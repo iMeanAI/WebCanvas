@@ -1,15 +1,18 @@
 import json5
 from Prompt import *
 
+
 class HistoryMemory:
 
-    def __init__(self,previous_trace) -> None:
+    def __init__(self,previous_trace: list) -> None:
+
         """
         previous_trace : list of each previous action and thought info before current environment state
         """
         self.previous_trace = previous_trace
         
-    def stringfy_thought_and_action(self):
+    def stringfy_thought_and_action(self)->str:
+
         """
         return : output after stringfy previous trace
         """
@@ -23,11 +26,20 @@ class HistoryMemory:
         return str_output
 
     
-    def get_previous_trace_prompt(self):
+    def construct_previous_trace_prompt(self)->str:
+
+        """
+        """
         # return prompt_user += eval(previous_trace_prompt)
+
         previous_trace_prompt = f"The previous thoughts and actions are: {self.stringfy_thought_and_action()}.\n\nYou have done the things above.\n\n"
         return previous_trace_prompt
 
 
-    def get_cache_trace(self):
+    def construct_cache_trace(self):
+
+        """
+        """
         pass
+
+
