@@ -31,18 +31,23 @@ class BaseEnvironment:
         """
         pass
 
+    def save_Environment(self)->None:
+        """
+        """
+        pass
+
 
 class DomEnvironment(BaseEnvironment):
 
-    def __init__(self,config : dict) -> None:
+    def __init__(self,configs : dict) -> None:
         
         """
         Inint Dom environment:
         state_info: 
         """
-        super(BaseEnvironment).__init__(self,config)
+        super().__init__(configs)
     
-        self.configs = config
+        self.configs = configs
         self.interactable_element = []
         self.link_element = []
         self.input_element = []
@@ -108,6 +113,17 @@ class DomEnvironment(BaseEnvironment):
         """
         pass
 
+    def save_Environment(self) -> None:
 
+        """
+        save main elements from dom
+        """
+        pass
 
+class HtmlEnvironment(BaseEnvironment):
 
+    def __init__(self, configs) -> None:
+        super().__init__(configs)
+        pass
+    
+    
