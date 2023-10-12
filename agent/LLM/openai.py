@@ -10,12 +10,12 @@ class GPTGenerator:
     def __init__(self):
         self.model = ""
 
-    async def __call__(self, messages:dict=None, max_tokens:int=None, temperature:float=None) -> str:
+    async def request(self, messages:dict=None, max_tokens:int=None, temperature:float=None) -> str:
         logger.info(1)
         try:
             cpu_count = multiprocessing.cpu_count()
             with ThreadPoolExecutor(max_workers = cpu_count * 2) as pool:
-                future_answer = pool.submit(self.generate, messages, max_tokens, temperature)
+                future_answer = pool.submit(self.chat, messages, max_tokens, temperature)
                 future_answer_result = await future_answer.result()
             pool.shutdown()
             openai_response = future_answer_result
@@ -39,7 +39,7 @@ class GPTGenerator:
             logger.error(f"OpenAI API request exceeded rate limit: {e}")
 
 
-    async def generate(self, messages, max_tokens=500, temperature=0.7):
+    async def chat(self, messages, max_tokens=500, temperature=0.7):
         loop = asyncio.get_event_loop()
         data = {
             'model': self.model,
