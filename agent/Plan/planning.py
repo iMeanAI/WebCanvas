@@ -14,4 +14,4 @@ class Planning:
         planning_request = PlanningPromptConstructor().construct(
             user_request, previous_trace, dom, tab_name_list, current_tab_name)
 
-        response = GPT35().request(planning_request)
+        response = GPT35.request(planning_request)

@@ -38,7 +38,7 @@ class PlanningPromptConstructor(PromptConstructor):
             "role": "user", "content": self.prompt_user}]
         return messages
 
-    def process_dom(self, dom: str, max_token: int = 16000):
+    def process_dom(self, dom: str, max_token: int = 16000): # TODO 移到Environment，从main函数调用
         dom = json5.loads(dom, encoding='utf-8')
         len_dom = len(dom)
         for element in dom:
