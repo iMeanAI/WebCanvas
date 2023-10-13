@@ -102,7 +102,6 @@ class DomEnvironment(BaseEnvironment):
                         f"link element: {str(self.link_element)}\n\n"\
                         f"input elements(like input and textarea): {str(self.input_element)}"
         if len(self.unknown_element) > 0:
-            
             prompt_user += f"\n\nother elements with tagname: {str(self.unknown_element)}"
         
         return prompt_user
