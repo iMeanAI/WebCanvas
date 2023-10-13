@@ -26,7 +26,7 @@ class BaseEnvironment:
         """
         pass
 
-    def construct_prompt_user_message(self)->str:
+    def construct_user_prompt(self)->str:
         """
         """
         pass
@@ -39,22 +39,25 @@ class BaseEnvironment:
 
 class DomEnvironment(BaseEnvironment):
 
-    def __init__(self,configs : dict) -> None:
+    def __init__(self,configs : dict, dom: list,tab_name_list: list,current_tab_name: list) -> None:
         
         """
         Inint Dom environment:
         state_info: 
         """
         super().__init__(configs)
-    
+
+        self.dom = dom
+        self.tab_name_list = tab_name_list
+        self.current_tab_name = current_tab_name
         self.configs = configs
+
         self.interactable_element = []
         self.link_element = []
         self.input_element = []
         self.unknown_element = []
-
     
-    def html_denoiser(self, dom: list)->None:
+    def html_denoiser(self)->None:
 
         """
         extract main elements from dom
@@ -63,7 +66,7 @@ class DomEnvironment(BaseEnvironment):
 
         # 将json格式的dom转换为四种list
         max_token = self.configs["max_token"]
-        dom = json5.loads(dom, encoding='utf-8')
+        dom = json5.loads(self.dom, encoding='utf-8')
         len_dom = len(dom)
         for element in dom:
             if element["tagName"] == "input" or element["tagName"] == "textarea": # 输入型元素
@@ -86,16 +89,23 @@ class DomEnvironment(BaseEnvironment):
 
         return None
 
-    def construct_prompt_user_message(self,):
+    def construct_user_prompt(self,):
 
         """
         return: construct user's prompt with html denoiser or state_info
         """
-        html_denoiser_prompt_user = f"All tabs are {str(self.tab_name_list)}. Now you are on tab '{str(self.current_tab_name)}'. The current elements with id are as follows:\n\n"\
+
+        self.html_denoiser()
+
+        prompt_user = f"All tabs are {str(self.tab_name_list)}. Now you are on tab '{str(self.current_tab_name)}'. The current elements with id are as follows:\n\n"\
                         f"interactable elements(like button, select and option): {str(self.interactable_element)}\n\n"\
                         f"link element: {str(self.link_element)}\n\n"\
                         f"input elements(like input and textarea): {str(self.input_element)}"
-        return html_denoiser_prompt_user
+        if len(self.unknown_element) > 0:
+            
+            prompt_user += f"\n\nother elements with tagname: {str(self.unknown_element)}"
+        
+        return prompt_user
 
 
     def state_init(self,):
@@ -127,3 +137,4 @@ class HtmlEnvironment(BaseEnvironment):
         pass
     
     
+
