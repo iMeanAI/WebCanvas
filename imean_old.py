@@ -29,7 +29,7 @@ openai.api_key = environ.get("OPENAI_API_KEY")
 # get API key from top-right dropdown on OpenAI website
 MODEL = environ.get("OPENAI_MODEL", "gpt-3.5-turbo-16k-0613")
 
-example_output = '\n```\n{\n  "action": "click",\n  "action_input": "link",\n  "element_id": "14",\n  "description": "Now I\'m on Google\'s main page. I should input text into the search bar. Then I will select the correct link frome the result page."\n}\n```'
+example_output = '\n```\n{\n  "action": "click",\n  "action_input": "link",\n  "element_id": "14",\n  "description": "Now I\'m on Google\'s main page. I should input text into the search bar. Then I will select the correct link from the result page."\n}\n```'
 
 app = Sanic("imean-context-gpt35")
 
@@ -112,7 +112,7 @@ async def planning(request: Request):
             stringfy_thought_and_action_output = stringfy_thought_and_action(previous_trace)
             prompt_user += f"The previous thoughts and actions are: {stringfy_thought_and_action_output}.\n\nYou have done the things above.\n\n"
             
-            prompt_user_if_finish = prompt_user + "Tools are goto(jump to url), fill_form(fill in the blank), google_search, switch_tab(switch window tab) and click. You shold only use tools above!\n"\
+            prompt_user_if_finish = prompt_user + "Tools are goto(jump to url), fill_form(fill in the blank), google_search, switch_tab(switch window tab) and click. You should only use tools above!\n"\
                 "Consider whether previous actions have done the task(ignore the detail actions)?\nIf true, just return 'finished'(without quotation marks);\nElse, return what's next step you plan to do.\n"\
                 "For example, if your goal is to set up a calendar or meeting or send an e-mail, you should not output 'finished' until you click send/submit/save button;"\
                 "If your goal is to goto somewhere and get some information, you should not output 'finished' until you see the correct information on webpage.\n"\
@@ -207,7 +207,7 @@ async def planning(request: Request):
                 dict_to_write = {}
                 dict_to_write['uuid'] = uuid
                 dict_to_write['action_type'] = "stop"
-                dict_to_write['excute_time'] = execute_time
+                dict_to_write['execute_time'] = execute_time
                 dict_to_write['error_message'] = error_message
                 dict_to_write['openai_response'] = openai_response
             else:
@@ -292,7 +292,7 @@ async def planning(request: Request):
                 dict_to_write['action_type'] = decoded_result['action']
                 dict_to_write['value'] = decoded_result['action_input']
                 dict_to_write['description'] = decoded_result['description']
-                dict_to_write['excute_time'] = execute_time
+                dict_to_write['execute_time'] = execute_time
                 dict_to_write['error_message'] = error_message
                 dict_to_write['openai_response'] = openai_response
                 # dict_to_write['refine'] = refine_flag

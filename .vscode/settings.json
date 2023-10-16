@@ -1,0 +1,9 @@
+{
+    "cSpell.words": [
+        "mopenai",
+        "stringfy"
+    ],
+    "commentTranslate.source": "Google",
+    "commentTranslate.multiLineMerge": true,
+    "python.analysis.typeCheckingMode": "off"
+}
