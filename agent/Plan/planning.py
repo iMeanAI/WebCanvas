@@ -18,4 +18,4 @@ class Planning:
 
         stringfy_thought_and_action_output = PlanningPromptConstructor().stringfy_thought_and_action(previous_trace)
 
-        reward_request = RewardPromptConstructor().construct(user_request, stringfy_thought_and_action_output)
+        reward_request = RewardPromptConstructor().construct(user_request, stringfy_thought_and_action_output) 
