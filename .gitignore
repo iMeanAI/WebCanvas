@@ -1,5 +1,6 @@
-.vscode/
-*/tempCodeRunnerFile.py
-*/.csv
-*/__pycache__
+/.vscode
+
+*.csv
+
+/__pycache__
 
