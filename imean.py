@@ -28,7 +28,7 @@ async def planning(request: Request):
         current_tab_name = request.json["current_tab_name"]
         current_time = request.json['current_time']
         previous_trace = request.json['previous_trace'] #include previous traces and description of previous states
-        cached_data = request.json['cached_info'] # include previous cached infomation
+        cached_data = request.json['cached_info'] # include previous cached information
         dom = request.json['dom']
 
         Prompt_user = ""
@@ -59,7 +59,7 @@ async def planning(request: Request):
         dict_to_write['value'] = decoded_result['action_input']
         dict_to_write['description'] = decoded_result['description']
 
-        # dict_to_write['excute_time'] = execute_time
+        # dict_to_write['execute_time'] = execute_time
         # dict_to_write['error_message'] = error_message
         # dict_to_write['openai_response'] = openai_response
 

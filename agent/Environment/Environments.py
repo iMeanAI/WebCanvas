@@ -42,7 +42,7 @@ class DomEnvironment(BaseEnvironment):
     def __init__(self,configs : dict, dom: list,tab_name_list: list,current_tab_name: list) -> None:
         
         """
-        Inint Dom environment:
+        Init Dom environment:
         state_info: 
         """
         super().__init__(configs)
@@ -117,7 +117,7 @@ class DomEnvironment(BaseEnvironment):
     def construct_state_info(self,):
 
         """
-        construt current environment state_info after html denoiser
+        construct current environment state_info after html denoiser
         return : current state_info
         """
         pass
