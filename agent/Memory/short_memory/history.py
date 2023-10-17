@@ -12,7 +12,7 @@ class HistoryMemory:
     def stringfy_thought_and_action(self)->str:
 
         """
-        return : output after stringfy previous trace
+        output after stringfy previous trace
         """
         input_list = json5.loads(self.previous_trace, encoding="utf-8")
         str_output = "["
@@ -25,7 +25,6 @@ class HistoryMemory:
 
     
     def ConstructPreviousTracePrompt(self)->str:
-
         """
         """
         # return prompt_user += eval(previous_trace_prompt)
