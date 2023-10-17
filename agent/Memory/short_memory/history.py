@@ -20,7 +20,7 @@ class HistoryMemory:
         str_output += "]"
         return str_output
     
-    def ConstructPreviousTracePrompt(self)->str:
+    def construct_previous_trace_prompt(self)->str:
         """
         """
         stringfy_thought_and_action_output = self.stringfy_thought_and_action()
@@ -28,7 +28,7 @@ class HistoryMemory:
             {stringfy_thought_and_action_output}.\n\nYou have done the things above.\n\n"
         return previous_trace_prompt
 
-    def ConstructCacheTrace(self):
+    def construct_cache_trace(self):
         """
         """
         pass

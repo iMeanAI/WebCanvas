@@ -6,22 +6,22 @@ class BaseEnvironment:
     def __init__(self,configs) -> None:
         self.configs = configs
 
-    def EnvDenoiser(self):
+    def env_denoiser(self):
         """
         """
         pass
     
-    def StateInit(self):
+    def state_init(self):
         """
         """
         pass
     
-    def ConstructStateInfo(self):
+    def construct_state_info(self):
         """
         """
         pass
 
-    def SaveEnvironment(self)->None:
+    def save_environment(self)->None:
         """
         """
         pass
@@ -41,7 +41,7 @@ class DomEnvironment(BaseEnvironment):
         self.tab_name_list = tab_name_list
         self.current_tab_name = current_tab_name
 
-    def EnvDenoiser(self):
+    def env_denoiser(self):
 
         """
         extract four elements from dom
@@ -77,19 +77,19 @@ class DomEnvironment(BaseEnvironment):
 
         return interact_element,link_element,input_element,unknown_element
 
-    def StateInit(self):
+    def state_init(self):
         """
         init state information
         """
         pass
 
-    def ConstructStateInfo(self):
+    def construct_state_info(self):
         """
         construct current environment state_info after env denoiser
         """
         pass
 
-    def SaveEnvironment(self) -> None:
+    def save_environment(self) -> None:
         """
         """
         pass
