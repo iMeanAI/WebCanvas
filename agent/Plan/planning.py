@@ -15,3 +15,7 @@ class Planning:
             user_request, previous_trace, dom, tab_name_list, current_tab_name)
 
         response = GPT35.request(planning_request)
+
+        stringfy_thought_and_action_output = PlanningPromptConstructor().stringfy_thought_and_action(previous_trace)
+
+        reward_request = RewardPromptConstructor().construct(user_request, stringfy_thought_and_action_output)
