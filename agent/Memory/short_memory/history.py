@@ -24,7 +24,7 @@ class HistoryMemory:
         return str_output
 
     
-    def construct_previous_trace_prompt(self)->str:
+    def ConstructPreviousTracePrompt(self)->str:
 
         """
         """
@@ -34,7 +34,7 @@ class HistoryMemory:
         return previous_trace_prompt
 
 
-    def construct_cache_trace(self):
+    def ConstructCacheTrace(self):
 
         """
         """

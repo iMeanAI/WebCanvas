@@ -11,27 +11,27 @@ class BaseEnvironment:
         self.environment_prompt = {}
         self.state_info = None
     
-    def html_denoiser(self)->None:
+    def HtmlDenoiser(self)->None:
         """
         """
         pass
 
-    def state_init(self):
+    def StateInit(self):
         """
         """
         pass
     
-    def construct_state_info(self):
+    def ConstructStateInfo(self):
         """
         """
         pass
 
-    def construct_user_prompt(self)->str:
+    def ConstructEnvPrompt(self)->str:
         """
         """
         pass
 
-    def save_Environment(self)->None:
+    def SaveEnvironment(self)->None:
         """
         """
         pass
@@ -57,7 +57,7 @@ class DomEnvironment(BaseEnvironment):
         self.input_element = []
         self.unknown_element = []
     
-    def html_denoiser(self)->None:
+    def HtmlDenoiser(self)->None:
 
         """
         extract main elements from dom
@@ -89,7 +89,7 @@ class DomEnvironment(BaseEnvironment):
 
         return None
 
-    def construct_user_prompt(self,):
+    def ConstructEnvPrompt(self,):
 
         """
         return: construct user's prompt with html denoiser or state_info
@@ -107,14 +107,14 @@ class DomEnvironment(BaseEnvironment):
         return prompt_user
 
 
-    def state_init(self,):
+    def StateInit(self,):
 
         """
         init state information
         """
         pass
 
-    def construct_state_info(self,):
+    def ConstructStateInfo(self,):
 
         """
         construt current environment state_info after html denoiser
@@ -122,7 +122,7 @@ class DomEnvironment(BaseEnvironment):
         """
         pass
 
-    def save_Environment(self) -> None:
+    def SaveEnvironment(self) -> None:
 
         """
         save main elements from dom
