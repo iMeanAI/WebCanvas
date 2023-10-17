@@ -1,2 +1,2 @@
-from .reference_trace import reference_trace
-from .website_knowledge import website_knowledge
+from .reference_trace import *
+from .website_knowledge import *
