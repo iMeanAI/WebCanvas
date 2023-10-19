@@ -9,7 +9,7 @@ class BasePromptConstructor:
         pass
 
 
-class PlanningPromptConstructor(BasePromptConstructor): # 类：构建planning的prompt
+class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning的prompt
     def __init__(self):
         self.prompt_system = BasePrompts.planning_prompt_system
         self.prompt_user = BasePrompts.planning_prompt_user
@@ -49,7 +49,7 @@ class PlanningPromptConstructor(BasePromptConstructor): # 类：构建planning�
         return str_output
 
 
-class RewardPromptConstructor(BasePromptConstructor): # 类：构建reward的prompt
+class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的prompt
     def __init__(self):
         self.prompt_system = BasePrompts.reward_prompt_system
         self.prompt_user = BasePrompts.reward_prompt_user
@@ -63,14 +63,15 @@ class RewardPromptConstructor(BasePromptConstructor): # 类：构建reward的pro
         return messages
 
 
-class JudgeSearchbarPromptConstructor(BasePromptConstructor): # 类：构建判断该元素是否是搜索框的prompt（如果是，则前端需要额外加上回车操作）
+# 类：构建判断该元素是否是搜索框的prompt（如果是，则前端需要额外加上回车操作）
+class JudgeSearchbarPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = BasePrompts.judge_searchbar_prompt_system
         self.prompt_user = BasePrompts.judge_searchbar_prompt_user
 
     # 构建判断是否是搜索框的prompt，输出openai可解析的格式
     # TODO 改掉decoded_result
-    def constructor(self, input_element, decoded_result) -> list:
+    def construct(self, input_element, decoded_result) -> list:
         self.prompt_user = Template(self.prompt_user).render(input_element=str(
             input_element), element_id=decoded_result['element_id'], action_input=decoded_result['action_input'])
         messages = [{"role": "system", "content": self.prompt_system}, {
