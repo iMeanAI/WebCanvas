@@ -6,7 +6,7 @@ class BaseEnvironment:
     def __init__(self,configs) -> None:
         self.configs = configs
 
-    def env_denoiser(self):
+    def html_denoiser(self):
         """
         """
         pass
@@ -41,7 +41,7 @@ class DomEnvironment(BaseEnvironment):
         self.tab_name_list = tab_name_list
         self.current_tab_name = current_tab_name
 
-    def env_denoiser(self):
+    def html_denoiser(self):
 
         """
         extract four elements from dom
