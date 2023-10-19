@@ -1,5 +1,5 @@
 import json5
-from Prompt import *
+from agent.Prompt import *
 
 
 class HistoryMemory:

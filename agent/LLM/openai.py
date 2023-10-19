@@ -5,7 +5,7 @@ from functools import partial
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
 from sanic.log import logger
-from Utils import *
+from agent.Utils import *
 
 
 class GPTGenerator:
@@ -18,10 +18,11 @@ class GPTGenerator:
             with ThreadPoolExecutor(max_workers=cpu_count * 2) as pool:
                 future_answer = pool.submit(
                     self.chat, messages, max_tokens, temperature)
-                future_answer_result = await future_answer.result()
+            future_answer_result = await future_answer.result()
+            openai_response = list(future_answer_result.choices)[
+                0].to_dict()['message']['content']
             pool.shutdown()
-            openai_response = self.parse_response(future_answer_result)
-            return openai_response
+            return openai_response, ""
         except openai.error.APIError as e:
             # Handle API error here, e.g. retry or log
             logger.error(f"OpenAI API returned an API Error: {e}")
@@ -54,10 +55,6 @@ class GPTGenerator:
         }
         func = partial(openai.ChatCompletion.create, **data)
         return await loop.run_in_executor(None, func)
-
-    async def parse_response(self, messages):
-        result = list(messages.choices)[0].to_dict()['message']['content']
-        return result
 
 
 class GPTGenerator35(GPTGenerator):

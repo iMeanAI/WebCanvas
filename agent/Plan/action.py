@@ -1,8 +1,9 @@
 import re
 import json5
-from Utils import *
+
 import traceback
-from Prompt import *
+from agent.Prompt import *
+from ..Utils import *
 
 
 class ActionParser():

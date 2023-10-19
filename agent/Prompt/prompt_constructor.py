@@ -1,7 +1,7 @@
 import json5
-from base_prompts import BasePrompts
+from .base_prompts import BasePrompts
 from jinja2 import Template
-from Environment import DomEnvironment
+from agent.Environment import DomEnvironment
 
 
 class BasePromptConstructor:
@@ -38,7 +38,7 @@ class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning�
         return messages
 
     # 将previous thought和action转化成格式化字符串
-    def stringfy_thought_and_action(input_list: list) -> str:
+    def stringfy_thought_and_action(self, input_list: list) -> str:
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
         for idx, i in enumerate(input_list):

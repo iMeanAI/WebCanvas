@@ -1,5 +1,5 @@
 import json5
-import configs
+import agent.configs as configs
 
 
 class BaseEnvironment:
