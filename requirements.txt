@@ -1,1 +1,4 @@
-openai
+Jinja2==3.1.2
+json5==0.9.14
+retry==0.9.2
+sanic==23.6.0
