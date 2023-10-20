@@ -1,21 +1,18 @@
 import json5
-from base_prompts import BasePrompts
+from .base_prompts import BasePrompts
 from jinja2 import Template
+from agent.Environment import DomEnvironment
 
 
-class PromptConstructor:
+class BasePromptConstructor:
     def __init__(self):
         pass
 
 
-class PlanningPromptConstructor(PromptConstructor):
+class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning的prompt
     def __init__(self):
         self.prompt_system = BasePrompts.planning_prompt_system
         self.prompt_user = BasePrompts.planning_prompt_user
-        self.interactable_element = []
-        self.link_element = []
-        self.input_element = []
-        self.unknown_element = []
 
     # 构建planning的prompt，输出openai可解析的格式
     def construct(self, user_request: str, previous_trace: str, dom: str, tab_name_list: list, current_tab_name: str, max_token: int = 16000) -> list:
@@ -23,52 +20,25 @@ class PlanningPromptConstructor(PromptConstructor):
             user_request=user_request)
         if len(previous_trace) > 0:
 
-            self.process_dom(dom)
+            dom_denoised = DomEnvironment(dom=dom)
+            dom_denoised.html_denoiser()
+
             stringfy_thought_and_action_output = self.stringfy_thought_and_action(
                 previous_trace)
             self.prompt_user += f"The previous thoughts and actions are: {stringfy_thought_and_action_output}.\n\nYou have done the things above.\n\n"
             self.prompt_user += f"All tabs are {str(tab_name_list)}. Now you are on tab '{str(current_tab_name)}'. The current elements with id are as follows:\n\n"\
-                f"interactable elements(like button, select and option): {str(self.interactable_element)}\n\n"\
-                f"link element: {str(self.link_element)}\n\n"\
-                f"input elements(like input and textarea): {str(self.input_element)}"
-            if len(self.unknown_element) > 0:
-                prompt_user += f"\n\nother elements with tagname: {str(self.unknown_element)}"
+                f"interactable elements(like button, select and option): {str(dom_denoised.interactable_element)}\n\n"\
+                f"link element: {str(dom_denoised.link_element)}\n\n"\
+                f"input elements(like input and textarea): {str(dom_denoised.input_element)}"
+            if len(dom_denoised.unknown_element) > 0:
+                self.prompt_user += f"\n\nother elements with tagname: {str(dom_denoised.unknown_element)}"
 
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
 
-    def process_dom(self, dom: str, max_token: int = 16000): # TODO 移到Environment，从main函数调用
-        dom = json5.loads(dom, encoding='utf-8')
-        len_dom = len(dom)
-        for element in dom:
-            if element["tagName"] == "input" or element["tagName"] == "textarea":  # 输入型元素
-                if "value" in element.keys():  # input元素已键入内容
-                    self.input_element.append(
-                        f"id:{element['id']}, content:{element['label']}, input_value:{element['value']}")
-                else:  # input元素未键入内容
-                    self.input_element.append(
-                        f"id:{element['id']}, content:{element['label']}")
-            elif element["tagName"] == "link":  # 链接型元素
-                if len(element['label']) > max_token*2/len_dom:  # 限制长度
-                    self.link_element.append(
-                        f"id:{element['id']}, content:{element['label'][:int(max_token*2/len_dom)]}")
-                else:
-                    self.link_element.append(
-                        f"id:{element['id']}, content:{element['label']}")
-            elif element["tagName"] in ["button", "row", "checkbox", "radio", "select", "datalist", "option", "switch"]:  # 交互型元素
-                if len(element['label']) > max_token*2/len_dom:  # 限制长度
-                    self.interactable_element.append(
-                        f"id:{element['id']}, content:{element['label'][:int(max_token*2/len_dom)]}")
-                else:
-                    self.interactable_element.append(
-                        f"id:{element['id']}, content:{element['label']}")
-            else:
-                self.unknown_element.append(
-                    f"tag:{element['tagName']},id:{element['id']}, content:{element['label']}")
-        return
-
-    def stringfy_thought_and_action(input_list):
+    # 将previous thought和action转化成格式化字符串
+    def stringfy_thought_and_action(self, input_list: list) -> str:
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
         for idx, i in enumerate(input_list):
@@ -79,11 +49,12 @@ class PlanningPromptConstructor(PromptConstructor):
         return str_output
 
 
-class RewardPromptConstructor(PromptConstructor):
+class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的prompt
     def __init__(self):
         self.prompt_system = BasePrompts.reward_prompt_system
         self.prompt_user = BasePrompts.reward_prompt_user
 
+    # 构建reward的prompt，输出openai可解析的格式
     def construct(self, user_request: str, stringfy_thought_and_action_output: str) -> list:
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request, stringfy_thought_and_action_output=stringfy_thought_and_action_output)
@@ -92,13 +63,15 @@ class RewardPromptConstructor(PromptConstructor):
         return messages
 
 
-class JudgeSearchbarPromptConstructor(PromptConstructor):
+# 类：构建判断该元素是否是搜索框的prompt（如果是，则前端需要额外加上回车操作）
+class JudgeSearchbarPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = BasePrompts.judge_searchbar_prompt_system
         self.prompt_user = BasePrompts.judge_searchbar_prompt_user
 
+    # 构建判断是否是搜索框的prompt，输出openai可解析的格式
     # TODO 改掉decoded_result
-    def constructor(self, user_request: str, input_element, decoded_result) -> list:
+    def construct(self, input_element, decoded_result) -> list:
         self.prompt_user = Template(self.prompt_user).render(input_element=str(
             input_element), element_id=decoded_result['element_id'], action_input=decoded_result['action_input'])
         messages = [{"role": "system", "content": self.prompt_system}, {

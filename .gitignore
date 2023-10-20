@@ -1,0 +1,5 @@
+.vscode/
+tempCodeRunnerFile.py
+**/__pycache__/
+.VSCodeCounter
+*.pyc
