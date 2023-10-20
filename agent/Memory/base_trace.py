@@ -58,7 +58,7 @@ class BaseTrace:
                 action = match.group(2).strip()
         except Exception as e:
             print(e)
-            print("math error")
+            print("match error")
         
         return thought,action
 
