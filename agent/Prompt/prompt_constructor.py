@@ -1,19 +1,19 @@
 import json5
-
+from .base_Prompts import BasePrompts
 from jinja2 import Template
 
 from agent.Prompt.base_Prompts import BasePrompts
-from agent.Environment.Environments import DomEnvironment
+from agent.Environment.environments import DomEnvironment
 from agent.Memory.short_memory.history import HistoryMemory
 from agent.configs import Env_configs
 
 
-class PromptConstructor:
+class BasePromptConstructor:
     def __init__(self):
         pass
 
 
-class PlanningPromptConstructor(PromptConstructor):
+class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning的prompt
     def __init__(self):
         self.prompt_system = BasePrompts.planning_prompt_system
         self.prompt_user = BasePrompts.planning_prompt_user
@@ -53,11 +53,12 @@ class PlanningPromptConstructor(PromptConstructor):
         return messages
 
 
-class RewardPromptConstructor(PromptConstructor):
+class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的prompt
     def __init__(self):
         self.prompt_system = BasePrompts.reward_prompt_system
         self.prompt_user = BasePrompts.reward_prompt_user
 
+    # 构建reward的prompt，输出openai可解析的格式
     def construct(self, user_request: str, stringfy_thought_and_action_output: str) -> list:
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request, stringfy_thought_and_action_output=stringfy_thought_and_action_output)
@@ -66,13 +67,15 @@ class RewardPromptConstructor(PromptConstructor):
         return messages
 
 
-class JudgeSearchbarPromptConstructor(PromptConstructor):
+# 类：构建判断该元素是否是搜索框的prompt（如果是，则前端需要额外加上回车操作）
+class JudgeSearchbarPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = BasePrompts.judge_searchbar_prompt_system
         self.prompt_user = BasePrompts.judge_searchbar_prompt_user
 
+    # 构建判断是否是搜索框的prompt，输出openai可解析的格式
     # TODO 改掉decoded_result
-    def constructor(self, user_request: str, input_element, decoded_result) -> list:
+    def construct(self, input_element, decoded_result) -> list:
         self.prompt_user = Template(self.prompt_user).render(input_element=str(
             input_element), element_id=decoded_result['element_id'], action_input=decoded_result['action_input'])
         messages = [{"role": "system", "content": self.prompt_system}, {
