@@ -70,5 +70,6 @@ class Planning:
         dict_to_write['execute_time'] = execute_time
         dict_to_write['error_message'] = error_message
         dict_to_write['openai_response'] = planning_response
+        
 
         return dict_to_write
