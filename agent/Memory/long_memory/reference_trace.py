@@ -1,5 +1,5 @@
-from Memory.base_trace import BaseTrace
-from Memory.base_qa import BaseConversation
+from ..base_trace import BaseTrace
+from ..base_qa import BaseConversation
 
 from typing import Dict
 import openai
