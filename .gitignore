@@ -1,4 +1,4 @@
-/.vscode
+.vscode/
 tempCodeRunnerFile.py
 *.csv
 **/__pycache__
