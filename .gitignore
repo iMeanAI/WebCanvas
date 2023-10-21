@@ -2,4 +2,5 @@
 tempCodeRunnerFile.py
 *.csv
 **/__pycache__
+local_data/
 
