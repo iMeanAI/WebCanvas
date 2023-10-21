@@ -1,10 +1,7 @@
 from agent.Prompt import *
 from agent.LLM import *
-<<<<<<< HEAD
-=======
 from .action import *
 import time
->>>>>>> dev
 
 
 class Planning:
@@ -35,12 +32,6 @@ class Planning:
         planning_request = PlanningPromptConstructor().construct(
             user_request, previous_trace, dom, tab_name_list, current_tab_name)
 
-<<<<<<< HEAD
-        response = GPT35.request(planning_request)
-
-        
-        
-=======
         planning_response, error_message = await GPT35.request(planning_request)
 
         # 提取出planning thought(str)和planning action(dict), 其中planning action拥有action, element_id, action_input, description四个字段
@@ -81,4 +72,3 @@ class Planning:
         dict_to_write['openai_response'] = planning_response
 
         return dict_to_write
->>>>>>> dev
