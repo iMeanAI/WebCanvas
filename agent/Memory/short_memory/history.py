@@ -18,7 +18,7 @@ class HistoryMemory:
         for idx, i in enumerate(input_list):
             str_output += f'Step{idx+1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
         str_output += "]"
-        return str_output
+        return str_output       
     
     def construct_previous_trace_prompt(self)->str:
         """
