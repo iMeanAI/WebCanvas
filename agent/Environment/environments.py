@@ -1,15 +1,16 @@
 import json5
 
-class BaseEnvironment():
 
-    def __init__(self,configs) -> None:
+class BaseEnvironment:
+
+    def __init__(self, configs) -> None:
         self.configs = configs
 
     def html_denoiser(self):
         """
         """
         pass
-    
+
     def state_init(self):
         """
         """
@@ -20,16 +21,17 @@ class BaseEnvironment():
         """
         pass
 
-    def save_environment(self)->None:
+    def save_environment(self) -> None:
         """
         """
         pass
+
 
 class DomEnvironment(BaseEnvironment):
 
     def __init__(
         self,
-        configs : dict,
+        configs: dict,
         dom: str,
         tab_name_list: list,
         current_tab_name: list
@@ -55,25 +57,32 @@ class DomEnvironment(BaseEnvironment):
             dom = json5.loads(self.dom, encoding='utf-8')
             len_dom = len(dom)
             for element in dom:
-                if element["tagName"] == "input" or element["tagName"] == "textarea": # 输入型元素
-                    if "value" in element.keys(): # input元素已键入内容
-                        input_element.append(f"id:{element['id']}, content:{element['label']}, input_value:{element['value']}")
-                    else:# input元素未键入内容
-                        self.input_element.append(f"id:{element['id']}, content:{element['label']}")
-                elif element["tagName"] == "link": # 链接型元素
-                    if len(element['label']) > max_token*2/len_dom: # 限制长度
-                        link_element.append(f"id:{element['id']}, content:{element['label'][:int(max_token*2/len_dom)]}")
+                if element["tagName"] == "input" or element["tagName"] == "textarea":  # 输入型元素
+                    if "value" in element.keys():  # input元素已键入内容
+                        input_element.append(
+                            f"id:{element['id']}, content:{element['label']}, input_value:{element['value']}")
+                    else:  # input元素未键入内容
+                        self.input_element.append(
+                            f"id:{element['id']}, content:{element['label']}")
+                elif element["tagName"] == "link":  # 链接型元素
+                    if len(element['label']) > max_token*2/len_dom:  # 限制长度
+                        link_element.append(
+                            f"id:{element['id']}, content:{element['label'][:int(max_token*2/len_dom)]}")
                     else:
-                        self.link_element.append(f"id:{element['id']}, content:{element['label']}")
-                elif element["tagName"] in ["button","row","checkbox","radio","select","datalist","option","switch"]: # 交互型元素
-                    if len(element['label']) > max_token*2/len_dom: # 限制长度
-                        interact_element.append(f"id:{element['id']}, content:{element['label'][:int(max_token*2/len_dom)]}")
+                        self.link_element.append(
+                            f"id:{element['id']}, content:{element['label']}")
+                elif element["tagName"] in ["button", "row", "checkbox", "radio", "select", "datalist", "option", "switch"]:  # 交互型元素
+                    if len(element['label']) > max_token*2/len_dom:  # 限制长度
+                        interact_element.append(
+                            f"id:{element['id']}, content:{element['label'][:int(max_token*2/len_dom)]}")
                     else:
-                        interact_element.append(f"id:{element['id']}, content:{element['label']}")
+                        interact_element.append(
+                            f"id:{element['id']}, content:{element['label']}")
                 else:
-                    unknown_element.append(f"tag:{element['tagName']},id:{element['id']}, content:{element['label']}")
+                    unknown_element.append(
+                        f"tag:{element['tagName']},id:{element['id']}, content:{element['label']}")
 
-        return interact_element,link_element,input_element,unknown_element
+        return interact_element, link_element, input_element, unknown_element
 
     def state_init(self):
         """
@@ -98,5 +107,3 @@ class HtmlEnvironment(BaseEnvironment):
     def __init__(self, configs) -> None:
         super().__init__(configs)
         pass
-    
-    
