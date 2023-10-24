@@ -42,7 +42,7 @@ class DomEnvironment(BaseEnvironment):
         self.tab_name_list = tab_name_list
         self.current_tab_name = current_tab_name
 
-    def html_denoiser(self) -> None:
+    def html_denoiser(self) -> (list,list,list,list):
         """
         extract four elements from dom
         """
@@ -62,14 +62,14 @@ class DomEnvironment(BaseEnvironment):
                         input_element.append(
                             f"id:{element['id']}, content:{element['label']}, input_value:{element['value']}")
                     else:  # input元素未键入内容
-                        self.input_element.append(
+                        input_element.append(
                             f"id:{element['id']}, content:{element['label']}")
                 elif element["tagName"] == "link":  # 链接型元素
                     if len(element['label']) > max_token*2/len_dom:  # 限制长度
                         link_element.append(
                             f"id:{element['id']}, content:{element['label'][:int(max_token*2/len_dom)]}")
                     else:
-                        self.link_element.append(
+                        link_element.append(
                             f"id:{element['id']}, content:{element['label']}")
                 elif element["tagName"] in ["button", "row", "checkbox", "radio", "select", "datalist", "option", "switch"]:  # 交互型元素
                     if len(element['label']) > max_token*2/len_dom:  # 限制长度

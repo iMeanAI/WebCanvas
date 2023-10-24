@@ -19,25 +19,26 @@ class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning�
         self.prompt_user = BasePrompts.planning_prompt_user
 
     # 构建planning的prompt，输出openai可解析的格式
-
     def construct(
         self,
         user_request: str,
-        previous_trace: str, 
+        previous_trace: str,
         dom: str,
-        tab_name_list: list, 
-        current_tab_name: list, 
+        tab_name_list: list,
+        current_tab_name: list,
     ) -> list:
-        
+
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request)
-        
-        if len(previous_trace) > 0: 
 
-            env = DomEnvironment(configs=Env_configs,dom=dom,tab_name_list=tab_name_list,current_tab_name=current_tab_name)
+        if len(previous_trace) > 0:
+
+            env = DomEnvironment(configs=Env_configs, dom=dom,
+                                 tab_name_list=tab_name_list, current_tab_name=current_tab_name)
             # add history memory
-            self.prompt_user += HistoryMemory(previous_trace=previous_trace).construct_previous_trace_prompt()
-            interact_element,link_element,input_element,unknown_element = env.html_denoiser()
+            self.prompt_user += HistoryMemory(
+                previous_trace=previous_trace).construct_previous_trace_prompt()
+            interact_element, link_element, input_element, unknown_element = env.html_denoiser()
 
             self.prompt_user += f"All tabs are {str(tab_name_list)}. Now you are on tab '{str(current_tab_name)}'.\
                 The current elements with id are as follows:\n\n"\
@@ -49,8 +50,19 @@ class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning�
 
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
-        
+
         return messages
+
+    # 将previous thought和action转化成格式化字符串
+    def stringfy_thought_and_action(self, input_list: list) -> str:
+        input_list = json5.loads(input_list, encoding="utf-8")
+        str_output = "["
+        for idx, i in enumerate(input_list):
+            str_output += f'Step{idx+1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
+        str_output += "]"
+        # logger.info(f"\033[32m\nstr_output\n{str_output}\033[0m")#绿色
+        # logger.info(f"str_output\n{str_output}")
+        return str_output
 
 
 class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的prompt
@@ -81,5 +93,3 @@ class JudgeSearchbarPromptConstructor(BasePromptConstructor):
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
-
-
