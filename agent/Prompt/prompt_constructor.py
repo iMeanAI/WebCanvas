@@ -39,7 +39,6 @@ class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning�
             self.prompt_user += HistoryMemory(
                 previous_trace=previous_trace).construct_previous_trace_prompt()
             interact_element, link_element, input_element, unknown_element = env.html_denoiser()
-
             self.prompt_user += f"All tabs are {str(tab_name_list)}. Now you are on tab '{str(current_tab_name)}'.\
                 The current elements with id are as follows:\n\n"\
                 f"interactable elements(like button, select and option): {str(interact_element)}\n\n"\
