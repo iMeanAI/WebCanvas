@@ -1,7 +1,11 @@
 import json5
-from .base_prompts import BasePrompts
+from .base_Prompts import BasePrompts
 from jinja2 import Template
-from agent.Environment import DomEnvironment
+
+from agent.Prompt.base_Prompts import BasePrompts
+from agent.Environment.environments import DomEnvironment
+from agent.Memory.short_memory.history import HistoryMemory
+from agent.configs import Env_configs
 
 
 class BasePromptConstructor:
@@ -15,26 +19,38 @@ class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning�
         self.prompt_user = BasePrompts.planning_prompt_user
 
     # 构建planning的prompt，输出openai可解析的格式
-    def construct(self, user_request: str, previous_trace: str, dom: str, tab_name_list: list, current_tab_name: str, max_token: int = 16000) -> list:
+    def construct(
+        self,
+        user_request: str,
+        previous_trace: str,
+        dom: str,
+        tab_name_list: list,
+        current_tab_name: list,
+    ) -> list:
+
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request)
+
         if len(previous_trace) > 0:
 
-            dom_denoised = DomEnvironment(dom=dom)
-            dom_denoised.html_denoiser()
+            env = DomEnvironment(configs=Env_configs, dom=dom,
+                                 tab_name_list=tab_name_list, current_tab_name=current_tab_name)
+            # add history memory
+            self.prompt_user += HistoryMemory(
+                previous_trace=previous_trace).construct_previous_trace_prompt()
+            interact_element, link_element, input_element, unknown_element = env.html_denoiser()
 
-            stringfy_thought_and_action_output = self.stringfy_thought_and_action(
-                previous_trace)
-            self.prompt_user += f"The previous thoughts and actions are: {stringfy_thought_and_action_output}.\n\nYou have done the things above.\n\n"
-            self.prompt_user += f"All tabs are {str(tab_name_list)}. Now you are on tab '{str(current_tab_name)}'. The current elements with id are as follows:\n\n"\
-                f"interactable elements(like button, select and option): {str(dom_denoised.interactable_element)}\n\n"\
-                f"link element: {str(dom_denoised.link_element)}\n\n"\
-                f"input elements(like input and textarea): {str(dom_denoised.input_element)}"
-            if len(dom_denoised.unknown_element) > 0:
-                self.prompt_user += f"\n\nother elements with tagname: {str(dom_denoised.unknown_element)}"
+            self.prompt_user += f"All tabs are {str(tab_name_list)}. Now you are on tab '{str(current_tab_name)}'.\
+                The current elements with id are as follows:\n\n"\
+                f"interactable elements(like button, select and option): {str(interact_element)}\n\n"\
+                f"link element: {str(link_element)}\n\n"\
+                f"input elements(like input and textarea): {str(input_element)}"
+            if len(unknown_element) > 0:
+                prompt_user += f"\n\nother elements with tagname: {str(unknown_element)}"
 
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
+
         return messages
 
     # 将previous thought和action转化成格式化字符串
@@ -77,8 +93,3 @@ class JudgeSearchbarPromptConstructor(BasePromptConstructor):
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
-
-
-if __name__ == "__main__":
-    res = BasePrompts.planning_prompt_system
-    print(res)

@@ -1,5 +1,6 @@
 .vscode/
 tempCodeRunnerFile.py
-**/__pycache__/
-.VSCodeCounter
-*.pyc
+*.csv
+**/__pycache__
+local_data/
+
