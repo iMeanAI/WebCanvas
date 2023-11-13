@@ -12,7 +12,7 @@ class GPTGenerator:
     def __init__(self):
         self.model = ""
 
-    async def request(self, messages: dict = None, max_tokens: int = None, temperature: float = None) -> (str, str):
+    async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7) -> (str, str):
         try:
             cpu_count = multiprocessing.cpu_count()
             with ThreadPoolExecutor(max_workers=cpu_count * 2) as pool:
