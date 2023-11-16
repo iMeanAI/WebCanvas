@@ -1,8 +1,8 @@
 import json5
-from .base_Prompts import BasePrompts
+from .base_prompts import BasePrompts
 from jinja2 import Template
 
-from agent.Prompt.base_Prompts import BasePrompts
+from agent.Prompt.base_prompts import BasePrompts
 from agent.Environment.environments import DomEnvironment
 from agent.Memory.short_memory.history import HistoryMemory
 from agent.configs import Env_configs
