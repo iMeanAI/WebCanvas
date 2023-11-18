@@ -1,5 +1,5 @@
 from .environments import DomEnvironment
-from .webarenaEnv import *
-from .htmlEnv import *
+from .webarena_env import *
+from .html_env import *
 
 

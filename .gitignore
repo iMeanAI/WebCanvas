@@ -3,6 +3,7 @@ tempCodeRunnerFile.py
 *.csv
 **/__pycache__
 local_data/
+test.py
 test2.py
 test3.py
 
