@@ -1,11 +1,8 @@
 from lxml import etree
 from io import StringIO
-import requests
-from bs4 import BeautifulSoup
-
 from collections import deque
+import requests
 import copy
-
 from .tree_utils import (
     ElementNode,
     TagNameList,
@@ -132,7 +129,7 @@ class HTMLTree:
             print(f"can't locate element, error {e}")
             return ""
 
-    # 通过后续遍历判断，清楚无效tag,并实现
+    # 通过后续遍历判断，然后剪枝
     def pruning_tree(self)->str:
         self.post_traver_judge_is_valid()
         result_list = []
