@@ -34,18 +34,31 @@ ASCII_CHARSET = "".join(chr(x) for x in range(32, 128))
 FREQ_UNICODE_CHARSET = "".join(chr(x) for x in range(129, 1000))
 UTTERANCE_MAX_LENGTH = 8192
 IN_VIEWPORT_RATIO_THRESHOLD = 0.6
+IGNORED_ACTREE_PROPERTIES = (
+    "focusable",
+    "editable",
+    "readonly",
+    "level",
+    "settable",
+    "multiline",
+    "invalid",
+)
+
 
 class ObservationProcessor:
     def process(self, page: Page, client: CDPSession) -> str:
         raise NotImplementedError
 
+
 class ObservationMetadata(TypedDict):
     obs_nodes_info: dict[str, Any]
+
 
 def create_empty_metadata() -> ObservationMetadata:
     return {
         "obs_nodes_info": {},
     }
+
 
 class TextObervationProcessor(ObservationProcessor):
     def __init__(
@@ -182,7 +195,7 @@ class TextObervationProcessor(ObservationProcessor):
             "Accessibility.getFullAXTree", {}
         )["nodes"]
 
-        print("AccessibilityTree:",accessibility_tree)
+        print("AccessibilityTree:", accessibility_tree)
 
         # a few nodes are repeated in the accessibility tree
         seen_ids = set()
@@ -282,7 +295,7 @@ class TextObervationProcessor(ObservationProcessor):
                 if node.get("parentId", "Root") != "[REMOVED]"
             ]
 
-        print("accessibility_tree:",accessibility_tree)
+        print("accessibility_tree:", accessibility_tree)
 
         return accessibility_tree
 
@@ -371,7 +384,7 @@ class TextObervationProcessor(ObservationProcessor):
             return tree_str
 
         tree_str = dfs(0, accessibility_tree[0]["nodeId"], 0)
-   
+
         return tree_str, obs_nodes_info
 
     @staticmethod
@@ -399,11 +412,11 @@ class TextObervationProcessor(ObservationProcessor):
     def process(self, page: Page, client: CDPSession) -> str:
         # get the tab info
         open_tabs = page.context.pages
-        print("open_tabs:",open_tabs)
+        print("open_tabs:", open_tabs)
         try:
             tab_titles = [tab.title() for tab in open_tabs]
             current_tab_idx = open_tabs.index(page)
-            print("current_tab_idx:",current_tab_idx)
+            print("current_tab_idx:", current_tab_idx)
             for idx in range(len(open_tabs)):
                 if idx == current_tab_idx:
                     tab_titles[
@@ -433,7 +446,7 @@ class TextObervationProcessor(ObservationProcessor):
             )
             # print("content: \n",content)
             # print("\n\nobs_nodes_info",obs_nodes_info)
-      
+
             content = self.clean_accesibility_tree(content)
             # print("after clean_accesibility_tree",content)
             self.obs_nodes_info = obs_nodes_info
@@ -445,7 +458,7 @@ class TextObervationProcessor(ObservationProcessor):
 
         self.browser_config = browser_info["config"]
         content = f"{tab_title_str}\n\n{content}"
-  
+
         return content
 
     def get_element_center(self, element_id: str) -> tuple[float, float]:
@@ -458,6 +471,7 @@ class TextObervationProcessor(ObservationProcessor):
             center_x / self.viewport_size["width"],
             center_y / self.viewport_size["height"],
         )
+
 
 class ObservationHandler:
     """Main entry point to access all observation processor"""
@@ -502,6 +516,7 @@ class ObservationHandler:
             return self.text_processor
         else:
             raise ValueError("Invalid main observation type")
+
 
 class BrowserEnvironment:
     @beartype
