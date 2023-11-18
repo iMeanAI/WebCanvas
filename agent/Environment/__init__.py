@@ -1,6 +1,5 @@
-from .constants import *
-    
-from .environments import *
+from .environments import DomEnvironment
+from .webarenaEnv import *
+from .htmlEnv import *
 
-from .utils import *
 
