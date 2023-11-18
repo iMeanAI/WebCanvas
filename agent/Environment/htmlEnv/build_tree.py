@@ -1,4 +1,4 @@
-from lxml import etree
+from lxml.html import etree
 from io import StringIO
 from collections import deque
 import requests
@@ -9,6 +9,7 @@ from .tree_utils import (
     DelTagNameList
 )
 
+
 class HTMLTree:
     def __init__(self):
         self.elementNodes = [ElementNode] * 100000
@@ -18,7 +19,7 @@ class HTMLTree:
         self.valid: list[bool] = [bool] * 100000
         self.nodeCounts: int
 
-    def fetch_html_content(self,html_content):
+    def fetch_html_content(self, html_content):
         parser = etree.HTMLParser()
         self.tree = etree.parse(StringIO(html_content), parser)
         root = self.tree.getroot()
@@ -26,7 +27,7 @@ class HTMLTree:
         self.build_tree(root)
 
     @staticmethod
-    def build_node(node,idx)->ElementNode:
+    def build_node(node, idx) -> ElementNode:
         elementNode = ElementNode()
         elementNode["nodeId"] = idx
         elementNode["tagName"] = node.tag
@@ -34,31 +35,34 @@ class HTMLTree:
         elementNode["attributes"] = node.attrib
         elementNode["childIds"] = []
         elementNode["parentId"] = ""
-        elementNode["htmlContents"] = etree.tostring(node, pretty_print=True).decode()
+        elementNode["htmlContents"] = etree.tostring(
+            node, pretty_print=True).decode()
         return elementNode
-    
-    def init_tree(self,root):
+
+    def init_tree(self, root):
         queue = deque([root])
         i = 0
         while queue:
             vertex = queue.popleft()
-            self.elementNodes[i] = HTMLTree().build_node(vertex,i)
+            self.elementNodes[i] = HTMLTree().build_node(vertex, i)
             self.rawNode2id[vertex] = i
             i += 1
             for child in vertex.getchildren():
-                queue.append(child)   
-        self.build_map() 
+                queue.append(child)
+        self.build_map()
         self.nodeCounts = i
         self.valid = self.valid[:self.nodeCounts + 1]
 
     def build_map(self):
-        self.element2id = {value["nodeId"]: index for index, value in enumerate(self.elementNodes)}
-        self.id2rawNode = {str(index): value for value, index in self.rawNode2id.items()}
-        
-    def get_elementId(self,node:ElementNode):
+        self.element2id = {value["nodeId"]: index for index,
+                           value in enumerate(self.elementNodes)}
+        self.id2rawNode = {str(index): value for value,
+                           index in self.rawNode2id.items()}
+
+    def get_elementId(self, node: ElementNode):
         return self.element2id[node["nodeId"]]
-    
-    def build_tree(self,root)->None:
+
+    def build_tree(self, root) -> None:
         queue = deque([root])
         rootId = self.rawNode2id[root]
         self.elementNodes[rootId]["parentId"] = -1
@@ -69,20 +73,20 @@ class HTMLTree:
                 childId = self.rawNode2id[child]
                 self.elementNodes[parentId]["childIds"].append(childId)
                 self.elementNodes[childId]["parentId"] = parentId
-                queue.append(child)  
+                queue.append(child)
         self.pruningTreeNode = copy.deepcopy(self.elementNodes)
 
-    def bfs_tree(self)->None:
+    def bfs_tree(self) -> None:
         root = self.elementNodes[0]
         queue = deque([root])
         while queue:
             vertex = queue.popleft()
-            for child_id in vertex["childIds"]:  
+            for child_id in vertex["childIds"]:
                 element = self.elementNodes[child_id]
                 print(element["tagName"])
-                queue.append(self.elementNodes[child_id]) 
+                queue.append(self.elementNodes[child_id])
 
-    def pre_trav_tree(self)->None:
+    def pre_trav_tree(self) -> None:
         root = self.elementNodes[0]
         stack = [root]
         while stack:
@@ -94,25 +98,25 @@ class HTMLTree:
                 children.append(self.elementNodes[child_id])
             stack.extend(reversed(children))
 
-    def get_node_info(self,idx:str)->None:
+    def get_node_info(self, idx: str) -> None:
         elementNode = self.elementNodes[idx]
         print("*" * 10)
-        print("nodeId: ",elementNode["nodeId"])
-        print("tagName: ",elementNode["tagName"])
-        print("text: ",elementNode["text"])
-        print("attributes: ",elementNode["attributes"])
-        print("childIds: ",elementNode["childIds"]) 
-        print("parentId:",elementNode["parentId"])
-        print("htmlContents:",elementNode["htmlContents"])
+        print("nodeId: ", elementNode["nodeId"])
+        print("tagName: ", elementNode["tagName"])
+        print("text: ", elementNode["text"])
+        print("attributes: ", elementNode["attributes"])
+        print("childIds: ", elementNode["childIds"])
+        print("parentId:", elementNode["parentId"])
+        print("htmlContents:", elementNode["htmlContents"])
         print("*" * 10)
         print(" " * 10)
 
-    def get_locator_path(self,idx: str)->str:
+    def get_locator_path(self, idx: str) -> str:
         locator_str = ""
         current_node = self.elementNodes[idx]
         tag_name = current_node["tagName"]
         text = current_node["text"]
-        locator_str =  "/" + tag_name  + f"[text()=\"{text}\"]"
+        locator_str = "/" + tag_name + f"[text()=\"{text}\"]"
         while current_node["parentId"] != -1:
             parentid = current_node["parentId"]
             current_node = self.elementNodes[parentid]
@@ -120,7 +124,7 @@ class HTMLTree:
             locator_str = "/" + current_tag_name + locator_str
         return locator_str
 
-    def xpath_element(self,locator_str: str)->str:
+    def xpath_element(self, locator_str: str) -> str:
         try:
             elements = self.tree.xpath(locator_str)
             element = elements[0]
@@ -130,7 +134,7 @@ class HTMLTree:
             return ""
 
     # 通过后续遍历判断，然后剪枝
-    def pruning_tree(self)->str:
+    def pruning_tree(self) -> str:
         self.post_traver_judge_is_valid()
         result_list = []
         root = self.pruningTreeNode[0]
@@ -154,11 +158,12 @@ class HTMLTree:
                 self.pruningTreeNode[nodeId]["htmlContents"] = ""
             else:
                 rawNode = self.id2rawNode[str(nodeId)]
-                html_contents = etree.tostring(rawNode, pretty_print=True).decode()
+                html_contents = etree.tostring(
+                    rawNode, pretty_print=True).decode()
                 self.pruningTreeNode[nodeId]["htmlContents"] = html_contents
         return self.pruningTreeNode[0]["htmlContents"]
-    
-    def is_valid(self,idx)->bool:
+
+    def is_valid(self, idx) -> bool:
         if self.pruningTreeNode[idx]["tagName"] in TagNameList:
             return True
 
@@ -189,14 +194,16 @@ class HTMLTree:
                     current_id = parent_id
             else:
                 self.valid[nodeId] = False
-        
-    def get_html_contents(self,idx):
+
+    def get_html_contents(self, idx):
         node = self.elementNodes[idx]
         html_content = node["htmlContents"]
         return html_content
-    
+
+
 if __name__ == "__main__":
-    html_content = requests.get("https://git.starblazer.cn/imean/imean-ai/imean-agents/-/tree/zhou").text
+    html_content = requests.get(
+        "https://git.starblazer.cn/imean/imean-ai/imean-agents/-/tree/zhou").text
     tree = HTMLTree()
     tree.fetch_html_content(html_content)
     print(tree.pruning_tree())
