@@ -3,7 +3,7 @@ from io import StringIO
 from collections import deque
 import requests
 import copy
-from .tree_utils import (
+from .utils import (
     ElementNode,
     TagNameList,
     DelTagNameList

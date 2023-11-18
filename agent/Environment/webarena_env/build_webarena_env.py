@@ -22,7 +22,7 @@ from playwright.sync_api import (
 
 from typing import Dict, TypedDict
 from gymnasium import spaces
-from .brower_utils import (
+from .utils import (
     AccessibilityTree,
     AccessibilityTreeNode,
     BrowserConfig,
