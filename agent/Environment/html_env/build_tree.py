@@ -16,7 +16,7 @@ class HTMLTree:
         self.rawNode2id: dict = {}
         self.element2id: dict = {}
         self.id2rawNode: dict = {}
-        self.valid: list[bool] = [bool] * 100000
+        self.valid: list[bool] = [False] * 100000
         self.nodeCounts: int
 
     def fetch_html_content(self, html_content):
@@ -35,6 +35,8 @@ class HTMLTree:
         elementNode["attributes"] = node.attrib
         elementNode["childIds"] = []
         elementNode["parentId"] = ""
+        elementNode["siblingId"] = ""
+        elementNode["depth"] = ""
         elementNode["htmlContents"] = etree.tostring(
             node, pretty_print=True).decode()
         return elementNode
@@ -69,10 +71,11 @@ class HTMLTree:
         while queue:
             vertex = queue.popleft()
             parentId = self.rawNode2id[vertex]
-            for child in vertex.getchildren():
+            for idx, child in enumerate(vertex.getchildren(), 1):
                 childId = self.rawNode2id[child]
                 self.elementNodes[parentId]["childIds"].append(childId)
                 self.elementNodes[childId]["parentId"] = parentId
+                self.elementNodes[childId]["siblingId"] = idx
                 queue.append(child)
         self.pruningTreeNode = copy.deepcopy(self.elementNodes)
 
@@ -98,15 +101,19 @@ class HTMLTree:
                 children.append(self.elementNodes[child_id])
             stack.extend(reversed(children))
 
-    def get_node_info(self, idx: str) -> None:
-        elementNode = self.elementNodes[idx]
+    def get_node_info(self, idx: str, pruning: bool = True) -> None:
+        if pruning is True:
+            elementNode = self.pruningTreeNode[idx]
+        else:
+            elementNode = self.elementNodes[idx]
         print("*" * 10)
         print("nodeId: ", elementNode["nodeId"])
+        print("childIds: ", elementNode["childIds"])
+        print("parentId:", elementNode["parentId"])
+        print("siblingId:", elementNode["siblingId"])
         print("tagName: ", elementNode["tagName"])
         print("text: ", elementNode["text"])
         print("attributes: ", elementNode["attributes"])
-        print("childIds: ", elementNode["childIds"])
-        print("parentId:", elementNode["parentId"])
         print("htmlContents:", elementNode["htmlContents"])
         print("*" * 10)
         print(" " * 10)
@@ -115,8 +122,10 @@ class HTMLTree:
         locator_str = ""
         current_node = self.elementNodes[idx]
         tag_name = current_node["tagName"]
-        text = current_node["text"]
-        locator_str = "/" + tag_name + f"[text()=\"{text}\"]"
+        siblingId = str(current_node["siblingId"])
+        # text = current_node["text"]
+        # locator_str = "/" + tag_name + f"[text()=\"{text}\"]"
+        locator_str = "/" + tag_name + "[" + siblingId + "]"
         while current_node["parentId"] != -1:
             parentid = current_node["parentId"]
             current_node = self.elementNodes[parentid]
@@ -138,8 +147,6 @@ class HTMLTree:
         self.post_traver_judge_is_valid()
         result_list = []
         root = self.pruningTreeNode[0]
-        if root is None:
-            result_list = []
         stack = [root]
         while stack:
             node = stack.pop()
@@ -155,7 +162,10 @@ class HTMLTree:
             if self.valid[nodeId] is False:
                 rawNode = self.id2rawNode[str(nodeId)]
                 rawNode.getparent().remove(rawNode)
-                self.pruningTreeNode[nodeId]["htmlContents"] = ""
+                current_node = self.pruningTreeNode[nodeId]
+                current_node["htmlContents"] = ""
+                parentid = current_node["parentId"]
+                self.pruningTreeNode[parentid]["childIds"].remove(nodeId)
             else:
                 rawNode = self.id2rawNode[str(nodeId)]
                 html_contents = etree.tostring(
@@ -200,10 +210,17 @@ class HTMLTree:
         html_content = node["htmlContents"]
         return html_content
 
-
-if __name__ == "__main__":
-    html_content = requests.get(
-        "https://git.starblazer.cn/imean/imean-ai/imean-agents/-/tree/zhou").text
-    tree = HTMLTree()
-    tree.fetch_html_content(html_content)
-    print(tree.pruning_tree())
+    def generate_contents(self):
+        root = self.pruningTreeNode[0]
+        stack = [root]
+        contents = ""
+        while stack:
+            node = stack.pop()
+            if len(node["childIds"]) == 0 and self.valid[node["nodeId"]] is True:
+                contents += "[" + str(node["nodeId"]) + "]" + \
+                    " " + node["htmlContents"] + "\n"
+            children = []
+            for child_id in node["childIds"]:
+                children.append(self.elementNodes[child_id])
+            stack.extend(reversed(children))
+        return contents

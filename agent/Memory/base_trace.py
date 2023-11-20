@@ -52,7 +52,6 @@ class BaseTrace:
             print(e)
             print("match error")
         return thought, action
-    
+
     def get_trace(self):
         return self.trace_output
-

@@ -4,6 +4,7 @@ import openai
 import json
 import os
 
+
 class ReferenceTrace:
 
     def __init__(
@@ -59,7 +60,7 @@ class ReferenceTrace:
         print(response)
         print(response.choices[0].text)
         similarity_score = response.choices[0].text.strip()
-        return similarity_score 
+        return similarity_score
 
     def get_topK_by_similar_trace(self, current_trace) -> BaseTrace:
         similarity_scores = self.get_similar_reference_trace(
