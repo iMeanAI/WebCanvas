@@ -19,7 +19,7 @@ class HTMLTree:
         self.valid: list[bool] = [False] * 100000
         self.nodeCounts: int
 
-    def fetch_html_content(self, html_content):
+    def fetch_html_content(self, html_content) -> None:
         parser = etree.HTMLParser()
         self.tree = etree.parse(StringIO(html_content), parser)
         root = self.tree.getroot()
@@ -41,7 +41,7 @@ class HTMLTree:
             node, pretty_print=True).decode()
         return elementNode
 
-    def init_tree(self, root):
+    def init_tree(self, root) -> None:
         queue = deque([root])
         i = 0
         while queue:
@@ -55,7 +55,7 @@ class HTMLTree:
         self.nodeCounts = i
         self.valid = self.valid[:self.nodeCounts + 1]
 
-    def build_map(self):
+    def build_map(self) -> None:
         self.element2id = {value["nodeId"]: index for index,
                            value in enumerate(self.elementNodes)}
         self.id2rawNode = {str(index): value for value,
@@ -112,7 +112,7 @@ class HTMLTree:
         print("childIds: ", elementNode["childIds"])
         print("parentId:", elementNode["parentId"])
         print("siblingId:", elementNode["siblingId"])
-        print("depth:",elementNode["depth"])
+        print("depth:", elementNode["depth"])
         print("tagName: ", elementNode["tagName"])
         print("text: ", elementNode["text"])
         print("attributes: ", elementNode["attributes"])
@@ -207,12 +207,12 @@ class HTMLTree:
             else:
                 self.valid[nodeId] = False
 
-    def get_html_contents(self, idx):
+    def get_html_contents(self, idx) -> str:
         node = self.elementNodes[idx]
         html_content = node["htmlContents"]
         return html_content
 
-    def generate_contents(self):
+    def generate_contents(self) -> str:
         root = self.pruningTreeNode[0]
         stack = [root]
         contents = " "
@@ -220,14 +220,15 @@ class HTMLTree:
             node = stack.pop()
             if len(node["childIds"]) == 0 and self.valid[node["nodeId"]] is True:
                 contents += " " * node["depth"] + "[" + str(node["nodeId"]) + "]" + \
-                    " " + HTMLTree().process_contents(node["htmlContents"]) + "\n"
+                    " " + \
+                    HTMLTree().process_contents(node["htmlContents"]) + "\n"
             children = []
             for child_id in node["childIds"]:
                 children.append(self.elementNodes[child_id])
             stack.extend(reversed(children))
         return contents
 
-    def get_parents_id(self,idx)->str:
+    def get_parents_id(self, idx) -> (str, str):
         parentid_str = ""
         parent_tag_str = ""
         current_node = self.elementNodes[idx]
@@ -242,10 +243,10 @@ class HTMLTree:
             parent_tag_str += tagName + "->"
             parentid_str += str(nodeId) + "->"
         parentid_str += "-1"
-        return parentid_str,parent_tag_str
+        return parentid_str, parent_tag_str
 
     @staticmethod
-    def process_contents(html_contents: str):
+    def process_contents(html_contents: str) -> str:
         if html_contents is None:
             return ""
-        return html_contents.replace("\n","").replace("\t","")
+        return html_contents.replace("\n", "").replace("\t", "")
