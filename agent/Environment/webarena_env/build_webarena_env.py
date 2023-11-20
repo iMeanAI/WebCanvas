@@ -194,9 +194,6 @@ class TextObervationProcessor(ObservationProcessor):
         accessibility_tree: AccessibilityTree = client.send(
             "Accessibility.getFullAXTree", {}
         )["nodes"]
-
-        print("AccessibilityTree:", accessibility_tree)
-
         # a few nodes are repeated in the accessibility tree
         seen_ids = set()
         _accessibility_tree = []
@@ -205,7 +202,6 @@ class TextObervationProcessor(ObservationProcessor):
                 _accessibility_tree.append(node)
                 seen_ids.add(node["nodeId"])
         accessibility_tree = _accessibility_tree
-
         nodeid_to_cursor = {}
         for cursor, node in enumerate(accessibility_tree):
             nodeid_to_cursor[node["nodeId"]] = cursor
@@ -294,9 +290,6 @@ class TextObervationProcessor(ObservationProcessor):
                 for node in accessibility_tree
                 if node.get("parentId", "Root") != "[REMOVED]"
             ]
-
-        print("accessibility_tree:", accessibility_tree)
-
         return accessibility_tree
 
     @staticmethod
@@ -412,11 +405,9 @@ class TextObervationProcessor(ObservationProcessor):
     def process(self, page: Page, client: CDPSession) -> str:
         # get the tab info
         open_tabs = page.context.pages
-        print("open_tabs:", open_tabs)
         try:
             tab_titles = [tab.title() for tab in open_tabs]
             current_tab_idx = open_tabs.index(page)
-            print("current_tab_idx:", current_tab_idx)
             for idx in range(len(open_tabs)):
                 if idx == current_tab_idx:
                     tab_titles[
@@ -434,7 +425,7 @@ class TextObervationProcessor(ObservationProcessor):
         except Exception:
             page.wait_for_load_state("load", timeout=500)
             browser_info = self.fetch_browser_info(page, client)
-        # print("browser_info",browser_info)
+
         if self.observation_type == "accessibility_tree":
             accessibility_tree = self.fetch_page_accessibility_tree(
                 browser_info,
@@ -446,7 +437,6 @@ class TextObervationProcessor(ObservationProcessor):
             )
             # print("content: \n",content)
             # print("\n\nobs_nodes_info",obs_nodes_info)
-
             content = self.clean_accesibility_tree(content)
             # print("after clean_accesibility_tree",content)
             self.obs_nodes_info = obs_nodes_info

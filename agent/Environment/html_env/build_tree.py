@@ -36,7 +36,7 @@ class HTMLTree:
         elementNode["childIds"] = []
         elementNode["parentId"] = ""
         elementNode["siblingId"] = ""
-        elementNode["depth"] = ""
+        elementNode["depth"] = 1
         elementNode["htmlContents"] = etree.tostring(
             node, pretty_print=True).decode()
         return elementNode
@@ -76,6 +76,7 @@ class HTMLTree:
                 self.elementNodes[parentId]["childIds"].append(childId)
                 self.elementNodes[childId]["parentId"] = parentId
                 self.elementNodes[childId]["siblingId"] = idx
+                self.elementNodes[childId]["depth"] = self.elementNodes[parentId]["depth"] + 1
                 queue.append(child)
         self.pruningTreeNode = copy.deepcopy(self.elementNodes)
 
@@ -111,6 +112,7 @@ class HTMLTree:
         print("childIds: ", elementNode["childIds"])
         print("parentId:", elementNode["parentId"])
         print("siblingId:", elementNode["siblingId"])
+        print("depth:",elementNode["depth"])
         print("tagName: ", elementNode["tagName"])
         print("text: ", elementNode["text"])
         print("attributes: ", elementNode["attributes"])
@@ -213,14 +215,37 @@ class HTMLTree:
     def generate_contents(self):
         root = self.pruningTreeNode[0]
         stack = [root]
-        contents = ""
+        contents = " "
         while stack:
             node = stack.pop()
             if len(node["childIds"]) == 0 and self.valid[node["nodeId"]] is True:
-                contents += "[" + str(node["nodeId"]) + "]" + \
-                    " " + node["htmlContents"] + "\n"
+                contents += " " * node["depth"] + "[" + str(node["nodeId"]) + "]" + \
+                    " " + HTMLTree().process_contents(node["htmlContents"]) + "\n"
             children = []
             for child_id in node["childIds"]:
                 children.append(self.elementNodes[child_id])
             stack.extend(reversed(children))
         return contents
+
+    def get_parents_id(self,idx)->str:
+        parentid_str = ""
+        parent_tag_str = ""
+        current_node = self.elementNodes[idx]
+        nodeId = current_node["nodeId"]
+        tagName = current_node["tagName"]
+        parent_tag_str += tagName + "->"
+        parentid_str += str(nodeId) + "->"
+        while current_node["parentId"] != -1:
+            nodeId = current_node["parentId"]
+            current_node = self.elementNodes[nodeId]
+            tagName = current_node["tagName"]
+            parent_tag_str += tagName + "->"
+            parentid_str += str(nodeId) + "->"
+        parentid_str += "-1"
+        return parentid_str,parent_tag_str
+
+    @staticmethod
+    def process_contents(html_contents: str):
+        if html_contents is None:
+            return ""
+        return html_contents.replace("\n","").replace("\t","")
