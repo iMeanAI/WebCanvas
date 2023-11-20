@@ -18,6 +18,7 @@ TagNameList = [
     "input",
     "select",
     "textarea",
+    "textbox",
     "option",
     "datalist",
     "label",

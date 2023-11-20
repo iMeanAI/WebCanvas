@@ -1,6 +1,7 @@
 import json5
 from typing import Any, Union
 
+
 class DomEnvironment:
     def __init__(
         self,
@@ -51,4 +52,3 @@ class DomEnvironment:
                         f"tag:{element['tagName']},id:{element['id']}, content:{element['label']}")
 
         return interact_element, link_element, input_element, unknown_element
-

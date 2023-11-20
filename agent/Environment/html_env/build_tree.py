@@ -23,6 +23,7 @@ class HTMLTree:
         parser = etree.HTMLParser()
         self.tree = etree.parse(StringIO(html_content), parser)
         root = self.tree.getroot()
+        print("type",type(root))
         self.init_tree(root)
         self.build_tree(root)
 
@@ -215,13 +216,16 @@ class HTMLTree:
     def generate_contents(self) -> str:
         root = self.pruningTreeNode[0]
         stack = [root]
-        contents = " "
+        contents = ""
         while stack:
             node = stack.pop()
-            if len(node["childIds"]) == 0 and self.valid[node["nodeId"]] is True:
-                contents += " " * node["depth"] + "[" + str(node["nodeId"]) + "]" + \
-                    " " + \
-                    HTMLTree().process_contents(node["htmlContents"]) + "\n"
+            # if len(node["childIds"]) == 0 and self.valid[node["nodeId"]] is True:
+            if self.valid[node["nodeId"]] is True:
+                # TODO 添加可交互元素，主要是由该节点的tag和属性来判断
+                content_text = HTMLTree().process_contents(node["text"])
+                if content_text != "":
+                    contents += " " * (node["depth"]-1) + "[" + str(node["nodeId"]) + "]" + \
+                        " " + content_text + "\n"
             children = []
             for child_id in node["childIds"]:
                 children.append(self.elementNodes[child_id])
