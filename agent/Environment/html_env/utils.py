@@ -5,7 +5,7 @@ class ElementNode(TypedDict):
     childIds: list[int]
     siblingId: int
     tagName: str
-    attributes: str
+    attributes: dict
     text: str
     parentId: int
     htmlContents: str
@@ -18,7 +18,6 @@ TagNameList = [
     "input",
     "select",
     "textarea",
-    "textbox",
     "option",
     "datalist",
     "label",
@@ -40,8 +39,21 @@ DelTagNameList = [
     "meta",             # del
 ]
 
+
+ConditionTagNameList = [
+    'span', 
+    'td', 
+    'th',
+    'tr',
+    'li', 
+    'div'
+]
+
+
+
 __all__ = [
     "ElementNode",
     "TagNameList",
-    "DelTagNameList"
+    "DelTagNameList",
+    "ConditionTagNameList"
 ]

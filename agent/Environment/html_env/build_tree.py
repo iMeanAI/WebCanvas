@@ -3,6 +3,7 @@ from io import StringIO
 from collections import deque
 import requests
 import copy
+from .interactive_elements import ActiveElements
 from .utils import (
     ElementNode,
     TagNameList,
@@ -23,7 +24,6 @@ class HTMLTree:
         parser = etree.HTMLParser()
         self.tree = etree.parse(StringIO(html_content), parser)
         root = self.tree.getroot()
-        print("type",type(root))
         self.init_tree(root)
         self.build_tree(root)
 
@@ -72,11 +72,15 @@ class HTMLTree:
         while queue:
             vertex = queue.popleft()
             parentId = self.rawNode2id[vertex]
-            for idx, child in enumerate(vertex.getchildren(), 1):
+            tag_st = {}
+            for child in vertex.getchildren():
                 childId = self.rawNode2id[child]
+                tag_name = self.elementNodes[childId].get("tagName")
+                tag_st[tag_name] = tag_st.get(tag_name, 0) + 1
+                siblingId = tag_st.get(tag_name)
                 self.elementNodes[parentId]["childIds"].append(childId)
                 self.elementNodes[childId]["parentId"] = parentId
-                self.elementNodes[childId]["siblingId"] = idx
+                self.elementNodes[childId]["siblingId"] = siblingId
                 self.elementNodes[childId]["depth"] = self.elementNodes[parentId]["depth"] + 1
                 queue.append(child)
         self.pruningTreeNode = copy.deepcopy(self.elementNodes)
@@ -121,7 +125,7 @@ class HTMLTree:
         print("*" * 10)
         print(" " * 10)
 
-    def get_locator_path(self, idx: str) -> str:
+    def get_locator_path(self, idx: int) -> str:
         locator_str = ""
         current_node = self.elementNodes[idx]
         tag_name = current_node["tagName"]
@@ -142,12 +146,13 @@ class HTMLTree:
             element = elements[0]
             return self.rawNode2id[element]
         except Exception as e:
-            print(f"can't locate element, error {e}")
+            print(
+                f"can't locate current element,it may have been deleted after pruning tree,please check if it is a valid element, error occur {e}")
             return ""
 
     # 通过后续遍历判断，然后剪枝
     def pruning_tree(self) -> str:
-        self.post_traver_judge_is_valid()
+        self.post_trave_judge_is_valid()
         result_list = []
         root = self.pruningTreeNode[0]
         stack = [root]
@@ -176,12 +181,13 @@ class HTMLTree:
                 self.pruningTreeNode[nodeId]["htmlContents"] = html_contents
         return self.pruningTreeNode[0]["htmlContents"]
 
-    def is_valid(self, idx) -> bool:
-        if self.pruningTreeNode[idx]["tagName"] in TagNameList:
-            return True
+    def is_valid(self, idx: int) -> bool:
+        node = self.pruningTreeNode[idx]
+        if node["tagName"] in TagNameList:
+            return ActiveElements().is_valid_element(node)
 
     # 通过后序遍历判断是否是有效tag
-    def post_traver_judge_is_valid(self):
+    def post_trave_judge_is_valid(self):
         result_list = []
         root = self.pruningTreeNode[0]
         if root is None:
@@ -222,7 +228,8 @@ class HTMLTree:
             # if len(node["childIds"]) == 0 and self.valid[node["nodeId"]] is True:
             if self.valid[node["nodeId"]] is True:
                 # TODO 添加可交互元素，主要是由该节点的tag和属性来判断
-                content_text = HTMLTree().process_contents(node["text"])
+                content_text = HTMLTree().process_contents(node)
+                # print(node["htmlContents"])
                 if content_text != "":
                     contents += " " * (node["depth"]-1) + "[" + str(node["nodeId"]) + "]" + \
                         " " + content_text + "\n"
@@ -250,7 +257,20 @@ class HTMLTree:
         return parentid_str, parent_tag_str
 
     @staticmethod
-    def process_contents(html_contents: str) -> str:
-        if html_contents is None:
+    def process_contents(element: ElementNode) -> str:
+        attributes = element.get('attributes')
+        htmlContents = element.get('htmlContents')
+        nodeId = element.get("nodeId")
+        text = element.get("text")
+        html_text = ActiveElements.get_element_label(element)
+        # print("*" * 10)
+        # print("nodeId:",nodeId)
+        # print("attrib:",attributes)
+        # print("text:",text)
+        # print("htmlContents:",htmlContents)
+        # print("html_text",html_text)
+        # print("*" * 10)
+        # print(" " * 10)
+        if html_text is None:
             return ""
-        return html_contents.replace("\n", "").replace("\t", "")
+        return html_text.replace("\n", "").replace("\t", "")
