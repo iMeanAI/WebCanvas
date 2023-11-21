@@ -1,6 +1,7 @@
 [
     {
         "task": "Look for a place with a good swimming pool that charges between $200 and $300 per night.",
+        "reference_task_length":10,
         "evaluation": [
             {
                 "match_function": "url_exact_match",

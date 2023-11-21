@@ -1,13 +1,14 @@
 from urllib.parse import parse_qs, urlparse, quote
 
 
-class Evaluator():
+class StepEvaluator():
     def __init__(self, evaluate_function, value):
         pass
 
 
-# URL评测打分
-class URLEvaluator(Evaluator):
+class URLEvaluator(StepEvaluator):
+    '''URL评测打分'''
+    @staticmethod
     def URL_exact_match(input_url, reference_answer, key=False):
         if key:
             try:
@@ -19,10 +20,13 @@ class URLEvaluator(Evaluator):
         else:
             input_answer = input_url
         input_answer = quote(input_answer)
-        result_score = MatchFunction.exact_match(input_answer, reference_answer)
-        if result_score == 1:print("correct:", input_answer)
+        result_score = MatchFunction.exact_match(
+            input_answer, reference_answer)
+        if result_score == 1:
+            print("correct:", input_answer)
         return result_score
 
+    @staticmethod
     def URL_include_match(input_url, reference_answer, key=False):
         if key:
             try:
@@ -34,9 +38,11 @@ class URLEvaluator(Evaluator):
         else:
             input_answer = input_url
         input_answer = quote(input_answer)
-        result_score = MatchFunction.include_match(input_answer, reference_answer)
+        result_score = MatchFunction.include_match(
+            input_answer, reference_answer)
         return result_score
-    
+
+    @staticmethod
     def URL_semantic_match(input_url, reference_answer, key=False, method=None):
         if key:
             try:
@@ -48,31 +54,50 @@ class URLEvaluator(Evaluator):
         else:
             input_answer = input_url
         input_answer = quote(input_answer)
-        result_score = MatchFunction.semantic_match(input_answer, reference_answer, method)
+        result_score = MatchFunction.semantic_match(
+            input_answer, reference_answer, method)
         return result_score
 
-# 元素路径评测打分
-class PathEvaluator(Evaluator):
+
+class PathEvaluator(StepEvaluator):
+    '''元素路径评测打分'''
+    @staticmethod
     def path_exact_match(input_answer, reference_answer):
-        result_score = MatchFunction.exact_match(input_answer, reference_answer)
+        result_score = MatchFunction.exact_match(
+            input_answer, reference_answer)
         return result_score
+
+    @staticmethod
     def path_included_match(input_answer, reference_answer):
-        result_score = MatchFunction.include_match(input_answer, reference_answer)
+        result_score = MatchFunction.include_match(
+            input_answer, reference_answer)
         return result_score
-    def path_semantic_match(input_answer, reference_answer, method = None):
-        result_score = MatchFunction.semantic_match(input_answer, reference_answer, method)
+
+    @staticmethod
+    def path_semantic_match(input_answer, reference_answer, method=None):
+        result_score = MatchFunction.semantic_match(
+            input_answer, reference_answer, method)
         return result_score
-    
-# 文本评测打分
-class TextEvaluator(Evaluator):
+
+
+class TextEvaluator(StepEvaluator):
+    '''文本评测打分'''
+    @staticmethod
     def text_exact_match(input_answer, reference_answer):
-        result_score = MatchFunction.exact_match(input_answer, reference_answer)
+        result_score = MatchFunction.exact_match(
+            input_answer, reference_answer)
         return result_score
+
+    @staticmethod
     def text_included_match(input_answer, reference_answer):
-        result_score = MatchFunction.include_match(input_answer, reference_answer)
+        result_score = MatchFunction.include_match(
+            input_answer, reference_answer)
         return result_score
-    def text_semantic_match(input_answer, reference_answer, method = None):
-        result_score = MatchFunction.semantic_match(input_answer, reference_answer, method)
+
+    @staticmethod
+    def text_semantic_match(input_answer, reference_answer, method=None):
+        result_score = MatchFunction.semantic_match(
+            input_answer, reference_answer, method)
         return result_score
 
 
@@ -89,5 +114,5 @@ class MatchFunction():
         return 1 if input_answer in reference_answer else 0
 
     @staticmethod
-    def semantic_match(input_answer, reference_answer, method = None) -> int:
+    def semantic_match(input_answer, reference_answer, method=None) -> int:
         pass  # TODO 补全semantic match
