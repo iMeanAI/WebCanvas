@@ -268,19 +268,14 @@ class HTMLTree:
             return ""
         return html_text.replace("\n", "").replace("\t", "")
 
-    def get_distance(self, element1: ElementNode, element2: ElementNode) -> int:
+    def get_distance(self, idx1: int, idx2: int) -> int:
+        element1, element2 = self.elementNodes[idx1], self.elementNodes[idx2]
         if element1["depth"] < element2["depth"]:
-            return self.get_distance(element2, element1)
-        higher_element = element1
-        lower_element = element2
-        depth_difference = higher_element["depth"] - lower_element["depth"]
-        while depth_difference > 0:
-            parent_id = higher_element["parentId"]
-            higher_element = self.elementNodes[parent_id]
-            depth_difference -= 1
-        while higher_element["parentId"] != lower_element["parentId"]:
-            parent_id_higher = higher_element["parentId"]
-            higher_element = self.elementNodes[parent_id_higher]
-            parent_id_lower = lower_element["parentId"]
-            lower_element = self.elementNodes[parent_id_lower]
-        return element1["depth"] + element2["depth"] - higher_element["depth"]
+            return self.get_distance(idx2, idx1)
+        higher_element, lower_element = element1, element2
+        while higher_element["depth"] - lower_element["depth"] > 0:
+            higher_element = self.elementNodes[higher_element["parentId"]]
+        while higher_element["nodeId"] != lower_element["nodeId"]:
+            higher_element = self.elementNodes[higher_element["parentId"]]
+            lower_element = self.elementNodes[lower_element["parentId"]]
+        return element1["depth"] + element2["depth"] - 2 * lower_element["depth"]
