@@ -28,7 +28,7 @@ class HTMLTree:
         self.build_tree(root)
 
     @staticmethod
-    def build_node(node, idx) -> ElementNode:
+    def build_node(node, idx: int) -> ElementNode:
         elementNode = ElementNode()
         elementNode["nodeId"] = idx
         elementNode["tagName"] = node.tag
@@ -107,7 +107,7 @@ class HTMLTree:
                 children.append(self.elementNodes[child_id])
             stack.extend(reversed(children))
 
-    def get_node_info(self, idx: str, pruning: bool = True) -> None:
+    def get_node_info(self, idx: int, pruning: bool = True) -> None:
         if pruning is True:
             elementNode = self.pruningTreeNode[idx]
         else:
@@ -214,7 +214,7 @@ class HTMLTree:
             else:
                 self.valid[nodeId] = False
 
-    def get_html_contents(self, idx) -> str:
+    def get_html_contents(self, idx: int) -> str:
         node = self.elementNodes[idx]
         html_content = node["htmlContents"]
         return html_content
@@ -239,7 +239,7 @@ class HTMLTree:
             stack.extend(reversed(children))
         return contents
 
-    def get_parents_id(self, idx) -> (str, str):
+    def get_parents_id(self, idx: int) -> (str, str):
         parentid_str = ""
         parent_tag_str = ""
         current_node = self.elementNodes[idx]
@@ -262,15 +262,25 @@ class HTMLTree:
         htmlContents = element.get('htmlContents')
         nodeId = element.get("nodeId")
         text = element.get("text")
+        # TODO 添加合适的可交互元素信息，目前只将节点的text信息添加进去
         html_text = ActiveElements.get_element_label(element)
-        # print("*" * 10)
-        # print("nodeId:",nodeId)
-        # print("attrib:",attributes)
-        # print("text:",text)
-        # print("htmlContents:",htmlContents)
-        # print("html_text",html_text)
-        # print("*" * 10)
-        # print(" " * 10)
         if html_text is None:
             return ""
         return html_text.replace("\n", "").replace("\t", "")
+
+    def get_distance(self, element1: ElementNode, element2: ElementNode) -> int:
+        if element1["depth"] < element2["depth"]:
+            return self.get_distance(element2, element1)
+        higher_element = element1
+        lower_element = element2
+        depth_difference = higher_element["depth"] - lower_element["depth"]
+        while depth_difference > 0:
+            parent_id = higher_element["parentId"]
+            higher_element = self.elementNodes[parent_id]
+            depth_difference -= 1
+        while higher_element["parentId"] != lower_element["parentId"]:
+            parent_id_higher = higher_element["parentId"]
+            higher_element = self.elementNodes[parent_id_higher]
+            parent_id_lower = lower_element["parentId"]
+            lower_element = self.elementNodes[parent_id_lower]
+        return element1["depth"] + element2["depth"] - higher_element["depth"]
