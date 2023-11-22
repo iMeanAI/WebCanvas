@@ -262,7 +262,7 @@ class HTMLTree:
         htmlContents = element.get('htmlContents')
         nodeId = element.get("nodeId")
         text = element.get("text")
-        # TODO 添加合适的可交互元素信息，目前只将节点的text信息添加进去
+        # TODO 添加合适的可交互元素信息，目前只添加具有text属性的可交互元素
         html_text = ActiveElements.get_element_label(element)
         if html_text is None:
             return ""
