@@ -517,7 +517,7 @@ class BrowserEnvironment:
         slow_mo: int = 0,
         observation_type: str = "accessibility_tree",
         current_viewport_only: bool = False,
-        viewport_size: ViewportSize = {"width": 1920, "height": 1080},
+        viewport_size: ViewportSize = {"width": 1280, "height": 720},
         save_trace_enabled: bool = False,
         sleep_after_execution: float = 0.0,
     ):

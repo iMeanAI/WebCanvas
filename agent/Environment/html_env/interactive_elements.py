@@ -1,8 +1,8 @@
-import re
 from .utils import (
     ElementNode,
     ConditionTagNameList
 )
+import re
 
 
 class ActiveElements:
@@ -101,7 +101,7 @@ class ActiveElements:
     def get_element_label(element: ElementNode) -> str:
         if element["text"] and element["text"] != "":
             return element["text"]
-        # print(type(element['attributes']))
+
         title = element['attributes'].get('title')
         if title and not re.match(r'^\s*$', title):
             return title

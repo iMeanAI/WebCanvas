@@ -1,16 +1,18 @@
 from typing import TypedDict
 
+
 class ElementNode(TypedDict):
-    nodeId: int
-    childIds: list[int]
-    siblingId: int
-    tagName: str
-    attributes: dict
-    text: str
-    parentId: int
-    htmlContents: str
-    depth: int
-    
+    nodeId: int                 # 元素编号
+    childIds: list[int]         # 子元素编号列表
+    siblingId: int              # 兄弟元素排名
+    twinId: int                 # 相同tag元素排名
+    tagName: str                # 元素
+    attributes: dict            # 元素属性
+    text: str                   # 文本属性
+    parentId: int               # 父元素
+    htmlContents: str           # 元素的所有信息
+    depth: int                  # 深度
+
 
 TagNameList = [
     "button",
@@ -35,20 +37,19 @@ DelTagNameList = [
     "script",           # del
     "noscript",         # del
     "style",            # del
-    "link",             # del    
+    "link",             # del
     "meta",             # del
 ]
 
 
 ConditionTagNameList = [
-    'span', 
-    'td', 
+    'span',
+    'td',
     'th',
     'tr',
-    'li', 
+    'li',
     'div'
 ]
-
 
 
 __all__ = [
