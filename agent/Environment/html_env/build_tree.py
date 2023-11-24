@@ -3,7 +3,7 @@ from io import StringIO
 from collections import deque
 from beartype import beartype
 from beartype.door import is_bearable
-from .interactive_elements import ActiveElements
+from .active_elements import ActiveElements
 from .utils import (
     ElementNode,
     TagNameList,
