@@ -6,7 +6,6 @@ import re
 
 
 class ActiveElements:
-
     @staticmethod
     def is_visiable(element: ElementNode, only_child_check=True):
         style = element["attributes"].get('style')
@@ -101,21 +100,16 @@ class ActiveElements:
     def get_element_label(element: ElementNode) -> str:
         if element["text"] and element["text"] != "":
             return element["text"]
-
         title = element['attributes'].get('title')
         if title and not re.match(r'^\s*$', title):
             return title
-
         placeholder = element['attributes'].get('placeholder')
         if placeholder and not re.match(r'^\s*$', placeholder):
             return placeholder
-
         aria_label = element['attributes'].get('aria-label')
         if aria_label and not re.match(r'^\s*$', aria_label):
             return aria_label
-
         aria_checked = element['attributes'].get('aria-checked')
         if aria_checked:
             return aria_checked
-
         return ""
