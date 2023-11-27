@@ -180,7 +180,7 @@ class HTMLTree:
                 if current_node["attributes"].get('class') and uu_node is True:
                     selector_str = " > " + tag_name + "." + \
                         ".".join(current_node["attributes"].get(
-                            'class').split(" ")) + selector_str
+                            'class').replace("\n"," ").split(" ")) + selector_str
                 else:
                     selector_str = " > " + tag_name + \
                         ":nth-child(" + siblingId + ")" + selector_str
@@ -312,7 +312,7 @@ class HTMLTree:
             stack.extend(reversed(children))
         return contents
 
-    def get_parents_id(self, idx: int) -> (str, str):
+    def get_parents_id(self, idx: int) -> (str, str,str):
         parentid_str = ""
         parent_tag_str = ""
         current_node = self.elementNodes[idx]

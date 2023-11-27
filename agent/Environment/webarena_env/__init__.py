@@ -1,2 +1,2 @@
 from .utils import *
-from .build_webarena_env import *
+from .build_env import *
