@@ -1,58 +1,27 @@
 import json5
+from typing import Any, Union
 
 
-class BaseEnvironment:
-
-    def __init__(self, configs) -> None:
-        self.configs = configs
-
-    def html_denoiser(self):
-        """
-        """
-        pass
-
-    def state_init(self):
-        """
-        """
-        pass
-
-    def construct_state_info(self):
-        """
-        """
-        pass
-
-    def save_environment(self) -> None:
-        """
-        """
-        pass
-
-
-class DomEnvironment(BaseEnvironment):
-
+class DomEnvironment:
     def __init__(
         self,
-        configs: dict,
         dom: str,
         tab_name_list: list,
-        current_tab_name: list
+        current_tab_name: list,
+        max_token: int = 16000
     ):
-        super().__init__(configs)
-        self.configs = configs
+        self.max_token = max_token
         self.dom = dom
         self.tab_name_list = tab_name_list
         self.current_tab_name = current_tab_name
 
-    def html_denoiser(self) -> (list,list,list,list):
-        """
-        extract four elements from dom
-        """
+    def html_denoiser(self) -> (list, list, list, list):
         interact_element = []
         link_element = []
         input_element = []
         unknown_element = []
-
         # 将json格式的dom转换为四种list
-        max_token = self.configs["max_token"]
+        max_token = self.max_token
         if self.dom:
             dom = json5.loads(self.dom, encoding='utf-8')
             len_dom = len(dom)
@@ -83,27 +52,3 @@ class DomEnvironment(BaseEnvironment):
                         f"tag:{element['tagName']},id:{element['id']}, content:{element['label']}")
 
         return interact_element, link_element, input_element, unknown_element
-
-    def state_init(self):
-        """
-        init state information
-        """
-        pass
-
-    def construct_state_info(self):
-        """
-        construct current environment state_info after env denoiser
-        """
-        pass
-
-    def save_environment(self) -> None:
-        """
-        """
-        pass
-
-
-class HtmlEnvironment(BaseEnvironment):
-
-    def __init__(self, configs) -> None:
-        super().__init__(configs)
-        pass

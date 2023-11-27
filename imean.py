@@ -6,7 +6,7 @@ from os import environ
 from sanic import Request, Sanic, response
 from sanic.log import logger
 
-from agent.configs import Env_configs
+
 from agent.Environment.environments import DomEnvironment
 from agent.Memory.short_memory.history import HistoryMemory
 
