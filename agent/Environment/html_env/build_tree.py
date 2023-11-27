@@ -303,9 +303,9 @@ class HTMLTree:
                 # TODO 添加可交互元素，目前主要基于text属性
                 content_text = HTMLTree().process_contents(node)
                 if content_text != "":
-                    tag_name, intercact_idx = self.get_tagName(node)
+                    tag_name, intercact_idx = self.get_tagName(node) # 选择node["nodeId"]还是父节点可交互元素的idx 
                     contents += " " * (node["depth"]-1) + "[" + str(node["nodeId"]) + "] " + tag_name + \
-                        " " + content_text + "\n"
+                        " " + f"\'{content_text}\'" + "\n"
             children = []
             for child_id in node["childIds"]:
                 children.append(self.elementNodes[child_id])
@@ -412,5 +412,7 @@ class HTMLEnvironment:
         return observation
 
     def excute_action(self, idx: int):
+        interact_tag,idx = self.tree.get_tagName(self.tree.elementNodes[idx])
+        # 找到父节点的selector,比如之前的span的上级
         selector,xpath = self.tree.get_selector_and_xpath(idx)
         return selector,xpath
