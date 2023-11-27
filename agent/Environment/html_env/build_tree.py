@@ -411,8 +411,8 @@ class HTMLEnvironment:
         observation = self._get_obs()
         return observation
 
-    def excute_action(self, idx: int):
-        interact_tag,idx = self.tree.get_tagName(self.tree.elementNodes[idx])
-        # 找到父节点的selector,比如之前的span的上级
+    def execute_action(self, idx: int):
+        # interact_tag,idx = self.tree.get_tagName(self.tree.elementNodes[idx])
+        # 找到父节点的selector,比如之前的span的父节点为可交互元素
         selector,xpath = self.tree.get_selector_and_xpath(idx)
         return selector,xpath

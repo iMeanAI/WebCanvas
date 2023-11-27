@@ -38,7 +38,7 @@ if __name__ == "__main__":
     obs = env.reset(
         "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:3000")
     print(obs)
-    print(env.excute_action(393))
+    print(env.execute_action(393))
     
 
 
