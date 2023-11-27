@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # obs = env.reset(
     #     "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:7770")
     # print(obs)
-    # print(env.excute_action(331))
+    # print(env.execute_action(331))
 
     # REDDIT
     # obs = env.reset(
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # obs = env.reset(
     #     "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:8023")
     # print(obs)
-    # print(env.excute_action(94))
+    # print(env.execute_action(94))
 
     #MAP
     obs = env.reset(
