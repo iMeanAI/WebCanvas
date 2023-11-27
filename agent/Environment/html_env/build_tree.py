@@ -412,4 +412,5 @@ class HTMLEnvironment:
         return observation
 
     def excute_action(self, idx: int):
-        xpath = self.tree.get_locator_path(idx)
+        selector,xpath = self.tree.get_selector_and_xpath(idx)
+        return selector,xpath
