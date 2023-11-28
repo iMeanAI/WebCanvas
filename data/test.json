@@ -1,0 +1,29 @@
+[
+    {
+        "task": "Look for a place with a good swimming pool that charges between $200 and $300 per night.",
+        "reference_task_length":10,
+        "evaluation": [
+            {
+                "match_function": "url_exact_match",
+                "content": {
+                    "key": "category_tag",
+                    "reference_answer": "Tag%3A677"
+                }
+            },
+            {
+                "match_function": "url_exact_match",
+                "content": {
+                    "key": "price_min",
+                    "reference_answer": "200"
+                }
+            },
+            {
+                "match_function": "url_exact_match",
+                "content": {
+                    "key": "price_max",
+                    "reference_answer": "300"
+                }
+            }
+        ]
+    }
+]
