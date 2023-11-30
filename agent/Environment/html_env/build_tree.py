@@ -187,46 +187,14 @@ class HTMLTree:
             print(
                 f"error occur {e}")
 
-    def prune_tree(self) -> str:
-        '''通过后续遍历判断是否有效，然后剪枝'''
-        self.post_traversal_validate()
-        result_list = []
-        root = self.pruningTreeNode[0]
-        stack = [root]
-        while stack:
-            node = stack.pop()
-            nodeId = node["nodeId"]
-            result_list.append(nodeId)
-            children = []
-            for childId in node["childIds"]:
-                childNode = self.pruningTreeNode[childId]
-                children.append(childNode)
-            stack.extend(children)
-        result = result_list[::-1]
-        for nodeId in result:
-            if self.valid[nodeId] is False:
-                rawNode = self.id2rawNode[str(nodeId)]
-                rawNode.getparent().remove(rawNode)
-                current_node = self.pruningTreeNode[nodeId]
-                current_node["htmlContents"] = ""
-                parentid = current_node["parentId"]
-                self.pruningTreeNode[parentid]["childIds"].remove(nodeId)
-            else:
-                rawNode = self.id2rawNode[str(nodeId)]
-                html_contents = etree.tostring(
-                    rawNode, pretty_print=True).decode()
-                self.pruningTreeNode[nodeId]["htmlContents"] = html_contents
-        return self.pruningTreeNode[0]["htmlContents"]
-
     def is_valid(self, idx: int) -> bool:
         node = self.pruningTreeNode[idx]
         if node["tagName"] in TagNameList:
-            return ActiveElements().is_valid_element(node)
+            return ActiveElements.is_valid_element(node)
 
     # 通过后序遍历判断是否是有效tag
-    def post_traversal_validate(self) -> None:
-        """遍历每个元素判断是否有效"""
-        # TODO 后面需要和树剪枝合并
+    def prune_tree(self) -> str:
+        """遍历每个元素判断是否有效并剪枝"""
         result_list = []
         root = self.pruningTreeNode[0]
         if root is None:
@@ -244,6 +212,10 @@ class HTMLTree:
         result = result_list[::-1]
         for nodeId in result:
             if self.is_valid(nodeId) or self.valid[nodeId] is True:
+                rawNode = self.id2rawNode[str(nodeId)]
+                html_contents = etree.tostring(
+                    rawNode, pretty_print=True).decode()
+                self.pruningTreeNode[nodeId]["htmlContents"] = html_contents
                 self.valid[nodeId] = True
                 current_id = nodeId
                 while self.pruningTreeNode[current_id]["parentId"] != -1:
@@ -251,7 +223,14 @@ class HTMLTree:
                     self.valid[parent_id] = True
                     current_id = parent_id
             else:
+                rawNode = self.id2rawNode[str(nodeId)]
+                rawNode.getparent().remove(rawNode)
+                current_node = self.pruningTreeNode[nodeId]
+                current_node["htmlContents"] = ""
+                parentid = current_node["parentId"]
+                self.pruningTreeNode[parentid]["childIds"].remove(nodeId)
                 self.valid[nodeId] = False
+        return self.pruningTreeNode[0]["htmlContents"]
 
     def get_element_contents(self, idx: int) -> str:
         node = self.elementNodes[idx]
@@ -283,7 +262,7 @@ class HTMLTree:
                 content_text = HTMLTree().process_element_contents(node)
                 if content_text != "":
                     tag_name, _ = self.get_tag_name(
-                        node)  
+                        node)
                     # 选择node["nodeId"]还是父节点可交互元素的idx
                     contents += " " * (node["depth"]-1) + "[" + str(node["nodeId"]) + "] " + tag_name + \
                         " " + f"\'{content_text}\'" + "\n"
@@ -392,20 +371,6 @@ class HTMLEnvironment:
         self.tree.fetch_html_content(self.html_content)
         return self.tree.build_dom_tree()
 
-    def _reset(self, start_url: str) -> str:
-        self.setup(start_url)
-        while True:
-            observation = self._get_obs()
-            print("current observation:\n", observation)
-            action = create_action(
-                elementid=459, action_type="google_search", action_input="xbox")
-            new_obs = self.execute_action(action)
-            print("the next observation:\n", new_obs)
-            selector, xpath = self.tree.get_selector_and_xpath(1587)
-            print("selector:", selector)
-            break
-        return observation
-
     def reset(self, start_url: str) -> str:
         if start_url:
             self.setup(start_url)
@@ -471,5 +436,6 @@ class HTMLEnvironment:
                         f"Unknown action type {action['action_type']}"
                     )
         except Exception as e:
+            print("execute goto action")
             print(e)
         return ""
