@@ -97,7 +97,7 @@ class ActiveElements:
         return ActiveElements().is_interactive(element) & ActiveElements().is_visiable(element)
 
     @staticmethod
-    def get_element_label(element: ElementNode) -> str:
+    def get_element_value(element: ElementNode) -> str:
         if element["text"] and element["text"] != "":
             return element["text"]
         title = element['attributes'].get('title')

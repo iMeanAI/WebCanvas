@@ -11,7 +11,6 @@ from playwright.sync_api import (
     expect,
     sync_playwright,
 )
-
 from .active_elements import ActiveElements
 from .actions import (
     Action,
@@ -23,8 +22,6 @@ from .utils import (
     TagNameList,
     DelTagNameList,
 )
-
-
 import requests
 import copy
 
@@ -44,9 +41,9 @@ class HTMLTree:
         self.tree = etree.parse(StringIO(html_content), parser)
         self.copy_tree = copy.deepcopy(self.tree)
         root = self.tree.getroot()
-        self.init_tree(root)
-        self.build_tree(root)
-        self.pruning_tree()
+        self.init_html_tree(root)
+        self.build_html_tree(root)
+        self.prune_tree()
 
     @staticmethod
     def build_node(node, idx: int) -> ElementNode:
@@ -64,73 +61,48 @@ class HTMLTree:
             node, pretty_print=True).decode()
         return elementNode
 
-    def init_tree(self, root) -> None:
-        queue = deque([root])
-        i = 0
-        while queue:
-            vertex = queue.popleft()
-            self.elementNodes[i] = HTMLTree().build_node(vertex, i)
-            self.rawNode2id[vertex] = i
-            i += 1
-            for child in vertex.getchildren():
-                queue.append(child)
-        self.build_map()
-        self.nodeCounts = i
-        self.valid = self.valid[:self.nodeCounts + 1]
-
-    def build_map(self) -> None:
+    def build_mapping(self) -> None:
         self.element2id = {value["nodeId"]: index for index,
                            value in enumerate(self.elementNodes)}
         self.id2rawNode = {str(index): value for value,
                            index in self.rawNode2id.items()}
 
-    def get_elementId(self, node: ElementNode):
-        return self.element2id[node["nodeId"]]
+    def init_html_tree(self, root) -> None:
+        node_queue = deque([root])
+        node_id = 0
+        while node_queue:
+            node = node_queue.popleft()
+            self.elementNodes[node_id] = HTMLTree().build_node(node, node_id)
+            self.rawNode2id[node] = node_id
+            node_id += 1
+            for child in node.getchildren():
+                node_queue.append(child)
+        self.build_mapping()
+        self.nodeCounts = node_id
+        self.valid = self.valid[:self.nodeCounts + 1]
 
-    def build_tree(self, root) -> None:
-        queue = deque([root])
-        rootId = self.rawNode2id[root]
-        self.elementNodes[rootId]["parentId"] = -1
-        while queue:
-            vertex = queue.popleft()
-            parentId = self.rawNode2id[vertex]
+    def build_html_tree(self, root) -> None:
+        node_queue = deque([root])
+        root_id = self.rawNode2id[root]
+        self.elementNodes[root_id]["parentId"] = -1
+        while node_queue:
+            node = node_queue.popleft()
+            parent_id = self.rawNode2id[node]
             tag_st = {}
-            siblingId = 1
-            for child in vertex.getchildren():
-                childId = self.rawNode2id[child]
-                tag_name = self.elementNodes[childId].get("tagName")
+            sibling_id = 1
+            for child in node.getchildren():
+                child_id = self.rawNode2id[child]
+                tag_name = self.elementNodes[child_id].get("tagName")
                 tag_st[tag_name] = tag_st.get(tag_name, 0) + 1
-                twinId = tag_st.get(tag_name)
-                self.elementNodes[parentId]["childIds"].append(childId)
-                self.elementNodes[childId]["parentId"] = parentId
-                self.elementNodes[childId]["twinId"] = twinId
-                self.elementNodes[childId]["depth"] = self.elementNodes[parentId]["depth"] + 1
-                self.elementNodes[childId]["siblingId"] = siblingId
-                queue.append(child)
-                siblingId += 1
+                twin_id = tag_st.get(tag_name)
+                self.elementNodes[parent_id]["childIds"].append(child_id)
+                self.elementNodes[child_id]["parentId"] = parent_id
+                self.elementNodes[child_id]["twinId"] = twin_id
+                self.elementNodes[child_id]["depth"] = self.elementNodes[parent_id]["depth"] + 1
+                self.elementNodes[child_id]["siblingId"] = sibling_id
+                node_queue.append(child)
+                sibling_id += 1
         self.pruningTreeNode = copy.deepcopy(self.elementNodes)
-
-    def bfs_tree(self) -> None:
-        root = self.elementNodes[0]
-        queue = deque([root])
-        while queue:
-            vertex = queue.popleft()
-            for child_id in vertex["childIds"]:
-                element = self.elementNodes[child_id]
-                print(element["tagName"])
-                queue.append(self.elementNodes[child_id])
-
-    def pre_trav_tree(self) -> None:
-        root = self.elementNodes[0]
-        stack = [root]
-        while stack:
-            node = stack.pop()
-            idx = self.get_elementId(node)
-            self.get_node_info(idx)
-            children = []
-            for child_id in node["childIds"]:
-                children.append(self.elementNodes[child_id])
-            stack.extend(reversed(children))
 
     def get_node_info(self, idx: int, pruning: bool = True) -> None:
         if pruning is True:
@@ -146,7 +118,7 @@ class HTMLTree:
         print("tagName: ", elementNode["tagName"])
         print("text: ", elementNode["text"])
         print("attributes: ", elementNode["attributes"])
-        print("htmlContents:", elementNode["htmlContents"])
+        print("htmlcontents:", elementNode["htmlContents"])
         print("*" * 10)
         print(" " * 10)
 
@@ -155,8 +127,6 @@ class HTMLTree:
         current_node = self.elementNodes[idx]
         tag_name = current_node["tagName"]
         twinId = current_node["twinId"]
-        # text = current_node["text"]
-        # locator_str = "/" + tag_name + f"[text()=\"{text}\"]"
         locator_str = "/" + tag_name + "[" + str(twinId) + "]"
         while current_node["parentId"] != 0:
             parentid = current_node["parentId"]
@@ -217,9 +187,9 @@ class HTMLTree:
             print(
                 f"error occur {e}")
 
-    # 通过后续遍历判断，然后剪枝
-    def pruning_tree(self) -> str:
-        self.post_trave_judge_is_valid()
+    def prune_tree(self) -> str:
+        '''通过后续遍历判断是否有效，然后剪枝'''
+        self.post_traversal_validate()
         result_list = []
         root = self.pruningTreeNode[0]
         stack = [root]
@@ -254,7 +224,9 @@ class HTMLTree:
             return ActiveElements().is_valid_element(node)
 
     # 通过后序遍历判断是否是有效tag
-    def post_trave_judge_is_valid(self):
+    def post_traversal_validate(self) -> None:
+        """遍历每个元素判断是否有效"""
+        # TODO 后面需要和树剪枝合并
         result_list = []
         root = self.pruningTreeNode[0]
         if root is None:
@@ -281,12 +253,12 @@ class HTMLTree:
             else:
                 self.valid[nodeId] = False
 
-    def get_html_contents(self, idx: int) -> str:
+    def get_element_contents(self, idx: int) -> str:
         node = self.elementNodes[idx]
         html_content = node["htmlContents"]
         return html_content
 
-    def get_tagName(self, element: ElementNode):
+    def get_tag_name(self, element: ElementNode) -> (str, int):
         tag_name = ActiveElements.get_element_tagName(element)
         tag_idx = element["nodeId"]
         if tag_name == "unknown":
@@ -295,12 +267,12 @@ class HTMLTree:
             # TODO 添加更多映射关系
             if tag_name == "span":
                 parent_element = self.elementNodes[element["parentId"]]
-                return self.get_tagName(parent_element)
+                return self.get_tag_name(parent_element)
             else:
                 return ("statictext", tag_idx)
         return (tag_name, tag_idx)
 
-    def get_obs(self) -> str:
+    def build_dom_tree(self) -> str:
         root = self.pruningTreeNode[0]
         stack = [root]
         contents = ""
@@ -308,16 +280,16 @@ class HTMLTree:
             node = stack.pop()
             # if len(node["childIds"]) == 0 and self.valid[node["nodeId"]] is True:
             if self.valid[node["nodeId"]] is True:
-                # TODO 添加可交互元素，目前主要基于text属性
-                content_text = HTMLTree().process_contents(node)
+                content_text = HTMLTree().process_element_contents(node)
                 if content_text != "":
-                    tag_name, intercact_idx = self.get_tagName(
-                        node)  # 选择node["nodeId"]还是父节点可交互元素的idx
+                    tag_name, _ = self.get_tag_name(
+                        node)  
+                    # 选择node["nodeId"]还是父节点可交互元素的idx
                     contents += " " * (node["depth"]-1) + "[" + str(node["nodeId"]) + "] " + tag_name + \
                         " " + f"\'{content_text}\'" + "\n"
             children = []
             for child_id in node["childIds"]:
-                children.append(self.elementNodes[child_id])
+                children.append(self.pruningTreeNode[child_id])
             stack.extend(reversed(children))
         return contents
 
@@ -350,14 +322,14 @@ class HTMLTree:
                 f"can't locate element,error occur {e}")
 
     @staticmethod
-    def process_contents(element: ElementNode) -> str:
-        # TODO 添加合适的可交互元素信息，目前只添加具有text属性的可交互元素
-        html_text = ActiveElements.get_element_label(element)
+    def process_element_contents(element: ElementNode) -> str:
+        # TODO 添加合适的可交互元素信息，目前只处理具有text属性的可交互元素
+        html_text = ActiveElements.get_element_value(element)
         if html_text is None:
             return ""
         return html_text.replace("\n", "").replace("\t", "").strip()
 
-    def get_distance(self, idx1: int, idx2: int) -> int:
+    def get_elements_distance(self, idx1: int, idx2: int) -> int:
         element1, element2 = self.elementNodes[idx1], self.elementNodes[idx2]
         if element1["depth"] < element2["depth"]:
             return self.get_distance(idx2, idx1)
@@ -418,7 +390,7 @@ class HTMLEnvironment:
 
     def _get_obs(self):
         self.tree.fetch_html_content(self.html_content)
-        return self.tree.get_obs()
+        return self.tree.build_dom_tree()
 
     def _reset(self, start_url: str) -> str:
         self.setup(start_url)
@@ -441,8 +413,8 @@ class HTMLEnvironment:
         return observation
 
     def execute_action(self, action: Action) -> str:
-        # 找到父节点的可交互元素
-        element_name, element_idx = self.tree.get_tagName(
+        '''找到可交互元素并执行相应的动作得到新的observation'''
+        element_name, element_idx = self.tree.get_tag_name(
             self.tree.elementNodes[action["element_id"]])
         action.update({"element_id": element_idx,
                       "element_name": element_name})
