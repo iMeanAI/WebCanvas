@@ -1,8 +1,7 @@
 from agent.Environment.html_env.build_tree import HTMLTree, HTMLEnvironment
 from agent.Environment.webarena_env.build_env import BrowserEnvironment
 from agent.Environment.html_env.active_elements import ActiveElements
-from playwright.sync_api import sync_playwright
-import requests
+from agent.Environment.html_env.actions import create_action
 
 
 if __name__ == "__main__":
@@ -18,29 +17,28 @@ if __name__ == "__main__":
     )
 
     # SHOPPING
-    # obs = env.reset(
-    #     "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:7770")
-    # print(obs)
-    # print(env.execute_action(331))
+    observation = env.reset(
+        "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:7770")
+    print("current observation:\n", observation)
+    action = create_action(
+        elementid=459, action_type="fill_form", action_input="xbox")
+    next_observation = env.execute_action(action)
+    print("the next observation:\n", next_observation)
+    selector, xpath = env.tree.get_selector_and_xpath(1587)
+    print("selector:", selector)
 
     # REDDIT
-    # obs = env.reset(
+    # observation = env.reset(
     #     "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:9999")
-    # print(obs)
+    # print(observation)
 
     # GITLAB
-    # obs = env.reset(
+    # observation = env.reset(
     #     "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:8023")
-    # print(obs)
-    # print(env.execute_action(94))
+    # print(observation)
 
-    #MAP
-    obs = env.reset(
-        "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:3000")
-    print(obs)
-    print(env.execute_action(393))
-    
+    # MAP
+    # observation = env.reset(
+    #     "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:3000")
+    # print(observation)
 
-
-
-    

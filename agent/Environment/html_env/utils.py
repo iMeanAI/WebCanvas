@@ -1,4 +1,5 @@
 from typing import TypedDict
+from enum import IntEnum
 
 
 class ElementNode(TypedDict):
@@ -56,5 +57,5 @@ __all__ = [
     "ElementNode",
     "TagNameList",
     "DelTagNameList",
-    "ConditionTagNameList"
+    "ConditionTagNameList",
 ]
