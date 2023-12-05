@@ -1,5 +1,6 @@
 import json5
 from .base_prompts import BasePrompts
+from .obs_prompts import ObservationPrompts
 from jinja2 import Template
 
 from agent.Prompt.base_prompts import BasePrompts
@@ -44,7 +45,7 @@ class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning�
                 f"link element: {str(link_element)}\n\n"\
                 f"input elements(like input and textarea): {str(input_element)}"
             if len(unknown_element) > 0:
-                prompt_user += f"\n\nother elements with tagname: {str(unknown_element)}"
+                self.prompt_user += f"\n\nother elements with tagname: {str(unknown_element)}"
 
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
@@ -58,8 +59,36 @@ class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning�
         for idx, i in enumerate(input_list):
             str_output += f'Step{idx+1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
         str_output += "]"
-        # logger.info(f"\033[32m\nstr_output\n{str_output}\033[0m")#绿色
-        # logger.info(f"str_output\n{str_output}")
+        return str_output
+
+
+# 类：构建根据dom tree得到的planning的prompt
+class ObservationPromptConstructor(BasePromptConstructor):
+    def __init__(self):
+        self.prompt_system = ObservationPrompts.planning_prompt_system
+        self.prompt_user = ObservationPrompts.planning_prompt_user
+
+    def construct(
+        self,
+        user_request: str,
+        previous_trace: str,
+        observation: str
+    ) -> list:
+        self.prompt_user = Template(self.prompt_user).render(
+            user_request=user_request)
+        if len(previous_trace) > 0:
+            self.prompt_user += f"current observation or Dom tree is {observation}"
+        messages = [{"role": "system", "content": self.prompt_system}, {
+            "role": "user", "content": self.prompt_user}]
+        return messages
+
+    # 将previous thought和action转化成格式化字符串
+    def stringfy_thought_and_action(self, input_list: list) -> str:
+        input_list = json5.loads(input_list, encoding="utf-8")
+        str_output = "["
+        for idx, i in enumerate(input_list):
+            str_output += f'Step{idx+1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
+        str_output += "]"
         return str_output
 
 

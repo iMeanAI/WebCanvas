@@ -1,29 +1,25 @@
+from playwright.sync_api import sync_playwright, Page
+from collections import deque
 from lxml.html import etree
 from io import StringIO
-from collections import deque
-from beartype import beartype
-from beartype.door import is_bearable
-from playwright.sync_api import (
-    CDPSession,
-    Page,
-    Playwright,
-    ViewportSize,
-    expect,
-    sync_playwright,
-)
+
+from .utils import ElementNode, TagNameList, DelTagNameList
 from .active_elements import ActiveElements
-from .actions import (
-    Action,
-    ActionTypes,
-    create_action
-)
-from .utils import (
-    ElementNode,
-    TagNameList,
-    DelTagNameList,
-)
+
 import requests
 import copy
+
+
+async def is_valid_element(page: Page, selector: str):
+    element = await page.query_selector(selector)
+    if element:
+        if await element.is_visible() is False:
+            return False
+        elif await element.is_hidden() is True:
+            return False
+    else:
+        return False
+    return True
 
 
 class HTMLTree:
@@ -35,7 +31,7 @@ class HTMLTree:
         self.valid: list[bool] = [False] * 100000
         self.nodeCounts: int
 
-    def fetch_html_content(self, html_content) -> None:
+    def fetch_html_content(self, html_content) -> str:
         self.__init__()
         parser = etree.HTMLParser()
         self.tree = etree.parse(StringIO(html_content), parser)
@@ -43,7 +39,7 @@ class HTMLTree:
         root = self.tree.getroot()
         self.init_html_tree(root)
         self.build_html_tree(root)
-        self.prune_tree()
+        return self.prune_tree()
 
     @staticmethod
     def build_node(node, idx: int) -> ElementNode:
@@ -80,6 +76,20 @@ class HTMLTree:
         self.build_mapping()
         self.nodeCounts = node_id
         self.valid = self.valid[:self.nodeCounts + 1]
+
+    def pre_trav_tree(self) -> None:
+        root = self.elementNodes[0]
+        stack = [root]
+        while stack:
+            node = stack.pop()
+            if node["tagName"] == 'input':
+                print("yes")
+                print(node["nodeId"])
+                self.get_node_info(node["parentId"], False)
+            children = []
+            for child_id in node["childIds"]:
+                children.append(self.elementNodes[child_id])
+            stack.extend(reversed(children))
 
     def build_html_tree(self, root) -> None:
         node_queue = deque([root])
@@ -251,7 +261,7 @@ class HTMLTree:
                 return ("statictext", tag_idx)
         return (tag_name, tag_idx)
 
-    def build_dom_tree(self) -> str:
+    def build_dom_tree(self, page: Page) -> str:
         root = self.pruningTreeNode[0]
         stack = [root]
         contents = ""
@@ -261,11 +271,14 @@ class HTMLTree:
             if self.valid[node["nodeId"]] is True:
                 content_text = HTMLTree().process_element_contents(node)
                 if content_text != "":
-                    tag_name, _ = self.get_tag_name(
+                    tag_name, tag_idx = self.get_tag_name(
                         node)
-                    # 选择node["nodeId"]还是父节点可交互元素的idx
-                    contents += " " * (node["depth"]-1) + "[" + str(node["nodeId"]) + "] " + tag_name + \
-                        " " + f"\'{content_text}\'" + "\n"
+                    selector = self.get_selector(tag_idx)
+                    if tag_name.lower() != "statictext":
+                        # 选择node["nodeId"]还是父节点可交互元素的idx
+                        # if (await is_valid_element(page, selector)):
+                        contents += "  " * (node["depth"]-1) + "[" + str(tag_idx) + "] " + tag_name + \
+                            " " + f"\'{content_text}\'" + "\n"
             children = []
             for child_id in node["childIds"]:
                 children.append(self.pruningTreeNode[child_id])
@@ -295,10 +308,12 @@ class HTMLTree:
 
     def get_selector_and_xpath(self, idx: int) -> (str, str):
         try:
-            return self.get_selector(idx), self.get_xpath(idx)
+            selector = self.get_selector(idx)
+            xpath = self.get_xpath(idx)
+            return selector, xpath
         except Exception as e:
-            print(
-                f"can't locate element,error occur {e}")
+            print(f"can't locate element")
+            print(e)
 
     @staticmethod
     def process_element_contents(element: ElementNode) -> str:
@@ -321,121 +336,6 @@ class HTMLTree:
         return element1["depth"] + element2["depth"] - 2 * lower_element["depth"]
 
 
-class HTMLEnvironment:
-    @beartype
-    def __init__(
-        self,
-        max_page_length: int = 8192,
-        headless: bool = True,
-        slow_mo: int = 0,
-        current_viewport_only: bool = False,
-        viewport_size: ViewportSize = {"width": 1280, "height": 720},
-        save_trace_enabled: bool = False,
-        sleep_after_execution: float = 0.0,
-    ):
-        self.headless = headless
-        self.slow_mo = slow_mo
-        self.current_viewport_only = current_viewport_only
-        self.reset_finished = False
-        self.viewport_size = viewport_size
-        self.save_trace_enabled = save_trace_enabled
-        self.sleep_after_execution = sleep_after_execution
-        self.tree = HTMLTree()
-
-    def setup(self, start_url: str) -> None:
-        self.context_manager = sync_playwright()
-        self.playwright = self.context_manager.__enter__()
-        self.browser = self.playwright.chromium.launch(
-            headless=self.headless, slow_mo=self.slow_mo
-        )
-        start_url = start_url
-        self.context = self.browser.new_context(
-            viewport=self.viewport_size,
-            device_scale_factor=1,
-        )
-        if start_url:
-            start_urls = start_url.split(" |AND| ")
-            for url in start_urls:
-                self.page = self.context.new_page()
-                client = self.page.context.new_cdp_session(
-                    self.page
-                )
-                self.page.client = client
-                self.page.goto(url)
-                self.page.wait_for_timeout(500)
-                self.html_content = self.page.content()
-        else:
-            self.page = self.context.new_page()
-
-    def _get_obs(self):
-        self.tree.fetch_html_content(self.html_content)
-        return self.tree.build_dom_tree()
-
-    def reset(self, start_url: str) -> str:
-        if start_url:
-            self.setup(start_url)
-        observation = self._get_obs()
-        return observation
-
-    def execute_action(self, action: Action) -> str:
-        '''找到可交互元素并执行相应的动作得到新的observation'''
-        element_name, element_idx = self.tree.get_tag_name(
-            self.tree.elementNodes[action["element_id"]])
-        action.update({"element_id": element_idx,
-                      "element_name": element_name})
-        selector, xpath = self.tree.get_selector_and_xpath(
-            action["element_id"])
-        try:
-            match action["action_type"]:
-                case ActionTypes.CLICK:
-                    try:
-                        self.page.locator(selector).click()
-                        self.html_content = self.page.content()
-                        return self._get_obs()
-                    except Exception as e:
-                        print("can't execute click action")
-                        print(e)
-                        return ""
-                case ActionTypes.GOTO:
-                    try:
-                        self.page = self.context.new_page()
-                        self.page.goto(action["url"])
-                        self.html_content = self.page.content()
-                        return self._get_obs()
-                    except Exception as e:
-                        print("can't execute goto action")
-                        print(e)
-                        return ""
-                case ActionTypes.FILL_FORM:
-                    try:
-                        self.page.locator(selector).fill(action["fill_text"])
-                        self.page.locator(selector).press("Enter")
-                        self.html_content = self.page.content()
-                        return self._get_obs()
-                    except Exception as e:
-                        print("can't execute fill form action")
-                        print(e)
-                        return ""
-                case ActionTypes.GOOGLE_SEARCH:
-                    try:
-                        self.page = self.context.new_page()
-                        self.page.goto(action["url"])
-                        search_box = self.page.query_selector(
-                            'textarea[name="q"]')
-                        if search_box is not None:
-                            search_box.fill(action["fill_text"])
-                            self.page.click('input[type="submit"]')
-                        self.html_content = self.page.content()
-                        return self._get_obs()
-                    except Exception as e:
-                        print("can't execute google search action")
-                        print(e)
-                        return ""
-                case _:
-                    raise ValueError(
-                        f"Unknown action type {action['action_type']}"
-                    )
-        except Exception as e:
-            print("execute goto action")
-            print(e)
-        return ""
+__all__ = [
+    "HTMLTree"
+]

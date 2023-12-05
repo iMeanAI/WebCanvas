@@ -9,16 +9,17 @@ class Planning:
         pass
 
     @staticmethod
-    async def plan(uuid, user_request, tab_name_list, current_tab_name, current_time, previous_trace, dom):
+    async def plan(uuid, user_request, tab_name_list, current_tab_name, current_time, previous_trace, dom, observation):
         start_time = time.time()
         # 创建GPT查询类
         GPT35 = GPTGenerator35()
         GPT4 = GPTGenerator4()
-
         # reward
         if len(previous_trace) > 0:
             # 构建reward prompt及查询
-            stringfy_thought_and_action_output = PlanningPromptConstructor(
+            # stringfy_thought_and_action_output = PlanningPromptConstructor(
+            # ).stringfy_thought_and_action(previous_trace)
+            stringfy_thought_and_action_output = ObservationPromptConstructor(
             ).stringfy_thought_and_action(previous_trace)
 
             reward_request = RewardPromptConstructor().construct(
@@ -29,15 +30,14 @@ class Planning:
             reward_response = ""
 
         # 构建planning prompt及查询
-        planning_request = PlanningPromptConstructor().construct(
-            user_request, previous_trace, dom, tab_name_list, current_tab_name)
-
+        planning_request = ObservationPromptConstructor().construct(
+            user_request, previous_trace, observation)
+        # planning_request = PlanningPromptConstructor().construct(
+        #     user_request, previous_trace, dom, tab_name_list, current_tab_name)
         planning_response, error_message = await GPT35.request(planning_request)
-
         # 提取出planning thought(str)和planning action(dict), 其中planning action拥有action, element_id, action_input, description四个字段
         planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(
             planning_response)
-
         # 判断是否是搜索框，如果是则将planning action的action字段改成fill_and_search
         # TODO 移到action文件里
         if planning_response_action == "fill_form":
@@ -70,6 +70,5 @@ class Planning:
         dict_to_write['execute_time'] = execute_time
         dict_to_write['error_message'] = error_message
         dict_to_write['openai_response'] = planning_response
-        
 
         return dict_to_write

@@ -1,44 +1,64 @@
-from agent.Environment.html_env.build_tree import HTMLTree, HTMLEnvironment
+import traceback
+import json5
+from agent.Plan import *
+from os import environ
+from sanic import Request, Sanic, response
+from sanic.log import logger
 from agent.Environment.webarena_env.build_env import BrowserEnvironment
 from agent.Environment.html_env.active_elements import ActiveElements
-from agent.Environment.html_env.actions import create_action
+from agent.Environment.html_env.actions import create_action, Action
+from agent.Environment.html_env.async_env import AsyncHTMLEnvironment
+from agent.Environment.html_env.base_env import HTMLEnvironment
+from agent.Memory.short_memory.history import HistoryMemory
 
 
-if __name__ == "__main__":
-
-    env = HTMLEnvironment(
+async def main():
+    env = AsyncHTMLEnvironment(
         max_page_length=8192,
         headless=True,
         slow_mo=1000,
         current_viewport_only=False,
-        viewport_size={"width": 1280, "height": 720},
+        viewport_size={"width": 1920, "height": 1280},
         save_trace_enabled=False,
         sleep_after_execution=0.0,
     )
+    observation = await env.reset("https://www.leagueoflegends.com/zh-tw/")
+    def parse_previous_trace(response) -> (Action, list):
+        # 临时测试，有问题，后面得用history.py的previous trace
+        match = re.compile(r"Thought: (.*)\n\nAction:")
+        thought = match.search(response["openai_response"])
+        if thought:
+            thought = thought.group(1)
+        else:
+            thought = ""
+        action_type = response['action_type']
+        acton_input = response['value']
+        action = f"{action_type}: {acton_input}"
+        previous_trace = {"thought": thought, "action": action}
+        print(repr(response['id']))
+        if response['id'] == '' or response['id'] is None:
+            element_id = 0
+        else:
+            element_id = int(response['id'])
+        execute_action = create_action(
+            elementid=element_id, action_type=action_type, action_input=acton_input)
+        return execute_action, previous_trace
+    previous_trace = []
+    index = 1
+    while index < 10:
+        for _ in range(3):
+            try:
+                dict_to_write = await Planning.plan(uuid="uuid", user_request="去LOL官网查看英雄亚索的信息", tab_name_list=None, current_tab_name=None, current_time=None, previous_trace=previous_trace, dom=None, observation=observation)
+                if dict_to_write is not None:
+                    break
+            except Exception as e:
+                traceback.print_exc()
+                continue
+        execute_action, current_trace = parse_previous_trace(dict_to_write)
+        observation = await env.execute_action(execute_action)
+        print(f"new observation {index}:", observation)
+        previous_trace.append(current_trace)
+        index += 1
 
-    # SHOPPING
-    observation = env.reset(
-        "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:7770")
-    print("current observation:\n", observation)
-    action = create_action(
-        elementid=459, action_type="fill_form", action_input="xbox")
-    next_observation = env.execute_action(action)
-    print("the next observation:\n", next_observation)
-    selector, xpath = env.tree.get_selector_and_xpath(1587)
-    print("selector:", selector)
-
-    # REDDIT
-    # observation = env.reset(
-    #     "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:9999")
-    # print(observation)
-
-    # GITLAB
-    # observation = env.reset(
-    #     "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:8023")
-    # print(observation)
-
-    # MAP
-    # observation = env.reset(
-    #     "http://ec2-3-131-244-37.us-east-2.compute.amazonaws.com:3000")
-    # print(observation)
-
+if __name__ == "__main__":
+    asyncio.run(main())
