@@ -3,11 +3,14 @@ import json5
 import requests
 from evaluate import *
 from agent.Environment import HTMLEnvironment
-from playwright.sync_api import Playwright, sync_playwright, expect, Page
+from agent.Plan import *
+from playwright.async_api import Playwright, async_playwright, expect, Page
+
 import re
+import asyncio
 
-if __name__ == "__main__":
 
+async def main(num_steps=0):
     # html_env = HTMLEnvironment(
     #     max_page_length=8192,
     #     headless=True,
@@ -19,10 +22,9 @@ if __name__ == "__main__":
     # )
     # html_env.setup("about:blank")
 
-    num_steps = 0
-
-    # 读取标签数据
+    
     def read_file(path="./data/test.json"):
+        '''读取标签数据'''
         with open(path) as f:
             test_data = json5.load(f)
 
@@ -45,14 +47,15 @@ if __name__ == "__main__":
 
         return reference_task_length, reference_evaluate_steps
 
-    # 评测步骤打分
-    def step_evaluate(page: Page, input_path=None, semantic_method=None):
-        global reference_evaluate_steps, num_steps
-        num_steps += 1
+    
+    def step_evaluate(page: Page, evaluate_steps=[], input_path=None, semantic_method=None):
+        '''评测步骤打分'''
+        # reference_evaluate_steps, num_steps
+        # num_steps += 1
         # page_url = html_env.page.url
         # page_url = page.url
         step_score = 0
-        for evaluate in reference_evaluate_steps:
+        for evaluate in evaluate_steps:
             if evaluate["score"] != 1:
                 match_function = evaluate["match_function"]
                 if match_function == "url_exact_match":
@@ -75,7 +78,7 @@ if __name__ == "__main__":
                     score = PathEvaluator.path_semantic_match(
                         input_path, evaluate["reference_answer"], method, page.content(), semantic_method)
                 if match_function == "text_exact_match":
-                    pass
+                    pass  # TODO
                 if match_function == "text_include_match":
                     pass
                 if match_function == "text_semantic_match":
@@ -84,36 +87,59 @@ if __name__ == "__main__":
                 evaluate["score"] = max(evaluate["score"], score)
             step_score += evaluate["score"]
         print("current step score:", step_score)
-        return evaluate["score"]
+        return evaluate_steps
         # print(evaluate_steps)
 
     reference_task_length, reference_evaluate_steps = read_file()
     print("raw data:\n", reference_evaluate_steps)
 
-    # 用playwright运行浏览器
-    def run(playwright: Playwright) -> None:
-        browser = playwright.chromium.launch(headless=False)
-        context = browser.new_context()
-        page = context.new_page()
+
+    # # 1. playwright
+    async def aexec_playwright(code, page):
+        '''async执行playwright代码'''
+        exec(
+            f'async def __ex(page): ' +
+            ''.join(f'\n {l}' for l in code.split('\n'))
+        )
+        # Get `__ex` from local variables, call it and return the result
+        return await locals()['__ex'](page)
+
+    # # 用playwright运行浏览器
+    async def run(playwright: Playwright) -> None:
+        '''用playwright运行浏览器'''
+        evaluate_steps = reference_evaluate_steps
+        browser = await playwright.chromium.launch(headless=False)
+        context = await browser.new_context()
+        page = await context.new_page()
         replay_codes = open("./data/playwright/steam.txt", "r", encoding="utf-8")
-        for i, line in enumerate(replay_codes):
-            print("step:", i, line)
+        for num_steps, line in enumerate(replay_codes):
+            print("step:", num_steps, line)
             selector = None
             if "page.locator" in line:
                 selector = re.findall('page.locator\("(.*?)"\).*?\(\)', line)[0]
                 print("selector:", selector)
-            exec(line)
-            step_evaluate(page, selector)
+            line = "await "+line
+            print(line)
+            await aexec_playwright(line, page)
+            evaluate_steps = step_evaluate(page=page, evaluate_steps=evaluate_steps, input_path=selector)
             time.sleep(3)
+        return num_steps, evaluate_steps
 
-    with sync_playwright() as playwright:
-        run(playwright)
-
-    # 任务评测打分
+    async with async_playwright() as playwright:
+        num_steps, evaluate_steps = await run(playwright)
+    
+    
+    # 2. planning
+    # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
+    # print(json5.dumps(a, indent=4))
+    # input()
+    
+    
+    # # 任务评测打分
 
     # step score
     total_step_score = 0
-    for evaluate in reference_evaluate_steps:
+    for evaluate in evaluate_steps:
         total_step_score += evaluate["score"]
     print("\ntotal step score:", total_step_score)
 
@@ -125,3 +151,6 @@ if __name__ == "__main__":
     # finish score
     finish_task_score = FinishTaskEvaluator.finish_task_score(len(reference_evaluate_steps), total_step_score)
     print("finish_task_score:", finish_task_score)
+
+if __name__ == "__main__":
+    asyncio.run(main())
