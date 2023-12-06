@@ -1,34 +1,31 @@
 class ObservationPrompts:
 
     example_input = """
-current web tab name is 'Google'
-    [40] link 'About'
-    [41] link 'Store'
-            [186] link 'Gmail'
-            [187] link 'Images'
-            [222] link 'Google apps'
-        [126] link 'Sign in'
-        [157] link 'Sign in'
-    [75] button 'x'
-        [163] textarea 'Search'
-        [169] button 'Search by voice'
-        [171] button 'Search by image'
-            [236] button 'See more'
+        current web tab name is 'Google'
+            [40] link 'About'
+            [41] link 'Store'
+                    [186] link 'Gmail'
+                    [187] link 'Images'
+                    [222] link 'Google apps'
+                [126] link 'Sign in'
+                [157] link 'Sign in'
+            [75] button 'x'
+                [163] textarea 'Search'
+                [169] button 'Search by voice'
+                [171] button 'Search by image'
+                    [236] button 'See more'
     """
     example_output = '\n```\n{\n  "action": "click",\n  "action_input": "link",\n  "element_id": "169",\n  "description": "Now I\'m on Google\'s main page. I should input text into the search bar. Then I will select the correct link from the result page."\n}\n```'
 
-    planning_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can. "\
-        "Here's the information you'll have:\n"\
-        "The user's request: This outlines task you need to complete.\n"\
-        "The current web page's DOM tree: This is a simplified representation of the webpage, offering key information."\
-        f"DOM tree example: ${example_input}. Choose the most reasonable element from the DOM tree, such as [126] link 'Sign in'."\
-        "The previous trace: This includes the thought process and actions you just performed, useful for tracking progress.\n"\
+    planning_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can."\
+        "You will get key information from current web page,such as Dom tree\n\n"\
+        f"Here is a Dom tree example:{example_output}\n"\
         "You also have access to the following tools:\n\n"\
-        "goto: Use this when you need to visit a link or website; it will open a new tab.\n"\
-        "fill_form: Use this when you need to fill out a form on the current website. Input should be a string.\n"\
-        "google_search: Use this when you need to search something using Google.\n"\
-        "switch_tab: Use this when you need to switch tabs.\n"\
-        "click: Use this when you need to click a button or link.\n"\
+        "goto: useful for when you need visit a link or a website, it will open a new tab\n"\
+        "fill_form: useful for when you need to fill out a form on the current website. Input should be a string\n"\
+        "google_search: useful for when you need to use google to search something\n"\
+        "switch_tab: useful for when you need to switch tab\n"\
+        "click: useful for when you need to click a button/link\n"\
         "The way you use the tools is by specifying a json blob.\nSpecifically, this json should have an `action` key (the name of the tool to use), an `action_input` key (the input to the tool going here) and the target element id.\n\n"\
         "The only values that should be in the \"action\" field are: goto, fill_form, google_search, switch_tab, click\n\n"\
         "A proper description contains:1. What website it is; 2. Which action do you choose; 3. Your next action plan to do.\nREMEMBER DO NOT LEAVE THE DESCRIPTION EMPTY!\n"\
@@ -38,8 +35,7 @@ current web tab name is 'Google'
         "1. ALWAYS use the following format:\nThought: you should always consider previous and subsequent steps and what to do\nAction:\n```\n$JSON_BLOB\n```\n"\
         "2. You must return a valid $JSON_BLOB like above or I can't read it.\n"\
         "3. You should only return one JSON blob as the result."\
-        "4. Your action should not be the same as last step's action."\
-
+        "4. Your action should not be the same as last step's action."
     planning_prompt_user = "The question here is described as \"{{user_request}}\".\n\n"
 
     reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals."

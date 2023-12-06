@@ -1,4 +1,4 @@
-from playwright.sync_api import ViewportSize, sync_playwright
+from playwright.sync_api import ViewportSize, sync_playwright,Page
 from beartype import beartype
 
 from .active_elements import ActiveElements
@@ -54,7 +54,7 @@ class HTMLEnvironment:
             html_content = self.tree.fetch_html_content(self.html_content)
             # self.tree.pre_trav_tree()
             tab_name = self.page.title()
-            dom_tree = self.tree.build_dom_tree(self.page)
+            dom_tree = self.tree.build_dom_tree()
             observation = f"current web tab name is \'{tab_name}\'\n" + dom_tree
         except:
             observation = ""
@@ -71,6 +71,8 @@ class HTMLEnvironment:
         except:
             selector = ""
         return self.page, selector
+    
+    
 
     def execute_action(self, action: Action) -> str:
         '''找到可交互元素并执行相应的动作得到新的observation'''

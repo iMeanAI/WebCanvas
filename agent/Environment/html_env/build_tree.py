@@ -10,18 +10,6 @@ import requests
 import copy
 
 
-async def is_valid_element(page: Page, selector: str):
-    element = await page.query_selector(selector)
-    if element:
-        if await element.is_visible() is False:
-            return False
-        elif await element.is_hidden() is True:
-            return False
-    else:
-        return False
-    return True
-
-
 class HTMLTree:
     def __init__(self):
         self.elementNodes = [ElementNode] * 100000
@@ -261,7 +249,7 @@ class HTMLTree:
                 return ("statictext", tag_idx)
         return (tag_name, tag_idx)
 
-    def build_dom_tree(self, page: Page) -> str:
+    def build_dom_tree(self) -> str:
         root = self.pruningTreeNode[0]
         stack = [root]
         contents = ""
@@ -311,9 +299,8 @@ class HTMLTree:
             selector = self.get_selector(idx)
             xpath = self.get_xpath(idx)
             return selector, xpath
-        except Exception as e:
+        except:
             print(f"can't locate element")
-            print(e)
 
     @staticmethod
     def process_element_contents(element: ElementNode) -> str:

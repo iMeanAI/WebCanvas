@@ -22,7 +22,7 @@ async def main():
         save_trace_enabled=False,
         sleep_after_execution=0.0,
     )
-    observation = await env.reset("https://www.leagueoflegends.com/zh-tw/")
+    observation = await env.reset()
     def parse_previous_trace(response) -> (Action, list):
         # 临时测试，有问题，后面得用history.py的previous trace
         match = re.compile(r"Thought: (.*)\n\nAction:")
@@ -35,7 +35,6 @@ async def main():
         acton_input = response['value']
         action = f"{action_type}: {acton_input}"
         previous_trace = {"thought": thought, "action": action}
-        print(repr(response['id']))
         if response['id'] == '' or response['id'] is None:
             element_id = 0
         else:
@@ -46,7 +45,10 @@ async def main():
     previous_trace = []
     index = 1
     while index < 10:
+        print("planning前：",previous_trace)
+        print("planning前的：",observation)
         for _ in range(3):
+            
             try:
                 dict_to_write = await Planning.plan(uuid="uuid", user_request="去LOL官网查看英雄亚索的信息", tab_name_list=None, current_tab_name=None, current_time=None, previous_trace=previous_trace, dom=None, observation=observation)
                 if dict_to_write is not None:
@@ -55,8 +57,10 @@ async def main():
                 traceback.print_exc()
                 continue
         execute_action, current_trace = parse_previous_trace(dict_to_write)
+        print("current trace:\n",current_trace)
+        print("response:\n",dict_to_write)
         observation = await env.execute_action(execute_action)
-        print(f"new observation {index}:", observation)
+        print(f"new observation {index}\n:", observation)
         previous_trace.append(current_trace)
         index += 1
 

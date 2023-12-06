@@ -66,8 +66,8 @@ class AsyncHTMLEnvironment:
         try:
             self.tree.fetch_html_content(self.html_content)
             tab_name = await self.page.title()
-            # print("self.page:",self.page)
-            dom_tree = self.tree.build_dom_tree()
+            # dom_tree = self.tree.build_dom_tree()
+            dom_tree = await self.get_dom_tree(self.tree,self.page)
             observation = f"current web tab name is \'{tab_name}\'\n" + dom_tree
         except:
             observation = ""
@@ -151,3 +151,39 @@ class AsyncHTMLEnvironment:
         except:
             selector = ""
         return self.page, selector
+
+    @staticmethod
+    async def is_valid_element(page: Page, selector: str):
+        element = await page.query_selector(selector)
+        if element:
+            if await element.is_visible() is False:
+                return False
+            elif await element.is_hidden() is True:
+                return False
+        else:
+            return False
+        return True
+    
+    async def get_dom_tree(self,tree: HTMLTree,page: Page):
+        root = tree.pruningTreeNode[0]
+        stack = [root]
+        contents = ""
+        while stack:
+            node = stack.pop()
+            # if len(node["childIds"]) == 0 and self.valid[node["nodeId"]] is True:
+            if tree.valid[node["nodeId"]] is True:
+                content_text = HTMLTree.process_element_contents(node)
+                if content_text != "":
+                    tag_name, tag_idx = tree.get_tag_name(
+                        node)
+                    selector = tree.get_selector(tag_idx)
+                    if tag_name.lower() != "statictext":
+                        # print("selector:",selector)
+                        # if await self.is_valid_element(page, selector):
+                        contents += "  " * (node["depth"]-1) + "[" + str(tag_idx) + "] " + tag_name + \
+                            " " + f"\'{content_text}\'" + "\n"
+            children = []
+            for child_id in node["childIds"]:
+                children.append(tree.pruningTreeNode[child_id])
+            stack.extend(reversed(children))
+        return contents
