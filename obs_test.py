@@ -15,7 +15,7 @@ from agent.Memory.short_memory.history import HistoryMemory
 async def main():
     env = AsyncHTMLEnvironment(
         max_page_length=8192,
-        headless=True,
+        headless=False,
         slow_mo=1000,
         current_viewport_only=False,
         viewport_size={"width": 1920, "height": 1280},
