@@ -1,7 +1,4 @@
-from .utils import (
-    ElementNode,
-    ConditionTagNameList
-)
+from .utils import ElementNode, ConditionTagNameList
 import re
 
 
@@ -27,7 +24,7 @@ class ActiveElements:
     def is_interactive(element: ElementNode):
         if element is None:
             return False
-        tag = ActiveElements().get_element_tagName(element)
+        tag = ActiveElements.get_element_tagName(element)
         if tag == 'input' and element["attributes"].get('type') == 'hidden':
             return False
         if tag in ['select', 'option'] and element["attributes"].get('disabled'):
@@ -94,10 +91,10 @@ class ActiveElements:
 
     @staticmethod
     def is_valid_element(element: ElementNode) -> bool:
-        return ActiveElements().is_interactive(element) & ActiveElements().is_visiable(element)
+        return ActiveElements.is_interactive(element) & ActiveElements.is_visiable(element)
 
     @staticmethod
-    def get_element_label(element: ElementNode) -> str:
+    def get_element_value(element: ElementNode) -> str:
         if element["text"] and element["text"] != "":
             return element["text"]
         title = element['attributes'].get('title')
