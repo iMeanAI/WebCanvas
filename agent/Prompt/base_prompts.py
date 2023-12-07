@@ -20,7 +20,6 @@ class BasePrompts:
 
     planning_prompt_user = "The question here is described as \"{{user_request}}\".\n\n"
 
-
     reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals."
 
     reward_prompt_user = "The question here is described as \"{{user_request}}\".\n\n"\
@@ -33,9 +32,14 @@ class BasePrompts:
         "If you find that the task is too difficult to complete, you should output 'hard'."\
         "Take a deep breath, please think carefully!"
 
-
     judge_searchbar_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can.\n"\
         "Your target is to judge whether the input is the search bar.\n"
     judge_searchbar_prompt_user = "Now the webpage's input elements are below: {{input_element}}\n"\
         "Last step you have fill in the input(id={{element_id}}) with text:{{action_input}}"\
         "Judge whether the input is the search bar. If the blank is search bar, return yes, else return no. You should only return one word!"
+
+    semantic_match_prompt_system = "Now you are an assistant to judge whether 2 elements are semantically same.\n"\
+    "If they are the same, you should return 1. If they are not related, you should return 0. "
+    "If they are related but not identical, return a decimal (two decimal places) between 0 and 1 of the degree of relevance you think."\
+    "Remember, you should only return a number without any punctuation or explanation!"  # TODO
+    semantic_match_prompt_user = "you should judge by the function below:{{semantic_method}}.\n\nmy answer is:{{input_answer}}\nreference answer is:{{reference_answer}}"

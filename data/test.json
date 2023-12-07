@@ -1,5 +1,25 @@
 [
     {
+        "task": "Find Dota 2 game and add all DLC to cart in steam.",
+        "reference_task_length":7,
+        "evaluation": [
+            {
+                "match_function": "path_exact_match",
+                "method":"selector",
+                "content": {
+                    "reference_answer": "#dlc_purchase_action >.btn_addtocart >.btn_green_steamui.btn_medium >span:nth-child(1)"
+                }
+            },
+            {
+                "match_function": "url_include_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "app/570"
+                }
+            }
+        ]
+    },
+    {
         "task": "Look for a place with a good swimming pool that charges between $200 and $300 per night.",
         "reference_task_length":10,
         "evaluation": [

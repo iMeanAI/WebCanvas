@@ -2,8 +2,11 @@ import json5
 
 
 class HistoryMemory:
-    def __init__(self, previous_trace: list) -> None:
+    def __init__(self, previous_trace: list=[]) -> None:
         self.previous_trace = previous_trace
+
+    def add_trace(self, thought, action):
+        self.previous_trace.append({"thought":thought,"action":action})
 
     def stringfy_thought_and_action(self) -> str:
         input_list = json5.loads(self.previous_trace, encoding="utf-8")
