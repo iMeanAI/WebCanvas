@@ -1,4 +1,5 @@
-from playwright.sync_api import ViewportSize, sync_playwright,Page
+from playwright.sync_api import ViewportSize, sync_playwright, Page
+from urllib.parse import urlparse, urljoin
 from beartype import beartype
 
 from .active_elements import ActiveElements
@@ -52,7 +53,6 @@ class HTMLEnvironment:
     def _get_obs(self):
         try:
             html_content = self.tree.fetch_html_content(self.html_content)
-            # self.tree.pre_trav_tree()
             tab_name = self.page.title()
             dom_tree = self.tree.build_dom_tree()
             observation = f"current web tab name is \'{tab_name}\'\n" + dom_tree
@@ -71,31 +71,50 @@ class HTMLEnvironment:
         except:
             selector = ""
         return self.page, selector
-    
-    
 
     def execute_action(self, action: Action) -> str:
         '''找到可交互元素并执行相应的动作得到新的observation'''
         try:
-            element_name, element_idx = self.tree.get_tag_name(
-                self.tree.elementNodes[action["element_id"]])
-            action.update({"element_id": element_idx,
-                           "element_name": element_name})
-            selector, xpath = self.tree.get_selector_and_xpath(
-                action["element_id"])
-        except:
-            selector = ""
-        try:
             match action["action_type"]:
                 case ActionTypes.CLICK:
                     try:
-                        self.page.locator(selector).click()
-                        self.html_content = self.page.content()
-                        return self._get_obs()
+                        label, element_idx = self.tree.get_tag_name(
+                            self.tree.elementNodes[action["element_id"]])
+                        action.update({"element_id": element_idx,
+                                       "element_name": label})
+                        selector, xpath = self.tree.get_selector_and_xpath(
+                            action["element_id"])
                     except Exception as e:
                         print("can't execute click action")
-                        print(e)
-                        return ""
+                        print(
+                            f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                    if label == "link":
+                        try:
+                            element = self.tree.elementNodes[element_idx]
+                            url = element["attributes"].get("href")
+                            if bool(urlparse(url).netloc) is False:
+                                base_url = self.page.url()
+                                url = urljoin(base_url, url)
+                            self.page = self.context.new_page()
+                            self.page.goto(url)
+                            self.html_content = self.page.content()
+                            return self._get_obs()
+                        except:
+                            try:
+                                self.page.locator(selector).click()
+                                self.html_content = self.page.content()
+                                return self._get_obs()
+                            except Exception as e:
+                                print(e)
+                    else:
+                        try:
+                            self.page.locator(selector).click()
+                            self.html_content = self.page.content()
+                            return self._get_obs()
+                        except Exception as e:
+                            print("can't execute click action")
+                            print(e)
+                            return ""
                 case ActionTypes.GOTO:
                     try:
                         self.page = self.context.new_page()
@@ -107,6 +126,18 @@ class HTMLEnvironment:
                         print(e)
                         return ""
                 case ActionTypes.FILL_FORM:
+                    try:
+                        label, element_idx = self.tree.get_tag_name(
+                            self.tree.elementNodes[action["element_id"]])
+                        action.update({"element_id": element_idx,
+                                       "element_name": label})
+                        selector, xpath = self.tree.get_selector_and_xpath(
+                            action["element_id"])
+                    except Exception as e:
+                        print("can't execute fill form action")
+                        print(
+                            f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                        print(e)
                     try:
                         self.page.locator(selector).fill(action["fill_text"])
                         self.page.locator(selector).press("Enter")

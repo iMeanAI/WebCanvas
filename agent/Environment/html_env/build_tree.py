@@ -261,10 +261,7 @@ class HTMLTree:
                 if content_text != "":
                     tag_name, tag_idx = self.get_tag_name(
                         node)
-                    selector = self.get_selector(tag_idx)
                     if tag_name.lower() != "statictext":
-                        # 选择node["nodeId"]还是父节点可交互元素的idx
-                        # if (await is_valid_element(page, selector)):
                         contents += "  " * (node["depth"]-1) + "[" + str(tag_idx) + "] " + tag_name + \
                             " " + f"\'{content_text}\'" + "\n"
             children = []

@@ -61,8 +61,8 @@ class AsyncHTMLEnvironment:
         try:
             self.tree.fetch_html_content(self.html_content)
             tab_name = await self.page.title()
-            # dom_tree = self.tree.build_dom_tree()
-            dom_tree = await self.get_dom_tree(self.tree,self.page)
+            dom_tree = self.tree.build_dom_tree()
+            # dom_tree = await self.get_dom_tree(self.tree,self.page)
             observation = f"current web tab name is \'{tab_name}\'\n" + dom_tree
         except:
             observation = ""
@@ -204,7 +204,6 @@ class AsyncHTMLEnvironment:
                         node)
                     selector = tree.get_selector(tag_idx)
                     if tag_name.lower() != "statictext":
-                        # print("selector:",selector)
                         # if await self.is_valid_element(page, selector):
                         contents += "  " * (node["depth"]-1) + "[" + str(tag_idx) + "] " + tag_name + \
                             " " + f"\'{content_text}\'" + "\n"
