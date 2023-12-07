@@ -1,6 +1,7 @@
 from playwright.async_api import async_playwright, Page
 from playwright.sync_api import ViewportSize
 from beartype.door import is_bearable
+from urllib.parse import urlparse,urljoin
 from collections import deque
 from beartype import beartype
 from lxml.html import etree
@@ -48,16 +49,10 @@ class AsyncHTMLEnvironment:
             device_scale_factor=1,
         )
         if start_url:
-            start_urls = start_url.split(" |AND| ")
-            for url in start_urls:
-                self.page = await self.context.new_page()
-                client = await self.page.context.new_cdp_session(
-                    self.page
-                )
-                self.page.client = client
-                await self.page.goto(url)
-                await self.page.wait_for_timeout(500)
-                self.html_content = await self.page.content()
+            self.page = await self.context.new_page()
+            await self.page.goto(start_url)
+            await self.page.wait_for_timeout(500)
+            self.html_content = await self.page.content()
         else:
             self.page = await self.context.new_page()
             self.html_content = await self.page.content()
@@ -81,21 +76,43 @@ class AsyncHTMLEnvironment:
     async def execute_action(self, action: Action) -> str:
         '''找到可交互元素并执行相应的动作得到新的observation'''
         try:
-            element_name, element_idx = self.tree.get_tag_name(
-                self.tree.elementNodes[action["element_id"]])
-            action.update({"element_id": element_idx,
-                           "element_name": element_name})
-            selector, xpath = self.tree.get_selector_and_xpath(
-                action["element_id"])
-        except:
-            selector = ""
-        try:
             match action["action_type"]:
                 case ActionTypes.CLICK:
                     try:
-                        await self.page.locator(selector).click()
-                        self.html_content = await self.page.content()
-                        return await self._get_obs()
+                        try:
+                            label, element_idx = self.tree.get_tag_name(
+                                self.tree.elementNodes[action["element_id"]])
+                            action.update({"element_id": element_idx,
+                                        "element_name": label})
+                            selector, xpath = self.tree.get_selector_and_xpath(
+                                action["element_id"])
+                        except Exception as e:
+                            print(f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                        if label == "link":
+                            try:
+                                element = self.tree.elementNodes[element_idx]
+                                url = element["attributes"].get("href")
+                                if bool(urlparse(url).netloc) is False:
+                                    base_url = self.page.url()
+                                    url = urljoin(base_url,url)
+                                self.page = await self.context.new_page()
+                                await self.page.goto(url)
+                                self.html_content = await self.page.content()
+                                return await self._get_obs()
+                            except:
+                                try:
+                                    await self.page.locator(selector).click()
+                                    self.html_content = await self.page.content()
+                                    return await self._get_obs()
+                                except Exception as e:
+                                    print(e)
+                        else:
+                            try:
+                                await self.page.locator(selector).click()
+                                self.html_content = await self.page.content()
+                                return await self._get_obs()
+                            except Exception as e:
+                                print(e)
                     except Exception as e:
                         print("can't execute click action")
                         print(e)
@@ -112,7 +129,16 @@ class AsyncHTMLEnvironment:
                         return ""
                 case ActionTypes.FILL_FORM:
                     try:
-                        await self.page.wait_for_selector(selector)
+                        try:
+                            label, element_idx = self.tree.get_tag_name(
+                                self.tree.elementNodes[action["element_id"]])
+                            action.update({"element_id": element_idx,
+                                        "element_name": label})
+                            selector, xpath = self.tree.get_selector_and_xpath(
+                                action["element_id"])
+                        except Exception as e:
+                            print(f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                            print(e)
                         await self.page.locator(selector).fill(action["fill_text"])
                         await self.page.locator(selector).press("Enter")
                         self.html_content = await self.page.content()

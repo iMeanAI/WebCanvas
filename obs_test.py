@@ -46,11 +46,10 @@ async def main():
     index = 1
     while index < 10:
         print("planning前：",previous_trace)
-        print("planning前的：",observation)
+        print("planning前：",observation)
         for _ in range(3):
-            
             try:
-                dict_to_write = await Planning.plan(uuid="uuid", user_request="去LOL官网查看英雄亚索的信息", tab_name_list=None, current_tab_name=None, current_time=None, previous_trace=previous_trace, dom=None, observation=observation)
+                dict_to_write = await Planning.plan(uuid="uuid", user_request="Go to the official website of LOL to check the information of the hero Yasuo", tab_name_list=None, current_tab_name=None, current_time=None, previous_trace=previous_trace, dom=None, observation=observation)
                 if dict_to_write is not None:
                     break
             except Exception as e:
@@ -60,7 +59,7 @@ async def main():
         print("current trace:\n",current_trace)
         print("response:\n",dict_to_write)
         observation = await env.execute_action(execute_action)
-        print(f"new observation {index}\n:", observation)
+        print(f"new observation {index}:\n", observation)
         previous_trace.append(current_trace)
         index += 1
 
