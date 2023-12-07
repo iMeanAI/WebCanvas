@@ -9,7 +9,7 @@ class Planning:
         pass
 
     @staticmethod
-    async def plan(uuid, user_request, tab_name_list, current_tab_name, current_time, previous_trace, dom):
+    async def plan(uuid=0, user_request="", tab_name_list=[], current_tab_name="", current_time="", previous_trace=[], dom=[]):
         start_time = time.time()
         # 创建GPT查询类
         GPT35 = GPTGenerator35()
