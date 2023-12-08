@@ -1,12 +1,11 @@
-from playwright.sync_api import sync_playwright, Page
 from collections import deque
 from lxml.html import etree
 from io import StringIO
 
-from .utils import ElementNode, TagNameList, DelTagNameList
+from .utils import ElementNode, TagNameList
 from .active_elements import ActiveElements
 
-import requests
+
 import copy
 
 

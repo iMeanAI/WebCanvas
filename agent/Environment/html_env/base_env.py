@@ -2,12 +2,9 @@ from playwright.sync_api import ViewportSize, sync_playwright, Page
 from urllib.parse import urlparse, urljoin
 from beartype import beartype
 
-from .active_elements import ActiveElements
-from .actions import Action, ActionTypes, create_action
-from .utils import ElementNode, TagNameList, DelTagNameList
+
+from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
-import requests
-import copy
 
 
 class HTMLEnvironment:
@@ -85,9 +82,8 @@ class HTMLEnvironment:
                         selector, xpath = self.tree.get_selector_and_xpath(
                             action["element_id"])
                     except Exception as e:
-                        print("can't execute click action")
                         print(
-                            f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                            f"selector:{selector},label:{label},element_idx: {element_idx}")
                     if label == "link":
                         try:
                             element = self.tree.elementNodes[element_idx]
@@ -101,20 +97,30 @@ class HTMLEnvironment:
                             return self._get_obs()
                         except:
                             try:
-                                self.page.locator(selector).click()
+                                self.page.evaluate('''() => {
+                                    const element = document.querySelector('%s');
+                                    if (element) {
+                                        element.click();
+                                    }
+                                }''' % selector)
+                                # await self.page.locator(selector).click()
                                 self.html_content = self.page.content()
                                 return self._get_obs()
                             except Exception as e:
                                 print(e)
                     else:
                         try:
-                            self.page.locator(selector).click()
+                            self.page.evaluate('''() => {
+                                const element = document.querySelector('%s');
+                                if (element) {
+                                    element.click();
+                                }
+                            }''' % selector)
+                            # await self.page.locator(selector).click()
                             self.html_content = self.page.content()
                             return self._get_obs()
                         except Exception as e:
-                            print("can't execute click action")
                             print(e)
-                            return ""
                 case ActionTypes.GOTO:
                     try:
                         self.page = self.context.new_page()
@@ -127,22 +133,33 @@ class HTMLEnvironment:
                         return ""
                 case ActionTypes.FILL_FORM:
                     try:
-                        label, element_idx = self.tree.get_tag_name(
-                            self.tree.elementNodes[action["element_id"]])
-                        action.update({"element_id": element_idx,
-                                       "element_name": label})
-                        selector, xpath = self.tree.get_selector_and_xpath(
-                            action["element_id"])
-                    except Exception as e:
-                        print("can't execute fill form action")
-                        print(
-                            f"selector:{selector},label_name:{label},element_idx: {element_idx}")
-                        print(e)
-                    try:
-                        self.page.locator(selector).fill(action["fill_text"])
-                        self.page.locator(selector).press("Enter")
-                        self.html_content = self.page.content()
-                        return self._get_obs()
+                        try:
+                            label, element_idx = self.tree.get_tag_name(
+                                self.tree.elementNodes[action["element_id"]])
+                            action.update({"element_id": element_idx,
+                                           "element_name": label})
+                            selector, xpath = self.tree.get_selector_and_xpath(
+                                action["element_id"])
+                        except Exception as e:
+                            print(
+                                f"selector:{selector},label:{label},element_idx: {element_idx}")
+                        try:
+                            fill_and_press_enter = '''() => {
+                                    const element = document.querySelector('%s');
+                                    if (element) {
+                                        element.value = '%s';
+                                        element.dispatchEvent(new Event('input', { bubbles: true }));
+                                        element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+                                    }
+                                }
+                            ''' % (selector, action['fill_text'])
+                            self.page.evaluate(fill_and_press_enter)
+                            # self.page.locator(selector).fill(action["fill_text"])
+                            # self.page.locator(selector).press("Enter")
+                            self.html_content = self.page.content()
+                            return self._get_obs()
+                        except Exception as e:
+                            print(e)
                     except Exception as e:
                         print("can't execute fill form action")
                         print(e)
@@ -167,6 +184,6 @@ class HTMLEnvironment:
                         f"Unknown action type {action['action_type']}"
                     )
         except Exception as e:
-            print("execute error")
+            print("execute action error")
             print(e)
         return ""

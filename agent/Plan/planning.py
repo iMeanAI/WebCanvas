@@ -55,8 +55,6 @@ class Planning:
             "action": f'{planning_response_action["action"]}: {planning_response_action["action_input"]}' if "description" not in planning_response_action.keys() else planning_response_action["description"]
         }
 
-        print("planning_response_action",planning_response_action["description"] )
-
         planning_response_action = {element: planning_response_action.get(
             element, "") for element in ["element_id", "action", "action_input", "description"]}
 
