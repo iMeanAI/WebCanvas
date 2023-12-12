@@ -28,6 +28,7 @@ class AsyncHTMLEnvironment:
         viewport_size: ViewportSize = {"width": 1280, "height": 720},
         save_trace_enabled: bool = False,
         sleep_after_execution: float = 0.0,
+        locale:str ="en-US"
     ):
         self.headless = headless
         self.slow_mo = slow_mo
@@ -37,6 +38,7 @@ class AsyncHTMLEnvironment:
         self.save_trace_enabled = save_trace_enabled
         self.sleep_after_execution = sleep_after_execution
         self.tree = HTMLTree()
+        self.locale=locale
 
     async def setup(self, start_url: str) -> None:
         self.playwright = await async_playwright().start()
@@ -47,6 +49,7 @@ class AsyncHTMLEnvironment:
         self.context = await self.browser.new_context(
             viewport=self.viewport_size,
             device_scale_factor=1,
+            locale=self.locale
         )
         if start_url:
             self.page = await self.context.new_page()
@@ -150,12 +153,12 @@ class AsyncHTMLEnvironment:
                 case ActionTypes.GOOGLE_SEARCH:
                     try:
                         self.page = await self.context.new_page()
-                        await self.page.goto(action["url"])
-                        search_box = await self.page.query_selector(
-                            'textarea[name="q"]')
-                        if search_box is not None:
-                            await search_box.fill(action["fill_text"])
-                            await self.page.click('input[type="submit"]')
+                        await self.page.goto("https://www.google.com/search?q="+action["fill_text"])
+                        # search_box = await self.page.query_selector(
+                        #     'textarea[name="q"]')
+                        # if search_box is not None:
+                        #     await search_box.fill(action["fill_text"])
+                        #     await self.page.click('input[type="submit"]')
                         self.html_content = await self.page.content()
                         return await self._get_obs()
                     except Exception as e:
