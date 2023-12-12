@@ -163,11 +163,17 @@ class AsyncHTMLEnvironment:
                     try:
                         self.page = await self.context.new_page()
                         await self.page.goto(action["url"])
-                        search_box = await self.page.query_selector(
-                            'textarea[name="q"]')
-                        if search_box is not None:
-                            await search_box.fill(action["fill_text"])
-                            await self.page.click('input[type="submit"]')
+                        await self.page.evaluate('''(fill_text) => {
+                            const searchBox = document.querySelector('textarea[name="q"]');
+                            if (searchBox) {
+                                searchBox.value = fill_text;
+                                // 查找并点击提交按钮
+                                const submitButton = document.querySelector('input[type="submit"]');
+                                if (submitButton) {
+                                    submitButton.click();
+                                }
+                            }
+                        }''', action["fill_text"])
                         self.html_content = await self.page.content()
                         return await self._get_obs()
                     except Exception as e:

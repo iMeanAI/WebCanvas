@@ -29,7 +29,7 @@ async def main():
         acton_input = response['value']
         action = f"{action_type}: {acton_input}"
         previous_trace = {"thought": thought, "action": action}
-        if response['id'] == '' or response['id'] is None:
+        if response['id'] == '' or response['id'] is None or response['id'].isdigit() is False:
             element_id = 0
         else:
             element_id = int(response['id'])
@@ -38,7 +38,7 @@ async def main():
         return execute_action, previous_trace
     previous_trace = []
     index = 1
-    while index < 10:
+    while True:
         for _ in range(3):
             try:
                 dict_to_write = await Planning.plan(uuid="uuid", user_request="Go to the official website of taobao to buy a back hat", tab_name_list=None, current_tab_name=None, current_time=None, previous_trace=previous_trace, dom=None, observation=observation)
@@ -46,13 +46,16 @@ async def main():
                     break
             except Exception as e:
                 traceback.print_exc()
-                continue
+                continue 
+        print("dict_to_write:\n", dict_to_write)
         execute_action, current_trace = parse_previous_trace(dict_to_write)
         print("execute action:\n",execute_action)
         observation = await env.execute_action(execute_action)
-        print("dict_to_write:\n", dict_to_write)
         print(f"new observation {index}:\n", observation)
         previous_trace.append(current_trace)
+        print("previous trace:\n",previous_trace)
+        if dict_to_write["description"]["thought"].lower() == "finished":
+            break
         index += 1
 
 if __name__ == "__main__":
