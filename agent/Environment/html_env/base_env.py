@@ -1,12 +1,10 @@
-from playwright.sync_api import ViewportSize, sync_playwright,Page
+from playwright.sync_api import ViewportSize, sync_playwright, Page
+from urllib.parse import urlparse, urljoin
 from beartype import beartype
 
-from .active_elements import ActiveElements
-from .actions import Action, ActionTypes, create_action
-from .utils import ElementNode, TagNameList, DelTagNameList
+
+from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
-import requests
-import copy
 
 
 class HTMLEnvironment:
@@ -52,7 +50,6 @@ class HTMLEnvironment:
     def _get_obs(self):
         try:
             html_content = self.tree.fetch_html_content(self.html_content)
-            # self.tree.pre_trav_tree()
             tab_name = self.page.title()
             dom_tree = self.tree.build_dom_tree()
             observation = f"current web tab name is \'{tab_name}\'\n" + dom_tree
@@ -71,31 +68,59 @@ class HTMLEnvironment:
         except:
             selector = ""
         return self.page, selector
-    
-    
 
     def execute_action(self, action: Action) -> str:
         '''找到可交互元素并执行相应的动作得到新的observation'''
         try:
-            element_name, element_idx = self.tree.get_tag_name(
-                self.tree.elementNodes[action["element_id"]])
-            action.update({"element_id": element_idx,
-                           "element_name": element_name})
-            selector, xpath = self.tree.get_selector_and_xpath(
-                action["element_id"])
-        except:
-            selector = ""
-        try:
             match action["action_type"]:
                 case ActionTypes.CLICK:
                     try:
-                        self.page.locator(selector).click()
-                        self.html_content = self.page.content()
-                        return self._get_obs()
+                        label, element_idx = self.tree.get_tag_name(
+                            self.tree.elementNodes[action["element_id"]])
+                        action.update({"element_id": element_idx,
+                                       "element_name": label})
+                        selector, xpath = self.tree.get_selector_and_xpath(
+                            action["element_id"])
                     except Exception as e:
-                        print("can't execute click action")
-                        print(e)
-                        return ""
+                        print(
+                            f"selector:{selector},label:{label},element_idx: {element_idx}")
+                    if label == "link":
+                        try:
+                            element = self.tree.elementNodes[element_idx]
+                            url = element["attributes"].get("href")
+                            if bool(urlparse(url).netloc) is False:
+                                base_url = self.page.url()
+                                url = urljoin(base_url, url)
+                            self.page = self.context.new_page()
+                            self.page.goto(url)
+                            self.html_content = self.page.content()
+                            return self._get_obs()
+                        except:
+                            try:
+                                self.page.evaluate('''() => {
+                                    const element = document.querySelector('%s');
+                                    if (element) {
+                                        element.click();
+                                    }
+                                }''' % selector)
+                                # await self.page.locator(selector).click()
+                                self.html_content = self.page.content()
+                                return self._get_obs()
+                            except Exception as e:
+                                print(e)
+                    else:
+                        try:
+                            self.page.evaluate('''() => {
+                                const element = document.querySelector('%s');
+                                if (element) {
+                                    element.click();
+                                }
+                            }''' % selector)
+                            # await self.page.locator(selector).click()
+                            self.html_content = self.page.content()
+                            return self._get_obs()
+                        except Exception as e:
+                            print(e)
                 case ActionTypes.GOTO:
                     try:
                         self.page = self.context.new_page()
@@ -108,10 +133,33 @@ class HTMLEnvironment:
                         return ""
                 case ActionTypes.FILL_FORM:
                     try:
-                        self.page.locator(selector).fill(action["fill_text"])
-                        self.page.locator(selector).press("Enter")
-                        self.html_content = self.page.content()
-                        return self._get_obs()
+                        try:
+                            label, element_idx = self.tree.get_tag_name(
+                                self.tree.elementNodes[action["element_id"]])
+                            action.update({"element_id": element_idx,
+                                           "element_name": label})
+                            selector, xpath = self.tree.get_selector_and_xpath(
+                                action["element_id"])
+                        except Exception as e:
+                            print(
+                                f"selector:{selector},label:{label},element_idx: {element_idx}")
+                        try:
+                            fill_and_press_enter = '''() => {
+                                    const element = document.querySelector('%s');
+                                    if (element) {
+                                        element.value = '%s';
+                                        element.dispatchEvent(new Event('input', { bubbles: true }));
+                                        element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+                                    }
+                                }
+                            ''' % (selector, action['fill_text'])
+                            self.page.evaluate(fill_and_press_enter)
+                            # self.page.locator(selector).fill(action["fill_text"])
+                            # self.page.locator(selector).press("Enter")
+                            self.html_content = self.page.content()
+                            return self._get_obs()
+                        except Exception as e:
+                            print(e)
                     except Exception as e:
                         print("can't execute fill form action")
                         print(e)
@@ -120,11 +168,17 @@ class HTMLEnvironment:
                     try:
                         self.page = self.context.new_page()
                         self.page.goto(action["url"])
-                        search_box = self.page.query_selector(
-                            'textarea[name="q"]')
-                        if search_box is not None:
-                            search_box.fill(action["fill_text"])
-                            self.page.click('input[type="submit"]')
+                        self.page.evaluate('''(fill_text) => {
+                            const searchBox = document.querySelector('textarea[name="q"]');
+                            if (searchBox) {
+                                searchBox.value = fill_text;
+                                // 查找并点击提交按钮
+                                const submitButton = document.querySelector('input[type="submit"]');
+                                if (submitButton) {
+                                    submitButton.click();
+                                }
+                            }
+                        }''', action["fill_text"])
                         self.html_content = self.page.content()
                         return self._get_obs()
                     except Exception as e:
@@ -136,6 +190,6 @@ class HTMLEnvironment:
                         f"Unknown action type {action['action_type']}"
                     )
         except Exception as e:
-            print("execute error")
+            print("execute action error")
             print(e)
         return ""

@@ -1,20 +1,11 @@
 from playwright.async_api import async_playwright, Page
 from playwright.sync_api import ViewportSize
-from beartype.door import is_bearable
-from urllib.parse import urlparse,urljoin
-from collections import deque
+from urllib.parse import urlparse, urljoin
 from beartype import beartype
-from lxml.html import etree
-from io import StringIO
 
 
-from .active_elements import ActiveElements
-from .actions import Action, ActionTypes, create_action
-from .utils import ElementNode, TagNameList, DelTagNameList
+from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
-
-import requests
-import copy
 
 
 class AsyncHTMLEnvironment:
@@ -64,8 +55,7 @@ class AsyncHTMLEnvironment:
         try:
             self.tree.fetch_html_content(self.html_content)
             tab_name = await self.page.title()
-            # dom_tree = self.tree.build_dom_tree()
-            dom_tree = await self.get_dom_tree(self.tree,self.page)
+            dom_tree = self.tree.build_dom_tree()
             observation = f"current web tab name is \'{tab_name}\'\n" + dom_tree
         except:
             observation = ""
@@ -86,39 +76,51 @@ class AsyncHTMLEnvironment:
                             label, element_idx = self.tree.get_tag_name(
                                 self.tree.elementNodes[action["element_id"]])
                             action.update({"element_id": element_idx,
-                                        "element_name": label})
+                                           "element_name": label})
                             selector, xpath = self.tree.get_selector_and_xpath(
                                 action["element_id"])
                         except Exception as e:
-                            print(f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                            print(
+                                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
                         if label == "link":
                             try:
                                 element = self.tree.elementNodes[element_idx]
                                 url = element["attributes"].get("href")
                                 if bool(urlparse(url).netloc) is False:
                                     base_url = self.page.url()
-                                    url = urljoin(base_url,url)
+                                    url = urljoin(base_url, url)
                                 self.page = await self.context.new_page()
                                 await self.page.goto(url)
                                 self.html_content = await self.page.content()
                                 return await self._get_obs()
                             except:
                                 try:
-                                    await self.page.locator(selector).click()
+                                    await self.page.evaluate('''() => {
+                                        const element = document.querySelector('%s');
+                                        if (element) {
+                                            element.click();
+                                        }
+                                    }''' % selector)
+                                    # await self.page.locator(selector).click()
                                     self.html_content = await self.page.content()
                                     return await self._get_obs()
                                 except Exception as e:
                                     print(e)
                         else:
                             try:
-                                await self.page.locator(selector).click()
+                                await self.page.evaluate('''() => {
+                                    const element = document.querySelector('%s');
+                                    if (element) {
+                                        element.click();
+                                    }
+                                }''' % selector)
+                                # await self.page.locator(selector).click()
                                 self.html_content = await self.page.content()
                                 return await self._get_obs()
                             except Exception as e:
                                 print(e)
                     except Exception as e:
                         print("can't execute click action")
-                        print(e)
                         return ""
                 case ActionTypes.GOTO:
                     try:
@@ -136,14 +138,24 @@ class AsyncHTMLEnvironment:
                             label, element_idx = self.tree.get_tag_name(
                                 self.tree.elementNodes[action["element_id"]])
                             action.update({"element_id": element_idx,
-                                        "element_name": label})
+                                           "element_name": label})
                             selector, xpath = self.tree.get_selector_and_xpath(
                                 action["element_id"])
                         except Exception as e:
-                            print(f"selector:{selector},label_name:{label},element_idx: {element_idx}")
-                            print(e)
-                        await self.page.locator(selector).fill(action["fill_text"])
-                        await self.page.locator(selector).press("Enter")
+                            print(
+                                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                        fill_and_press_enter = '''() => {
+                                    const element = document.querySelector('%s');
+                                    if (element) {
+                                        element.value = '%s';
+                                        element.dispatchEvent(new Event('input', { bubbles: true }));
+                                        element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+                                    }
+                                }
+                            ''' % (selector, action['fill_text'])
+                        await self.page.evaluate(fill_and_press_enter)
+                        # await self.page.locator(selector).fill(action["fill_text"])
+                        # await self.page.locator(selector).press("Enter")
                         self.html_content = await self.page.content()
                         return await self._get_obs()
                     except Exception as e:
@@ -192,27 +204,3 @@ class AsyncHTMLEnvironment:
         else:
             return False
         return True
-    
-    async def get_dom_tree(self,tree: HTMLTree,page: Page):
-        root = tree.pruningTreeNode[0]
-        stack = [root]
-        contents = ""
-        while stack:
-            node = stack.pop()
-            # if len(node["childIds"]) == 0 and self.valid[node["nodeId"]] is True:
-            if tree.valid[node["nodeId"]] is True:
-                content_text = HTMLTree.process_element_contents(node)
-                if content_text != "":
-                    tag_name, tag_idx = tree.get_tag_name(
-                        node)
-                    selector = tree.get_selector(tag_idx)
-                    if tag_name.lower() != "statictext":
-                        # print("selector:",selector)
-                        # if await self.is_valid_element(page, selector):
-                        contents += "  " * (node["depth"]-1) + "[" + str(tag_idx) + "] " + tag_name + \
-                            " " + f"\'{content_text}\'" + "\n"
-            children = []
-            for child_id in node["childIds"]:
-                children.append(tree.pruningTreeNode[child_id])
-            stack.extend(reversed(children))
-        return contents

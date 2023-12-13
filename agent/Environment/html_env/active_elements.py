@@ -84,6 +84,8 @@ class ActiveElements:
                 return 'option'
             elif role == 'row':
                 return 'row'
+            elif role == 'search-box':
+                return 'search-box'
             else:
                 return 'unknown'
         else:
@@ -98,13 +100,13 @@ class ActiveElements:
         if element["text"] and element["text"] != "":
             return element["text"]
         title = element['attributes'].get('title')
-        if title and not re.match(r'^\s*$', title):
+        if title:
             return title
         placeholder = element['attributes'].get('placeholder')
-        if placeholder and not re.match(r'^\s*$', placeholder):
+        if placeholder:
             return placeholder
         aria_label = element['attributes'].get('aria-label')
-        if aria_label and not re.match(r'^\s*$', aria_label):
+        if aria_label:
             return aria_label
         aria_checked = element['attributes'].get('aria-checked')
         if aria_checked:
