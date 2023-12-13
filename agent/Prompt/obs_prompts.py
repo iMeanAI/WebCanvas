@@ -4,22 +4,16 @@ class ObservationPrompts:
         current web tab name is 'Google'
             [40] link 'About'
             [41] link 'Store'
-                    [186] link 'Gmail'
-                    [187] link 'Images'
-                    [222] link 'Google apps'
-                [126] link 'Sign in'
-                [157] link 'Sign in'
-            [75] button 'x'
+                [186] link 'Gmail'
+                [187] link 'Images'
                 [163] textarea 'Search'
-                [169] button 'Search by voice'
-                [171] button 'Search by image'
-                    [236] button 'See more'
+                [236] button 'See more'
     """
     example_output = '\n```\n{\n  "action": "click",\n  "action_input": "link",\n  "element_id": "169",\n  "description": "Now I\'m on Google\'s main page. I should input text into the search bar. Then I will select the correct link from the result page."\n}\n```'
 
     planning_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can."\
         "You will get key information from current web page,such as Dom tree\n\n"\
-        f"Here is a Dom tree example:{example_output}\n"\
+        f"Here is a Dom tree example:{example_input}\n"\
         "You also have access to the following tools:\n\n"\
         "goto: useful for when you need visit a link or a website, it will open a new tab\n"\
         "fill_form: useful for when you need to fill out a form on the current website. Input should be a string\n"\

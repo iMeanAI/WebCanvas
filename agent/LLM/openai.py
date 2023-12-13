@@ -59,9 +59,9 @@ class GPTGenerator:
 
 class GPTGenerator35(GPTGenerator):
     def __init__(self):
-        self.model = "gpt-3.5-turbo-16k"
+        self.model = "gpt-3.5-turbo-1106"
 
 
 class GPTGenerator4(GPTGenerator):
     def __init__(self):
-        self.model = "gpt-4"
+        self.model = "gpt-4-1106-preview"
