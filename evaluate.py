@@ -131,6 +131,7 @@ async def main(num_steps=0):
     observation = await env.reset("about:blank")
     previous_trace = []
     evaluate_steps = reference_evaluate_steps
+    total_step_score = 0
     for index in range(10):
         print("planning前previous_trace：",previous_trace)
         print("planning前observation：",observation)
@@ -174,6 +175,10 @@ async def main(num_steps=0):
         print("response:\n",execute_action)
         print("selector:", selector)
         evaluate_steps = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
+        for evaluate in evaluate_steps:
+            total_step_score += evaluate["score"]
+        if total_step_score==len(reference_evaluate_steps):
+            break
         # input()
         observation = await env.execute_action(execute_action)
         # print(f"new observation {index}:\n", observation)
@@ -186,20 +191,23 @@ async def main(num_steps=0):
     
     #! 3.任务评测打分
 
-    # # step score
-    # total_step_score = 0
-    # for evaluate in evaluate_steps:
-    #     total_step_score += evaluate["score"]
-    # print("\ntotal step score:", total_step_score)
+    # step score
+    total_step_score = 0
+    for evaluate in evaluate_steps:
+        total_step_score += evaluate["score"]
+    print("\ntotal step score:", total_step_score)
 
-    # # length score
-    # task_evaluator = TaskLengthEvaluator()
-    # task_length_score = task_evaluator.task_length_score(reference_task_length, num_steps)
-    # print("task_length_score:", task_length_score)
+    # length score
+    task_evaluator = TaskLengthEvaluator()
+    task_length_score = task_evaluator.task_length_score(reference_task_length, num_steps)
+    print("task_length_score:", task_length_score)
 
-    # # finish score
-    # finish_task_score = FinishTaskEvaluator.finish_task_score(len(reference_evaluate_steps), total_step_score)
-    # print("finish_task_score:", finish_task_score)
+    # finish score
+    finish_task_score = FinishTaskEvaluator.finish_task_score(len(reference_evaluate_steps), total_step_score)
+    print("finish_task_score:", finish_task_score)
+
+    print(f"\033[31mtask finished!\033[0m") # 红色
+    input(f"\033[31m按回车键结束\033[0m")
 
 if __name__ == "__main__":
     asyncio.run(main())
