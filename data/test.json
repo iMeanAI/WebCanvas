@@ -16,6 +16,13 @@
                     "key": "",
                     "reference_answer": "app/570"
                 }
+            },
+            {
+                "match_function": "url_include_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "store.steampowered.com"
+                }
             }
         ]
     },

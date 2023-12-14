@@ -17,6 +17,7 @@ class HTMLTree:
         self.id2rawNode: dict = {}
         self.valid: list[bool] = [False] * 100000
         self.nodeCounts: int
+        self.nodeDict = {}
 
     def fetch_html_content(self, html_content) -> str:
         self.__init__()
@@ -252,6 +253,7 @@ class HTMLTree:
         root = self.pruningTreeNode[0]
         stack = [root]
         contents = ""
+        num = 0
         while stack:
             node = stack.pop()
             # if len(node["childIds"]) == 0 and self.valid[node["nodeId"]] is True:
@@ -261,7 +263,9 @@ class HTMLTree:
                     tag_name, tag_idx = self.get_tag_name(
                         node)
                     if tag_name.lower() != "statictext":
-                        contents += "  " * (node["depth"]-1) + "[" + str(tag_idx) + "] " + tag_name + \
+                        num += 1
+                        self.nodeDict[num] = tag_idx
+                        contents += "  " * (node["depth"]-1) + "[" + str(num) + "] " + tag_name + \
                             " " + f"\'{content_text}\'" + "\n"
             children = []
             for child_id in node["childIds"]:

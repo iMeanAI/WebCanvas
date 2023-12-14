@@ -35,7 +35,7 @@ def read_file(path="./data/test.json"):
     return reference_task_length, reference_evaluate_steps
 
 
-def step_evaluate(page: Page, evaluate_steps=[], input_path=None, semantic_method=None):
+async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, semantic_method=None):
     '''评测步骤打分'''
     # reference_evaluate_steps, num_steps
     # num_steps += 1
@@ -55,15 +55,15 @@ def step_evaluate(page: Page, evaluate_steps=[], input_path=None, semantic_metho
             if match_function == "path_exact_match":
                 method = evaluate["method"]
                 score = PathEvaluator.path_exact_match(
-                    input_path, evaluate["reference_answer"], method, page.content())
+                    input_path, evaluate["reference_answer"], method, await page.content())
             if match_function == "path_include_match":
                 method = evaluate["method"]
                 score = PathEvaluator.path_included_match(
-                    input_path, evaluate["reference_answer"], method, page.content())
+                    input_path, evaluate["reference_answer"], method, await page.content())
             if match_function == "path_semantic_match":
                 method = evaluate["method"]
                 score = PathEvaluator.path_semantic_match(
-                    input_path, evaluate["reference_answer"], method, page.content(), semantic_method)
+                    input_path, evaluate["reference_answer"], method, await page.content(), semantic_method)
             if match_function == "text_exact_match":
                 pass  # TODO
             if match_function == "text_include_match":
@@ -129,13 +129,13 @@ async def main(num_steps=0):
     )
     observation = await env.reset("about:blank")
     previous_trace = []
-    index = 1
-    while index < 10:
+    evaluate_steps = reference_evaluate_steps
+    for index in range(10):
         print("planning前previous_trace：",previous_trace)
         print("planning前observation：",observation)
         for _ in range(3):
             try:
-                dict_to_write = await Planning.plan(uuid=1, user_request='Find the user reviews for the game "Cyberpunk 2077" in ign', tab_name_list=None, current_tab_name=None, current_time=None, previous_trace=previous_trace, dom=None, observation=observation)
+                dict_to_write = await Planning.plan(uuid=1, user_request='Find Dota 2 game and add all DLC to cart in steam.', tab_name_list=None, current_tab_name=None, current_time=None, previous_trace=previous_trace, dom=None, observation=observation)
                 if dict_to_write is not None:
                     break
             except Exception as e:
@@ -143,31 +143,29 @@ async def main(num_steps=0):
                 continue
         def parse_previous_trace(response) -> (Action, list):
             # 临时测试，有问题，后面得用history.py的previous trace
-            match = re.compile(r"Thought: (.*)\n\nAction:")
-            # thought = match.search(response["openai_response"])
-            # if thought:
-            #     thought = thought.group(1)
-            # else:
-            #     thought = ""
+
             thought = response["description"]["reward"] if len(response["description"]["reward"]) > 0 else response["description"]["thought"]
             action_type = response['action_type']
             acton_input = response['value']
             action = f"{action_type}: {acton_input}"
             previous_trace = {"thought": thought, "action": action}
-            if response['id'] == '' or response['id'] is None:
-                element_id = 0
-            else:
-                element_id = int(response['id'])
+            element_id = int(response['id']) if type(response['id'])==int else 0
             execute_action = create_action(
                 elementid=element_id, action_type=action_type, action_input=acton_input)
-            return execute_action, previous_trace
-        execute_action, current_trace = parse_previous_trace(dict_to_write)
+            selector = env.tree.get_selector_and_xpath(element_id) if action_type in ["fill_form", "click"] else None
+
+            return execute_action, previous_trace, selector
+        print("dict_to_write:",dict_to_write)
+        execute_action, current_trace, path = parse_previous_trace(dict_to_write)
+        selector, xpath = (path[0], path[1]) if path is not None else (None, None)
+
         print("current trace:\n",current_trace)
         print("response:\n",execute_action)
+        print("selector:", selector)
         observation = await env.execute_action(execute_action)
-        # print(f"new observation {index}:\n", observation)
+        print(f"new observation {index}:\n", observation)
         previous_trace.append(current_trace)
-        index += 1
+        evaluate_steps = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
         input()
     # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
     # print(json5.dumps(a, indent=4))

@@ -21,6 +21,7 @@ class Planning:
             user_request, previous_trace, observation)
         # planning_request = PlanningPromptConstructor().construct(
         #     user_request, previous_trace, dom, tab_name_list, current_tab_name)
+        print(f"\033[32m{planning_request}\033[0m")
         planning_response, error_message = await GPT35.request(planning_request)
         # 提取出planning thought(str)和planning action(dict), 其中planning action拥有action, element_id, action_input, description四个字段
         planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(

@@ -56,7 +56,7 @@ class AsyncHTMLEnvironment:
             self.tree.fetch_html_content(self.html_content)
             tab_name = await self.page.title()
             dom_tree = self.tree.build_dom_tree()
-            observation = f"current web tab name is \'{tab_name}\'\n" + dom_tree
+            observation = f"current web tab name is \'{tab_name}\'\n" + "current dom tree is below:\n" +dom_tree
         except:
             observation = ""
         return observation
@@ -68,6 +68,10 @@ class AsyncHTMLEnvironment:
 
     async def execute_action(self, action: Action) -> str:
         '''找到可交互元素并执行相应的动作得到新的observation'''
+        if "element_id" in action and action["element_id"] != 0:
+            print('action["element_id"]:', action["element_id"])
+            print('tree.nodeDict[action["element_id"]]:',self.tree.nodeDict[action["element_id"]])
+            action["element_id"] = self.tree.nodeDict[action["element_id"]]
         try:
             match action["action_type"]:
                 case ActionTypes.CLICK:
@@ -121,17 +125,18 @@ class AsyncHTMLEnvironment:
                                 print(e)
                     except Exception as e:
                         print("can't execute click action")
-                        return ""
+                        return await self._get_obs()
                 case ActionTypes.GOTO:
                     try:
                         self.page = await self.context.new_page()
                         await self.page.goto(action["url"])
                         self.html_content = await self.page.content()
+                        print(self.html_content)
                         return await self._get_obs()
                     except Exception as e:
                         print("can't execute goto action")
                         print(e)
-                        return ""
+                        return await self._get_obs()
                 case ActionTypes.FILL_FORM:
                     try:
                         try:
@@ -161,7 +166,7 @@ class AsyncHTMLEnvironment:
                     except Exception as e:
                         print("can't execute fill form action")
                         print(e)
-                        return ""
+                        return await self._get_obs()
                 case ActionTypes.GOOGLE_SEARCH:
                     try:
                         self.page = await self.context.new_page()
@@ -176,7 +181,7 @@ class AsyncHTMLEnvironment:
                     except Exception as e:
                         print("can't execute google search action")
                         print(e)
-                        return ""
+                        return await self._get_obs()
                 case _:
                     raise ValueError(
                         f"Unknown action type {action['action_type']}"
@@ -184,7 +189,7 @@ class AsyncHTMLEnvironment:
         except Exception as e:
             print("execute error")
             print(e)
-        return ""
+        return await self._get_obs()
 
     async def get_page(self, element_id: int) -> (Page, str):
         try:
