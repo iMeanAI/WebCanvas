@@ -14,6 +14,8 @@ class ObservationPrompts:
     planning_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can."\
         "You will get key information from current web page,such as Dom tree\n\n"\
         f"Here is a Dom tree example:{example_input}\n"\
+        "And then you will find that each row represents the characteristic representation of a web page element, and it has three attributes, "\
+        "such as [40] link 'About', \n[40] for the element's element_id, link for the element to be a link, and 'About' for the content of the element"\
         "You also have access to the following tools:\n\n"\
         "goto: useful for when you need visit a link or a website, it will open a new tab\n"\
         "fill_form: useful for when you need to fill out a form on the current website. Input should be a string\n"\
@@ -29,7 +31,8 @@ class ObservationPrompts:
         "1. ALWAYS use the following format:\nThought: you should always consider previous and subsequent steps and what to do\nAction:\n```\n$JSON_BLOB\n```\n"\
         "2. You must return a valid $JSON_BLOB like above or I can't read it.\n"\
         "3. You should only return one JSON blob as the result."\
-        "4. Your action should not be the same as last step's action."
+        "4. Your action should not be the same as last step's action."\
+        "5. Your action output element_id must come from Dom tree,not a invalid character"
     planning_prompt_user = "The question here is described as \"{{user_request}}\".\n\n"
 
     reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals."

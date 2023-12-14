@@ -153,21 +153,26 @@ class AsyncHTMLEnvironment:
                         except Exception as e:
                             print(
                                 f"selector:{selector},label_name:{label},element_idx: {element_idx}")
-                        fill_and_press_enter = '''() => {
-                                    const element = document.querySelector('%s');
-                                    if (element) {
-                                        element.value = '%s';
-                                        element.dispatchEvent(new Event('input', { bubbles: true }));
-                                        element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+                        try:
+                            await self.page.locator(selector).fill(action["fill_text"])
+                            await self.page.locator(selector).press("Enter")
+                            await self.page.wait_for_load_state('load')
+                            self.html_content = await self.page.content()
+                            return await self._get_obs()
+                        except:
+                            fill_and_press_enter = '''() => {
+                                        const element = document.querySelector('%s');
+                                        if (element) {
+                                            element.value = '%s';
+                                            element.dispatchEvent(new Event('input', { bubbles: true }));
+                                            element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+                                        }
                                     }
-                                }
-                            ''' % (selector, action['fill_text'])
-                        await self.page.evaluate(fill_and_press_enter)
-                        # await self.page.locator(selector).fill(action["fill_text"])
-                        # await self.page.locator(selector).press("Enter")
-                        await self.page.wait_for_load_state('load')
-                        self.html_content = await self.page.content()
-                        return await self._get_obs()
+                                ''' % (selector, action['fill_text'])
+                            await self.page.evaluate(fill_and_press_enter)
+                            await self.page.wait_for_load_state('load')
+                            self.html_content = await self.page.content()
+                            return await self._get_obs()
                     except Exception as e:
                         print("can't execute fill form action")
                         print(e)
