@@ -54,6 +54,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, semantic
                     page.url, evaluate["reference_answer"], evaluate["key"], semantic_method=semantic_method)
             if match_function == "path_exact_match":
                 method = evaluate["method"]
+                print("path_exact_match:", input_path,"***", evaluate["reference_answer"])
                 score = PathEvaluator.path_exact_match(
                     input_path, evaluate["reference_answer"], method, await page.content())
             if match_function == "path_include_match":
@@ -149,10 +150,20 @@ async def main(num_steps=0):
             acton_input = response['value']
             action = f"{action_type}: {acton_input}"
             previous_trace = {"thought": thought, "action": action}
-            element_id = int(response['id']) if type(response['id'])==int else 0
+            try:
+                element_id = int(response['id'])
+            except:
+                element_id = 0
+            # TODO hack,记得删除
+            if index == 0:
+                action_type="goto"
+                acton_input = "https://store.steampowered.com/app/570/Dota_2/"
+
+            
             execute_action = create_action(
                 elementid=element_id, action_type=action_type, action_input=acton_input)
-            selector = env.tree.get_selector_and_xpath(element_id) if action_type in ["fill_form", "click"] else None
+            #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
+            selector = env.tree.get_selector_and_xpath(env.tree.nodeDict[element_id]) if action_type in ["fill_form", "click"] else None
 
             return execute_action, previous_trace, selector
         print("dict_to_write:",dict_to_write)
@@ -162,10 +173,11 @@ async def main(num_steps=0):
         print("current trace:\n",current_trace)
         print("response:\n",execute_action)
         print("selector:", selector)
-        observation = await env.execute_action(execute_action)
-        print(f"new observation {index}:\n", observation)
-        previous_trace.append(current_trace)
         evaluate_steps = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
+        # input()
+        observation = await env.execute_action(execute_action)
+        # print(f"new observation {index}:\n", observation)
+        previous_trace.append(current_trace)
         input()
     # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
     # print(json5.dumps(a, indent=4))

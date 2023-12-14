@@ -131,7 +131,7 @@ class AsyncHTMLEnvironment:
                         self.page = await self.context.new_page()
                         await self.page.goto(action["url"])
                         self.html_content = await self.page.content()
-                        print(self.html_content)
+                        # print(self.html_content)
                         return await self._get_obs()
                     except Exception as e:
                         print("can't execute goto action")

@@ -2,7 +2,7 @@ from collections import deque
 from lxml.html import etree
 from io import StringIO
 
-from .utils import ElementNode, TagNameList
+from .utils import ElementNode, TagNameList, MapTagNameList
 from .active_elements import ActiveElements
 
 
@@ -242,7 +242,7 @@ class HTMLTree:
             tag_name = element["tagName"]
             tag_idx = element["nodeId"]
             # TODO 添加更多映射关系
-            if tag_name == "span":
+            if tag_name in MapTagNameList:
                 parent_element = self.elementNodes[element["parentId"]]
                 return self.get_tag_name(parent_element)
             else:
@@ -265,7 +265,7 @@ class HTMLTree:
                     if tag_name.lower() != "statictext":
                         num += 1
                         self.nodeDict[num] = tag_idx
-                        contents += "  " * (node["depth"]-1) + "[" + str(num) + "] " + tag_name + \
+                        contents += "  " * (node["depth"]-1) + "[id:" + str(num) + "] " + tag_name + \
                             " " + f"\'{content_text}\'" + "\n"
             children = []
             for child_id in node["childIds"]:
