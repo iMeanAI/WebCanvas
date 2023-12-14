@@ -155,10 +155,10 @@ async def main(num_steps=0):
                 element_id = int(response['id'])
             except:
                 element_id = 0
-            # TODO hack,记得删除
-            if index == 0:
-                action_type="goto"
-                acton_input = "https://store.steampowered.com/app/570/Dota_2/"
+            # # TODO hack,记得删除
+            # if index == 0:
+            #     action_type="goto"
+            #     acton_input = "https://store.steampowered.com/app/570/Dota_2/"
 
             
             execute_action = create_action(

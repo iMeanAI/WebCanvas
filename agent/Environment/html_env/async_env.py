@@ -95,7 +95,7 @@ class AsyncHTMLEnvironment:
                                     url = urljoin(base_url, url)
                                 self.page = await self.context.new_page()
                                 await self.page.goto(url)
-                                await self.page.wait_for_load_state('wait_for_load_state')
+                                await self.page.wait_for_load_state('load')
                                 self.html_content = await self.page.content()
                                 return await self._get_obs()
                             except:
@@ -107,7 +107,7 @@ class AsyncHTMLEnvironment:
                                         }
                                     }''' % selector)
                                     # await self.page.locator(selector).click()
-                                    await self.page.wait_for_load_state('wait_for_load_state')
+                                    await self.page.wait_for_load_state('load')
                                     self.html_content = await self.page.content()
                                     return await self._get_obs()
                                 except Exception as e:
@@ -121,6 +121,7 @@ class AsyncHTMLEnvironment:
                                     }
                                 }''' % selector)
                                 # await self.page.locator(selector).click()
+                                await self.page.wait_for_load_state('load')
                                 self.html_content = await self.page.content()
                                 return await self._get_obs()
                             except Exception as e:
@@ -132,7 +133,7 @@ class AsyncHTMLEnvironment:
                     try:
                         self.page = await self.context.new_page()
                         await self.page.goto(action["url"])
-                        await self.page.wait_for_load_state('wait_for_load_state')
+                        await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
                         # print(self.html_content)
                         return await self._get_obs()
@@ -164,7 +165,7 @@ class AsyncHTMLEnvironment:
                         await self.page.evaluate(fill_and_press_enter)
                         # await self.page.locator(selector).fill(action["fill_text"])
                         # await self.page.locator(selector).press("Enter")
-                        await self.page.wait_for_load_state('wait_for_load_state')
+                        await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
                         return await self._get_obs()
                     except Exception as e:
@@ -180,7 +181,7 @@ class AsyncHTMLEnvironment:
                         # if search_box is not None:
                         #     await search_box.fill(action["fill_text"])
                         #     await self.page.click('input[type="submit"]')
-                        await self.page.wait_for_load_state('wait_for_load_state')
+                        await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
                         return await self._get_obs()
                     except Exception as e:
