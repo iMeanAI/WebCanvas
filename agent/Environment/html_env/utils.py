@@ -32,6 +32,22 @@ TagNameList = [
     "td",
     "ul",
     "li",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6"
+]
+
+MapTagNameList = [
+    "span",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6"
 ]
 
 DelTagNameList = [

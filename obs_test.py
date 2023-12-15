@@ -3,6 +3,7 @@ from agent.Environment.html_env.async_env import AsyncHTMLEnvironment
 from agent.Environment.html_env.base_env import HTMLEnvironment
 from agent.Plan import *
 import traceback
+from lxml import html
 
 
 async def main():

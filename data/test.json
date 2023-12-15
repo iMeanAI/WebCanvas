@@ -7,7 +7,7 @@
                 "match_function": "path_exact_match",
                 "method":"selector",
                 "content": {
-                    "reference_answer": "#dlc_purchase_action >.btn_addtocart >.btn_green_steamui.btn_medium >span:nth-child(1)"
+                    "reference_answer": "#dlc_purchase_action > div.btn_addtocart > a"
                 }
             },
             {
@@ -17,6 +17,7 @@
                     "reference_answer": "app/570"
                 }
             }
+            
         ]
     },
     {
