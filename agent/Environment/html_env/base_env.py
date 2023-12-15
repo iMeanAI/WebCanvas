@@ -148,14 +148,12 @@ class HTMLEnvironment:
                             print(
                                 f"selector:{selector},label:{label},element_idx: {element_idx}")
                         try:
-                            print("通过selector实现")
                             self.page.locator(selector).fill(action["fill_text"])
                             self.page.locator(selector).press("Enter")
                             self.page.wait_for_load_state('load')
                             self.html_content = self.page.content()
                             return self._get_obs()
                         except:
-                            print("通过js实现:")
                             fill_and_press_enter = '''() => {
                                         const element = document.querySelector('%s');
                                         if (element) {
