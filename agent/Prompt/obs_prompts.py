@@ -32,7 +32,7 @@ class ObservationPrompts:
         "2. You must return a valid $JSON_BLOB like above or I can't read it.\n"\
         "3. You should only return one JSON blob as the result."\
         "4. Your action should not be the same as last step's action."\
-        "5. Your action output element_id must come from Dom tree,not a invalid character"
+        "5. Your action output element_id must come from Dom tree,and it is a integer not a invalid character"
     planning_prompt_user = "The question here is described as \"{{user_request}}\".\n\n"
 
     reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals."
