@@ -9,7 +9,8 @@ class ObservationPrompts:
                 [163] textarea 'Search'
                 [236] button 'See more'
     """
-    example_output = '\n```\n{\n  "action": "click",\n  "action_input": "link",\n  "element_id": "169",\n  "description": "Now I\'m on Google\'s main page. I should input text into the search bar. Then I will select the correct link from the result page."\n}\n```'
+    # example_output = '\n```\n{\n  "action": "click",\n  "action_input": "link",\n  "element_id": "40",\n  "description": "Now I\'m on Google\'s main page. I should input text into the search bar. Then I will select the correct link from the result page."\n}\n```'
+    example_output = '\n```\n{\n  "action": "click",\n  "action_input": "link",\n  "element_id": "40",\n  "description": "Now I\'m on Google\'s main page. I\'m going to click on the link with element_id 40 ."\n}\n```'
 
     planning_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can."\
         "You will get key information from current web page,such as Dom tree\n\n"\
@@ -17,11 +18,11 @@ class ObservationPrompts:
         "And then you will find that each row represents the characteristic representation of a web page element, and it has three attributes, "\
         "such as [40] link 'About', \n[40] for the element's element_id, link for the element to be a link, and 'About' for the content of the element"\
         "You also have access to the following tools:\n\n"\
-        "goto: useful for when you need visit a link or a website, it will open a new tab\n"\
+        "goto: useful for when you need visit a new link or a website, it will open a new tab\n"\
         "fill_form: useful for when you need to fill out a form on the current website. Input should be a string\n"\
         "google_search: useful for when you need to use google to search something\n"\
         "switch_tab: useful for when you need to switch tab\n"\
-        "click: useful for when you need to click a button/link\n"\
+        "click: useful for when you need to click a button/link from Dom tree\n"\
         "The way you use the tools is by specifying a json blob.\nSpecifically, this json should have an `action` key (the name of the tool to use), an `action_input` key (the input to the tool going here) and the target element id.\n\n"\
         "The only values that should be in the \"action\" field are: goto, fill_form, google_search, switch_tab, click\n\n"\
         "A proper description contains:1. What website it is; 2. Which action do you choose; 3. Your next action plan to do.\nREMEMBER DO NOT LEAVE THE DESCRIPTION EMPTY!\n"\

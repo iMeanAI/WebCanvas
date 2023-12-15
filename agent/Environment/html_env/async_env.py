@@ -183,18 +183,12 @@ class AsyncHTMLEnvironment:
                     try:
                         self.page = await self.context.new_page()
                         await self.page.goto("https://www.google.com/search?q="+action["fill_text"])
-                        # search_box = await self.page.query_selector(
-                        #     'textarea[name="q"]')
-                        # if search_box is not None:
-                        #     await search_box.fill(action["fill_text"])
-                        #     await self.page.click('input[type="submit"]')
                         await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
                         return await self._get_obs()
                     except Exception as e:
                         print("can't execute google search action")
                         print(e)
-                        return await self._get_obs()
                 case _:
                     raise ValueError(
                         f"Unknown action type {action['action_type']}"

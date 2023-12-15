@@ -144,12 +144,10 @@ async def main(num_steps=0):
                 traceback.print_exc()
                 continue
         def parse_previous_trace(response) -> (Action, list):
-            # 临时测试，有问题，后面得用history.py的previous trace
-
-            thought = response["description"]["reward"] if len(response["description"]["reward"]) > 0 else response["description"]["thought"]
+            thought = response["description"].get("reward") if response["description"].get("reward") else response["description"].get("thought")
             action_type = response['action_type']
             acton_input = response['value']
-            action = f"{action_type}: {acton_input}"
+            action = response["description"].get("action")
             previous_trace = {"thought": thought, "action": action}
             try:
                 element_id = int(response['id'])
@@ -159,18 +157,15 @@ async def main(num_steps=0):
             # if index == 0:
             #     action_type="goto"
             #     acton_input = "https://store.steampowered.com/app/570/Dota_2/"
-
-            
             execute_action = create_action(
                 elementid=element_id, action_type=action_type, action_input=acton_input)
             #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
             selector = env.tree.get_selector_and_xpath(env.tree.nodeDict[element_id]) if action_type in ["fill_form", "click"] else None
-
             return execute_action, previous_trace, selector
+        
         print("dict_to_write:",dict_to_write)
         execute_action, current_trace, path = parse_previous_trace(dict_to_write)
         selector, xpath = (path[0], path[1]) if path is not None else (None, None)
-
         print("current trace:\n",current_trace)
         print("response:\n",execute_action)
         print("selector:", selector)

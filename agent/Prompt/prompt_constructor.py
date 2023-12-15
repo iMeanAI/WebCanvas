@@ -79,7 +79,7 @@ class ObservationPromptConstructor(BasePromptConstructor):
         if len(previous_trace) > 0:
             self.prompt_user += HistoryMemory(
                 previous_trace=previous_trace).construct_previous_trace_prompt()
-            self.prompt_user += f"current observation or Dom tree is {observation}"
+            self.prompt_user += observation
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
