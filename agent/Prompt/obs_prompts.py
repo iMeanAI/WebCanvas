@@ -10,7 +10,7 @@ class ObservationPrompts:
                 [236] button 'See more'
     """
     # example_output = '\n```\n{\n  "action": "click",\n  "action_input": "link",\n  "element_id": "40",\n  "description": "Now I\'m on Google\'s main page. I should input text into the search bar. Then I will select the correct link from the result page."\n}\n```'
-    example_output = '\n```\n{\n  "action": "click",\n  "action_input": "link",\n  "element_id": "40",\n  "description": "Now I\'m on Google\'s main page. I\'m going to click on the link with element_id 40 ."\n}\n```'
+    example_output = '\n```\n{\n  "action": "click",\n  "action_input": "link",\n  "element_id": "40",\n  "description": "Now I\'m on Google\'s main page. I\'m now clicking on the link with element_id 40 ."\n}\n```'
 
     planning_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can."\
         "You will get key information from current web page,such as Dom tree\n\n"\
@@ -38,15 +38,16 @@ class ObservationPrompts:
 
     reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals."
 
+    #"Tools are goto(jump to url), fill_form(fill in the blank), google_search, switch_tab(switch window tab) and click. You should only use tools above!\n"\
+    #"If you find that the actions of the last two steps are the same, it is determined that the process is stuck in a local optimum solution and you should output 'loop'(without quotation marks)."\
+
     reward_prompt_user = "The question here is described as \"{{user_request}}\".\n\n"\
-        "The previous thoughts and actions are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"\
-        "Tools are goto(jump to url), fill_form(fill in the blank), google_search, switch_tab(switch window tab) and click. You should only use tools above!\n"\
-        "Consider whether previous actions have done the task(ignore the detail actions)?\nIf true, just return 'finished'(without quotation marks);\nElse, return what's next step you plan to do.\n"\
-        "For example, if your goal is to set up a calendar or meeting or send an e-mail, you should not output 'finished' until you click send/submit/save button;"\
-        "If your goal is to goto somewhere and get some information, you should not output 'finished' until you see the correct information on webpage.\n"\
-        "If you find that the actions of the last two steps are the same, it is determined that the process is stuck in a local optimum solution and you should output 'loop'(without quotation marks)."\
-        "If you find that the task is too difficult to complete, you should output 'hard'."\
-        "Take a deep breath, please think carefully!"
+    "The previous thoughts and actions are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"\
+    "Consider whether previous actions have done the task(ignore the detail actions)?\nIf true, just return 'finished'(without quotation marks);\nElse, return what's next step you plan to do.\n"\
+    "For example, if your goal is to set up a calendar or meeting or send an e-mail, you should not output 'finished' until you click send/submit/save button;"\
+    "If your goal is to goto somewhere and get some information, you should not output 'finished' until you see the correct information on webpage.\n"\
+    "If you find that the task is too difficult to complete, you should output 'hard'."\
+    "Take a deep breath, please think carefully!"
 
     judge_searchbar_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can.\n"\
         "Your target is to judge whether the input is the search bar.\n"

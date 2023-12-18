@@ -144,7 +144,7 @@ async def main(num_steps=0):
                 traceback.print_exc()
                 continue
         def parse_previous_trace(response) -> (Action, list):
-            thought = response["description"].get("reward") if response["description"].get("reward") else response["description"].get("thought")
+            thought = response["description"].get("reward") if "finished" == response["description"].get("reward") else response["description"].get("thought")
             action_type = response['action_type']
             acton_input = response['value']
             action = response["description"].get("action")
