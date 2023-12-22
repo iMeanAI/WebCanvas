@@ -56,7 +56,7 @@ class AsyncHTMLEnvironment:
             self.tree.fetch_html_content(self.html_content)
             tab_name = await self.page.title()
             dom_tree = self.tree.build_dom_tree()
-            observation = f"current web tab name is \'{tab_name}\'\n" + "current dom tree is below:\n" +dom_tree
+            observation = f"current web tab name is \'{tab_name}\'\n" + "current accessiability tree is below:\n" +dom_tree
         except:
             observation = ""
         return observation
