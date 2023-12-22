@@ -9,17 +9,21 @@ class ObservationPrompts:
                 [163] textarea 'Search'
                 [236] button 'See more'
     """
-    example_output = '\n```\n{\n  "action": "click",\n  "action_input": "link",\n  "element_id": "169",\n  "description": "Now I\'m on Google\'s main page. I should input text into the search bar. Then I will select the correct link from the result page."\n}\n```'
+    # example_output = '\n```\n{\n  "action": "click",\n  "action_input": "link",\n  "element_id": "40",\n  "description": "Now I\'m on Google\'s main page. I should input text into the search bar. Then I will select the correct link from the result page."\n}\n```'
+    example_output = '\n```\n{\n  "action": "click",\n  "action_input": "button",\n  "element_id": "236",\n  "description": "Now I\'m on Google\'s main page. I\'m now clicking the button with element_id [236] to see more information."\n}\n```'
+    score_output = '\n```\n{\n "score": "10"\n}\n```'
 
     planning_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can."\
-        "You will get key information from current web page,such as Dom tree\n\n"\
-        f"Here is a Dom tree example:{example_input}\n"\
-        "You also have access to the following tools:\n\n"\
-        "goto: useful for when you need visit a link or a website, it will open a new tab\n"\
-        "fill_form: useful for when you need to fill out a form on the current website. Input should be a string\n"\
+        "You will get key information from current web page,such as accessiability tree\n\n"\
+        f"Here is a accessiability tree example:{example_input}\n"\
+        "And then you will find that each row represents the characteristic representation of a web page element, and it has three attributes,"\
+        "such as [40] link 'About', \n[40] for the element's element_id.\nlink for the element to be a link.\n'About' for the content of the element"\
+        "You also have access to the following tools(helpful to interact with web page):\n\n"\
+        "goto: useful for when you need visit a new link or a website, it will open a new tab\n"\
+        "fill_form: useful for when you need to fill out a form or input something from accessiability tree. Input should be a string\n"\
         "google_search: useful for when you need to use google to search something\n"\
         "switch_tab: useful for when you need to switch tab\n"\
-        "click: useful for when you need to click a button/link\n"\
+        "click: useful for when you need to click a button/link from accessiability tree\n"\
         "The way you use the tools is by specifying a json blob.\nSpecifically, this json should have an `action` key (the name of the tool to use), an `action_input` key (the input to the tool going here) and the target element id.\n\n"\
         "The only values that should be in the \"action\" field are: goto, fill_form, google_search, switch_tab, click\n\n"\
         "A proper description contains:1. What website it is; 2. Which action do you choose; 3. Your next action plan to do.\nREMEMBER DO NOT LEAVE THE DESCRIPTION EMPTY!\n"\
@@ -29,20 +33,56 @@ class ObservationPrompts:
         "1. ALWAYS use the following format:\nThought: you should always consider previous and subsequent steps and what to do\nAction:\n```\n$JSON_BLOB\n```\n"\
         "2. You must return a valid $JSON_BLOB like above or I can't read it.\n"\
         "3. You should only return one JSON blob as the result."\
-        "4. Your action should not be the same as last step's action."
+        "4. Your action should not be the same as last step's action."\
+        "5. Your action output element_id must come from accessiability tree,and it is a integer not a invalid character"
+
+    planning1_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can."\
+        "You will get key information from current web page,such as accessiability tree\n\n"\
+        f"Here is a accessiability tree example:{example_input}\n"\
+        "And then you will find that each row represents the characteristic representation of a web page element, and it has three attributes, "\
+        "such as [40] link 'About', \n[40] for the element's element_id, link for the element to be a link, and 'About' for the content of the element"\
+        "You also have access to the following tools:\n\n"\
+        "goto: useful for when you need visit a new link or a website, it will open a new tab\n"\
+        "fill_form: useful for when you need to fill out a form on the current website. Input should be a string\n"\
+        "google_search: useful for when you need to use google to search something\n"\
+        "switch_tab: useful for when you need to switch tab\n"\
+        "click: useful for when you need to click a button/link from accessiability tree\n"\
+        "The way you use the tools is by specifying a json blob.\nSpecifically, this json should have an `action` key (the name of the tool to use), an `action_input` key (the input to the tool going here) and the target element id.\n\n"\
+        "The only values that should be in the \"action\" field are: goto, fill_form, google_search, switch_tab, click\n\n"\
+        "A proper description contains:1. What website it is; 2. Which action do you choose; 3. Your next action plan to do.\nREMEMBER DO NOT LEAVE THE DESCRIPTION EMPTY!\n"\
+        "Here is an example of a valid $JSON_BLOB:\n\n```\n{\n  \"action\": $TOOL_NAME,\n  \"action_input\": $INPUT,\n  \"element_id\": $TARGET_ELEMENT_ID,\n  \"description\": $ACTION_DESCRIPTION\n}\n```\n\n"\
+        f"Example action output:{str(example_output)}\n"\
+        "Also, you should follow the instructions below:\n"\
+        "1. ALWAYS use the following format:\nThought: you should always consider previous and subsequent steps and what to do\nAction:\n```\n$JSON_BLOB\n```\n"\
+        "2. You must return a valid $JSON_BLOB like above or I can't read it.\n"\
+        "3. You should only return one JSON blob as the result."\
+        "4. Your action should not be the same as last step's action."\
+        "5. Your action output element_id must come from accessiability tree,and it is a integer not a invalid character"
     planning_prompt_user = "The question here is described as \"{{user_request}}\".\n\n"
 
-    reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals."
+    global_reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain task."
+    current_reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain task."
 
-    reward_prompt_user = "The question here is described as \"{{user_request}}\".\n\n"\
+    # "Tools are goto(jump to url), fill_form(fill in the blank), google_search, switch_tab(switch window tab) and click. You should only use tools above!\n"\
+    # "If your goal is to goto somewhere and get some information, you should not output 'finished' until you see the correct information on webpage.\n"\
+    # "For example, if your goal is to set up a calendar or meeting or send an e-mail, you should not output 'finished' until you click send/submit/save button;"\
+
+    global_reward_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
         "The previous thoughts and actions are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"\
-        "Tools are goto(jump to url), fill_form(fill in the blank), google_search, switch_tab(switch window tab) and click. You should only use tools above!\n"\
-        "Consider whether previous actions have done the task(ignore the detail actions)?\nIf true, just return 'finished'(without quotation marks);\nElse, return what's next step you plan to do.\n"\
-        "For example, if your goal is to set up a calendar or meeting or send an e-mail, you should not output 'finished' until you click send/submit/save button;"\
-        "If your goal is to goto somewhere and get some information, you should not output 'finished' until you see the correct information on webpage.\n"\
-        "If you find that the actions of the last two steps are the same, it is determined that the process is stuck in a local optimum solution and you should output 'loop'(without quotation marks)."\
-        "If you find that the task is too difficult to complete, you should output 'hard'."\
-        "Take a deep breath, please think carefully!"
+        "Consider the situation and quality of task completion?\n"\
+        "If you are entirely certain about completing the target task, just return 'finished'(without quotation marks);\n"\
+        "If you believe you have completed the intermediate steps of the target task but not entirely finish the target task,you should return 'doing'(without quotation marks);\n"\
+        "If you find that the target task is too difficult to complete, you should return 'hard'(without quotation marks);\n"\
+        "If you find that the the last two steps of previous actions are the same, it is determined that the process is stuck in a local optimum solution and you should return 'loop'(without quotation marks);\n"\
+        "Also, you should have summarization for previous thoughts and actions.\n"\
+        "Above all,you should return the status of completing the targe task and a summarization for previous thoughts and actions."\
+        "Here is an example of a valid $JSON_BLOB:\n\n```\n{\n  \"status\": $finished,\n  \"summarization\": $summarization,\n }\n```\n\n"\
+
+
+    current_reward_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
+        "The current thought and action is: {{stringfy_thought_and_action_output}}.\n\nYou have done the current action\n\n"\
+        "please judge whether this action is helpful for finishing the target task,and give this action a rating, from 1 to 10, give your points"\
+        f"Example output:{str(score_output)}\n"
 
     judge_searchbar_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can.\n"\
         "Your target is to judge whether the input is the search bar.\n"

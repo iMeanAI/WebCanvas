@@ -96,8 +96,8 @@ class ObservationPromptConstructor(BasePromptConstructor):
 
 class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的prompt
     def __init__(self):
-        self.prompt_system = BasePrompts.reward_prompt_system
-        self.prompt_user = BasePrompts.reward_prompt_user
+        self.prompt_system = ObservationPrompts.global_reward_prompt_system
+        self.prompt_user = ObservationPrompts.global_reward_prompt_user
 
     # 构建reward的prompt，输出openai可解析的格式
     def construct(self, user_request: str, stringfy_thought_and_action_output: str) -> list:

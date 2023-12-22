@@ -56,7 +56,7 @@ class AsyncHTMLEnvironment:
             self.tree.fetch_html_content(self.html_content)
             tab_name = await self.page.title()
             dom_tree = self.tree.build_dom_tree()
-            observation = f"current web tab name is \'{tab_name}\'\n" + "current dom tree is below:\n" +dom_tree
+            observation = f"current web tab name is \'{tab_name}\'\n" + "current accessiability tree is below:\n" +dom_tree
         except:
             observation = ""
         return observation
@@ -95,7 +95,7 @@ class AsyncHTMLEnvironment:
                                     url = urljoin(base_url, url)
                                 self.page = await self.context.new_page()
                                 await self.page.goto(url)
-                                await self.page.wait_for_load_state('wait_for_load_state')
+                                await self.page.wait_for_load_state('load')
                                 self.html_content = await self.page.content()
                                 return await self._get_obs()
                             except:
@@ -107,7 +107,7 @@ class AsyncHTMLEnvironment:
                                         }
                                     }''' % selector)
                                     # await self.page.locator(selector).click()
-                                    await self.page.wait_for_load_state('wait_for_load_state')
+                                    await self.page.wait_for_load_state('load')
                                     self.html_content = await self.page.content()
                                     return await self._get_obs()
                                 except Exception as e:
@@ -121,6 +121,7 @@ class AsyncHTMLEnvironment:
                                     }
                                 }''' % selector)
                                 # await self.page.locator(selector).click()
+                                await self.page.wait_for_load_state('load')
                                 self.html_content = await self.page.content()
                                 return await self._get_obs()
                             except Exception as e:
@@ -132,7 +133,7 @@ class AsyncHTMLEnvironment:
                     try:
                         self.page = await self.context.new_page()
                         await self.page.goto(action["url"])
-                        await self.page.wait_for_load_state('wait_for_load_state')
+                        await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
                         # print(self.html_content)
                         return await self._get_obs()
@@ -152,21 +153,26 @@ class AsyncHTMLEnvironment:
                         except Exception as e:
                             print(
                                 f"selector:{selector},label_name:{label},element_idx: {element_idx}")
-                        fill_and_press_enter = '''() => {
-                                    const element = document.querySelector('%s');
-                                    if (element) {
-                                        element.value = '%s';
-                                        element.dispatchEvent(new Event('input', { bubbles: true }));
-                                        element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+                        try:
+                            await self.page.locator(selector).fill(action["fill_text"])
+                            await self.page.locator(selector).press("Enter")
+                            await self.page.wait_for_load_state('load')
+                            self.html_content = await self.page.content()
+                            return await self._get_obs()
+                        except:
+                            fill_and_press_enter = '''() => {
+                                        const element = document.querySelector('%s');
+                                        if (element) {
+                                            element.value = '%s';
+                                            element.dispatchEvent(new Event('input', { bubbles: true }));
+                                            element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+                                        }
                                     }
-                                }
-                            ''' % (selector, action['fill_text'])
-                        await self.page.evaluate(fill_and_press_enter)
-                        # await self.page.locator(selector).fill(action["fill_text"])
-                        # await self.page.locator(selector).press("Enter")
-                        await self.page.wait_for_load_state('wait_for_load_state')
-                        self.html_content = await self.page.content()
-                        return await self._get_obs()
+                                ''' % (selector, action['fill_text'])
+                            await self.page.evaluate(fill_and_press_enter)
+                            await self.page.wait_for_load_state('load')
+                            self.html_content = await self.page.content()
+                            return await self._get_obs()
                     except Exception as e:
                         print("can't execute fill form action")
                         print(e)
@@ -175,18 +181,12 @@ class AsyncHTMLEnvironment:
                     try:
                         self.page = await self.context.new_page()
                         await self.page.goto("https://www.google.com/search?q="+action["fill_text"])
-                        # search_box = await self.page.query_selector(
-                        #     'textarea[name="q"]')
-                        # if search_box is not None:
-                        #     await search_box.fill(action["fill_text"])
-                        #     await self.page.click('input[type="submit"]')
-                        await self.page.wait_for_load_state('wait_for_load_state')
+                        await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
                         return await self._get_obs()
                     except Exception as e:
                         print("can't execute google search action")
                         print(e)
-                        return await self._get_obs()
                 case _:
                     raise ValueError(
                         f"Unknown action type {action['action_type']}"

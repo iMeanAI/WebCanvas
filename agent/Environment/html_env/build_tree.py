@@ -265,7 +265,7 @@ class HTMLTree:
                     if tag_name.lower() != "statictext":
                         num += 1
                         self.nodeDict[num] = tag_idx
-                        contents += "  " * (node["depth"]-1) + "[id:" + str(num) + "] " + tag_name + \
+                        contents += "  " * (node["depth"]-1) + "[" + str(num) + "] " + tag_name + \
                             " " + f"\'{content_text}\'" + "\n"
             children = []
             for child_id in node["childIds"]:
