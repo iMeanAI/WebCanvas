@@ -50,13 +50,14 @@ class AsyncHTMLEnvironment:
         else:
             self.page = await self.context.new_page()
             self.html_content = await self.page.content()
+        self.last_page = self.page
 
     async def _get_obs(self) -> str:
         try:
             self.tree.fetch_html_content(self.html_content)
             tab_name = await self.page.title()
             dom_tree = self.tree.build_dom_tree()
-            observation = f"current web tab name is \'{tab_name}\'\n" + "current accessiability tree is below:\n" +dom_tree
+            observation = f"current web page name is \'{tab_name}\'\n" + "current accessiability tree is below:\n" +dom_tree
         except:
             observation = ""
         return observation
@@ -93,6 +94,7 @@ class AsyncHTMLEnvironment:
                                 if bool(urlparse(url).netloc) is False:
                                     base_url = self.page.url()
                                     url = urljoin(base_url, url)
+                                self.last_page =  self.page
                                 self.page = await self.context.new_page()
                                 await self.page.goto(url)
                                 await self.page.wait_for_load_state('load')
@@ -100,6 +102,7 @@ class AsyncHTMLEnvironment:
                                 return await self._get_obs()
                             except:
                                 try:
+                                    self.last_page =  self.page
                                     await self.page.evaluate('''() => {
                                         const element = document.querySelector('%s');
                                         if (element) {
@@ -114,6 +117,7 @@ class AsyncHTMLEnvironment:
                                     print(e)
                         else:
                             try:
+                                self.last_page =  self.page
                                 await self.page.evaluate('''() => {
                                     const element = document.querySelector('%s');
                                     if (element) {
@@ -131,11 +135,11 @@ class AsyncHTMLEnvironment:
                         return await self._get_obs()
                 case ActionTypes.GOTO:
                     try:
+                        self.last_page =  self.page
                         self.page = await self.context.new_page()
                         await self.page.goto(action["url"])
                         await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
-                        # print(self.html_content)
                         return await self._get_obs()
                     except Exception as e:
                         print("can't execute goto action")
@@ -144,6 +148,7 @@ class AsyncHTMLEnvironment:
                 case ActionTypes.FILL_FORM:
                     try:
                         try:
+                            self.last_page =  self.page
                             label, element_idx = self.tree.get_tag_name(
                                 self.tree.elementNodes[action["element_id"]])
                             action.update({"element_id": element_idx,
@@ -154,12 +159,14 @@ class AsyncHTMLEnvironment:
                             print(
                                 f"selector:{selector},label_name:{label},element_idx: {element_idx}")
                         try:
+                            self.last_page =  self.page
                             await self.page.locator(selector).fill(action["fill_text"])
                             await self.page.locator(selector).press("Enter")
                             await self.page.wait_for_load_state('load')
                             self.html_content = await self.page.content()
                             return await self._get_obs()
                         except:
+                            self.last_page =  self.page
                             fill_and_press_enter = '''() => {
                                         const element = document.querySelector('%s');
                                         if (element) {
@@ -179,6 +186,7 @@ class AsyncHTMLEnvironment:
                         return await self._get_obs()
                 case ActionTypes.GOOGLE_SEARCH:
                     try:
+                        self.last_page =  self.page
                         self.page = await self.context.new_page()
                         await self.page.goto("https://www.google.com/search?q="+action["fill_text"])
                         await self.page.wait_for_load_state('load')
@@ -187,6 +195,17 @@ class AsyncHTMLEnvironment:
                     except Exception as e:
                         print("can't execute google search action")
                         print(e)
+                case ActionTypes.GO_BACK:
+                    try:
+                        tmp_page = self.last_page
+                        self.page =  self.last_page
+                        self.last_page = tmp_page
+                        await self.page.wait_for_load_state('load')
+                        self.html_content = await self.page.content()
+                        return await self._get_obs()
+                    except Exception as e:
+                        print("can't execute go back action")
+                        print(e) 
                 case _:
                     raise ValueError(
                         f"Unknown action type {action['action_type']}"
@@ -202,6 +221,10 @@ class AsyncHTMLEnvironment:
         except:
             selector = ""
         return self.page, selector
+
+    async def transfomer_status(self, element_id: int) -> (Page, str):
+        self.last_page.screenshot(path="example.png",full_page=True)
+        self.page.screenshot(path="example.png")
 
     @staticmethod
     async def is_valid_element(page: Page, selector: str):

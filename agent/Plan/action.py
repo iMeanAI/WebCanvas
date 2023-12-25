@@ -40,24 +40,38 @@ class ActionParser():
             traceback.print_exc()
 
         return decoded_result
-    
-    def extract_status_and_summary(self,reward_response):
-        result_thought = "null"
+
+    def extract_status_and_summary(self, message) -> dict:
+        result_status = "null"
         try:
-            status = re.findall(
-                "status:(.*?)summerization:", reward_response, re.S)[0].strip()
+            result_status = re.findall(
+                "status:(.*?)summarization:", message, re.S)[0].strip()
+            print(result_status)
         except:
             try:
-                status = reward_response.split("status:")[0].strip()
+                result_status = message.split("summarization:")[0].strip()
             except:
-                status = "null"
+                result_status = "null"
         try:
-            summary = re.findall("```(.*?)```", reward_response, re.S)[0]
+            summary = re.findall("```(.*?)```", message, re.S)[0]
         except:
-            summary = reward_response.split("summerization:")[-1].strip()
+            summary = message.split("summarization:")[-1].strip()
+        status_summary = self.parse_action(summary)
+        return status_summary
 
-        summary = self.parse_action(summary)
-
-        return {"status":status, "summary":summary}
-
-
+    def extract_score_and_description(self, message) -> dict:
+        result_score = "null"
+        try:
+            result_score = re.findall(
+                "score:(.*?)description:", message, re.S)[0].strip()
+        except:
+            try:
+                result_score = message.split("description:")[0].strip()
+            except:
+                result_score = "null"
+        try:
+            description = re.findall("```(.*?)```", message, re.S)[0]
+        except:
+            description = message.split("description:")[-1].strip()
+        score_description = self.parse_action(description)
+        return score_description

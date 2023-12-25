@@ -79,7 +79,7 @@ class ObservationPromptConstructor(BasePromptConstructor):
         if len(previous_trace) > 0:
             self.prompt_user += HistoryMemory(
                 previous_trace=previous_trace).construct_previous_trace_prompt()
-            self.prompt_user += f"current observation or Dom tree is {observation}"
+            self.prompt_user += observation
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
@@ -103,6 +103,20 @@ class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的pr
     def construct(self, user_request: str, stringfy_thought_and_action_output: str) -> list:
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request, stringfy_thought_and_action_output=stringfy_thought_and_action_output)
+        messages = [{"role": "system", "content": self.prompt_system}, {
+            "role": "user", "content": self.prompt_user}]
+        return messages
+    
+class CurrentRewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的prompt
+    def __init__(self):
+        self.prompt_system = ObservationPrompts.current_reward_prompt_system
+        self.prompt_user = ObservationPrompts.current_reward_prompt_user
+
+    # 构建reward的prompt，输出openai可解析的格式
+    def construct(self, user_request: str, stringfy_previous_trace_output: str,stringfy_current_trace_output: str,observation: str) -> list:
+        self.prompt_user = Template(self.prompt_user).render(
+            user_request=user_request, stringfy_previous_trace_output=stringfy_previous_trace_output,stringfy_current_trace_output=stringfy_current_trace_output)
+        self.prompt_user += f"current observation or accessiability tree is {observation}"
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
