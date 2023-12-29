@@ -106,17 +106,19 @@ class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的pr
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
-    
-class CurrentRewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的prompt
+
+
+# 类：构建reward的prompt
+class CurrentRewardPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = ObservationPrompts.current_reward_prompt_system
         self.prompt_user = ObservationPrompts.current_reward_prompt_user
 
     # 构建reward的prompt，输出openai可解析的格式
-    def construct(self, user_request: str, stringfy_previous_trace_output: str,stringfy_current_trace_output: str,observation: str) -> list:
+    def construct(self, user_request: str, stringfy_previous_trace_output: str, stringfy_current_trace_output: str, observation: str) -> list:
         self.prompt_user = Template(self.prompt_user).render(
-            user_request=user_request, stringfy_previous_trace_output=stringfy_previous_trace_output,stringfy_current_trace_output=stringfy_current_trace_output)
-        self.prompt_user += f"current observation or accessiability tree is {observation}"
+            user_request=user_request, stringfy_previous_trace_output=stringfy_previous_trace_output, stringfy_current_trace_output=stringfy_current_trace_output)
+        self.prompt_user += f"current observation or accessibility tree is {observation}"
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
@@ -144,7 +146,8 @@ class SemanticMatchPromptConstructor(BasePromptConstructor):
         self.prompt_user = BasePrompts.semantic_match_prompt_user
 
     def construct(self, semantic_method, input_answer, reference_answer) -> list:
-        self.prompt_user = Template(self.prompt_user).render(semantic_method, input_answer, reference_answer)
+        self.prompt_user = Template(self.prompt_user).render(
+            semantic_method, input_answer, reference_answer)
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages

@@ -57,7 +57,7 @@ class AsyncHTMLEnvironment:
             self.tree.fetch_html_content(self.html_content)
             tab_name = await self.page.title()
             dom_tree = self.tree.build_dom_tree()
-            observation = f"current web page name is \'{tab_name}\'\n" + "current accessiability tree is below:\n" +dom_tree
+            observation = f"current web page name is \'{tab_name}\'\n" + "current accessibility tree is below:\n" +dom_tree
         except:
             observation = ""
         return observation
@@ -117,7 +117,7 @@ class AsyncHTMLEnvironment:
                                     print(e)
                         else:
                             try:
-                                self.last_page =  self.page
+                                self.last_page = self.page
                                 await self.page.evaluate('''() => {
                                     const element = document.querySelector('%s');
                                     if (element) {

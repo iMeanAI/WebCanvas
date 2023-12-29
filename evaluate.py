@@ -138,12 +138,13 @@ async def main(num_steps=0):
     previous_trace = []
     evaluate_steps = reference_evaluate_steps
     total_step_score = 0
+    user_question = "Book me a flight from BWI to NYC for 2 for August 2nd-August 7th in united"
     for index in range(10):
         print("planning前previous_trace：", previous_trace)
         print("planning前observation：", observation)
         for _ in range(3):
             try:
-                dict_to_write = await Planning.plan(uuid=1, user_request='Find Dota 2 game and add all DLC to cart in steam.', previous_trace=previous_trace, observation=observation)
+                dict_to_write = await Planning.plan(uuid=1, user_request=user_question, previous_trace=previous_trace, observation=observation)
                 if dict_to_write is not None:
                     break
             except Exception as e:
@@ -160,11 +161,15 @@ async def main(num_steps=0):
                 element_id = int(response['id'])
             except:
                 element_id = 0
+            #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
+            if action_type in ["fill_form", "click"]:
+                selector = env.tree.get_selector_and_xpath(
+                    env.tree.nodeDict[element_id])  
+            else:
+                selector = None
+                element_id = 0
             execute_action = create_action(
                 elementid=element_id, action_type=action_type, action_input=acton_input)
-            #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
-            selector = env.tree.get_selector_and_xpath(
-                env.tree.nodeDict[element_id]) if action_type in ["fill_form", "click"] else None
             return execute_action, current_trace, selector
         print("dict_to_write:", dict_to_write)
         execute_action, current_trace, path = parse_current_trace(
@@ -183,9 +188,10 @@ async def main(num_steps=0):
         observation = await env.execute_action(execute_action)
         print("执行动作后的url", env.page.url)
         # current_trace = [current_trace]
-        local_reward = await Planning.evaluate(user_request='Find Dota 2 game and add all DLC to cart in steam.', previous_trace=previous_trace, current_trace=current_trace, observation=observation)
+        local_reward = await Planning.evaluate(user_request=user_question, previous_trace=previous_trace, current_trace=current_trace, observation=observation)
         if local_reward and int(local_reward.get("score")) < 8:
-            execute_action.update({"element_id": 0,"action_type": ActionTypes.GO_BACK})
+            execute_action.update(
+                {"element_id": 0, "action_type": ActionTypes.GO_BACK})
             observation = await env.execute_action(execute_action)
         else:
             previous_trace.append(current_trace)
