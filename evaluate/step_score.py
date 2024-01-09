@@ -77,6 +77,13 @@ class PathEvaluator(StepEvaluator):
                 score = 0
             if input_elements and reference_elements:
                 score = input_elements[0] is reference_elements[0]
+                try:
+                    if reference_elements[0].tag == "span":
+                        parent_element = reference_elements[0].getparent()
+                        score_parent = input_elements[0] is parent_element
+                        score = max(score, score_parent)
+                except:
+                    pass
             else:
                 score = 0
         elif method == "selector":
@@ -85,6 +92,14 @@ class PathEvaluator(StepEvaluator):
                 input_element = soup.select_one(input_answer)
                 reference_elements = soup.select_one(reference_answer)
                 score = input_element is reference_elements
+
+                try:
+                    if reference_elements.name == "span":
+                        parent_elements = reference_elements.parent
+                        score_parent = input_element is parent_elements
+                        score = max(score, score_parent)
+                except:
+                    pass
             except:
                 score = 0
         # result_score = MatchFunction.include_match(
