@@ -19,7 +19,7 @@ class AsyncHTMLEnvironment:
         viewport_size: ViewportSize = {"width": 1280, "height": 720},
         save_trace_enabled: bool = False,
         sleep_after_execution: float = 0.0,
-        locale:str ="en-US"
+        locale: str = "en-US"
     ):
         self.headless = headless
         self.slow_mo = slow_mo
@@ -29,7 +29,7 @@ class AsyncHTMLEnvironment:
         self.save_trace_enabled = save_trace_enabled
         self.sleep_after_execution = sleep_after_execution
         self.tree = HTMLTree()
-        self.locale=locale
+        self.locale = locale
 
     async def setup(self, start_url: str) -> None:
         self.playwright = await async_playwright().start()
@@ -50,15 +50,18 @@ class AsyncHTMLEnvironment:
         else:
             self.page = await self.context.new_page()
             self.html_content = await self.page.content()
+
     async def close(self):
         await self.context.close()
         await self.browser.close()
+
     async def _get_obs(self) -> str:
         try:
             self.tree.fetch_html_content(self.html_content)
             tab_name = await self.page.title()
             dom_tree = self.tree.build_dom_tree()
-            observation = f"current web tab name is \'{tab_name}\'\n" + "current accessiability tree is below:\n" +dom_tree
+            observation = f"current web tab name is \'{tab_name}\'\n" + \
+                "current accessiability tree is below:\n" + dom_tree
         except:
             observation = ""
         return observation
@@ -72,7 +75,7 @@ class AsyncHTMLEnvironment:
         '''找到可交互元素并执行相应的动作得到新的observation'''
         if "element_id" in action and action["element_id"] != 0:
             print('action["element_id"]:', action["element_id"])
-            print('tree.nodeDict[action["element_id"]]:',self.tree.nodeDict[action["element_id"]])
+            print('tree.nodeDict[action["element_id"]]:', self.tree.nodeDict[action["element_id"]])
             action["element_id"] = self.tree.nodeDict[action["element_id"]]
         try:
             match action["action_type"]:
