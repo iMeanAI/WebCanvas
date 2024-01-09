@@ -81,7 +81,9 @@ class AsyncHTMLEnvironment:
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
             self.html_content = await self.page.content()
-
+    async def close(self):
+        await self.context.close()
+        await self.browser.close()
     async def _get_obs(self) -> str:
         try:
             if self.mode == "dom" or self.mode == "d_v":

@@ -157,6 +157,7 @@ async def main(num_steps=0, mode="dom"):
         # task_name = "Ask Satya Nadella to send an email and mention your interest in AI at linkdin"
         last_action_description = ""
         for action_step in range(10):
+            break
             print("planning前previous_trace：", previous_trace)
             print("planning前observation：", observation)
             for _ in range(3):
