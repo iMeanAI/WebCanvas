@@ -58,9 +58,9 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, semantic
                     page.url, evaluate["reference_answer"], evaluate["key"], semantic_method=semantic_method)
             if match_function == "element_path_exactly_match":
                 method = evaluate["method"]
-                print("path_exact_match:", input_path, "***", evaluate["reference_answer"])
                 score = PathEvaluator.path_exact_match(
                     input_path, evaluate["reference_answer"], method, await page.content())
+                print(score, "path_exact_match:", input_path, "***", evaluate["reference_answer"])
             if match_function == "element_path_included_match":
                 method = evaluate["method"]
                 score = PathEvaluator.path_included_match(
@@ -136,7 +136,7 @@ async def main(num_steps=0):
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
         total_step_score = 0
-        for index in range(10):
+        for action_step in range(10):
             print("planning前previous_trace：", previous_trace)
             print("planning前observation：", observation)
             for _ in range(3):
@@ -186,7 +186,7 @@ async def main(num_steps=0):
                     previous_trace.append(current_trace)
 
             a = input("回车继续下一个Action，按q退出")
-            if a=="q":
+            if a == "q":
                 break
         # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
         # print(json5.dumps(a, indent=4))
@@ -198,7 +198,7 @@ async def main(num_steps=0):
         total_step_score = 0
         for evaluate in evaluate_steps:
             total_step_score += evaluate["score"]
-        print("\ntotal step score:", total_step_score)
+        print("\ntotal step score:", total_step_score, "/", len(reference_evaluate_steps))
 
         # length score
         task_evaluator = TaskLengthEvaluator()
@@ -209,10 +209,12 @@ async def main(num_steps=0):
         finish_task_score = FinishTaskEvaluator.finish_task_score(len(reference_evaluate_steps), total_step_score)
         print("finish_task_score:", finish_task_score)
         a = input("回车继续，按q退出")
-        if a=="q":
+        env.context.close()
+        env.browser.close()
+        if a == "q":
             break
 
-    print(f"\033[31mtask finished!\033[0m")  # 红色
+    print(f"\033[31mfinished!\033[0m")  # 红色
     input(f"\033[31m按回车键结束\033[0m")
 
 if __name__ == "__main__":
