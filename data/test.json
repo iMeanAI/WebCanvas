@@ -27,7 +27,7 @@
                 "match_function_name": "url_included_match",
                 "content": {
                     "key": "",
-                    "reference_answer": "comics"
+                    "reference_answer": "/comics"
                 }
             },
             {
@@ -71,10 +71,10 @@
         "reference_task_length": 5,
         "evaluation": [
             {
-                "match_function_name": "url_exactly_match",
+                "match_function_name": "url_included_match",
                 "content": {
                     "key": "",
-                    "reference_answer": "https://store.steampowered.com/charts/mostplayed/"
+                    "reference_answer": "charts/mostplayed"
                 }
             },
             {
@@ -233,7 +233,7 @@
                 "match_function_name": "url_included_match",
                 "content": {
                     "key": "",
-                    "reference_answer": "www.imdb.com/what-to-watch"
+                    "reference_answer": "imdb.com/what-to-watch"
                 }
             }
         ]
@@ -246,7 +246,7 @@
                 "match_function_name": "url_included_match",
                 "content": {
                     "key": "",
-                    "reference_answer": "receipts"
+                    "reference_answer": "/receipts"
                 }
             },
             {
@@ -292,7 +292,7 @@
                 "match_function_name": "url_semantic_match",
                 "content": {
                     "key": "q",
-                    "semantic_match_function": "Decide whether are searching for women's sports wear"
+                    "reference_answer": "Decide whether are searching for women's sports wear"
                 }
             },
             {
@@ -379,7 +379,7 @@
                 "match_function_name": "url_semantic_match",
                 "content": {
                     "key": "k",
-                    "semantic_match_function": "Decide whether they are smartphone "
+                    "reference_answer": "Decide whether they are smartphone "
                 }
             },
             {
@@ -392,7 +392,7 @@
             {
                 "match_function_name": "element_value_semantic_match",
                 "content": {
-                    "semantic_match_function": "Whether the are smartphone for Iphone"
+                    "reference_answer": "Whether the are smartphone for Iphone"
                 }
             },
             {
@@ -422,17 +422,10 @@
         "reference_task_length": 7,
         "evaluation": [
             {
-                "match_function_name": "url_exactly_match",
-                "content": {
-                    "key": "",
-                    "reference_answer": "https://www.ebay.com/"
-                }
-            },
-            {
                 "match_function_name": "url_semantic_match",
                 "content": {
                     "key": "_nkw",
-                    "semantic_match_function": "must include two features: vintage and clothing"
+                    "reference_answer": "must include two features: vintage and clothing"
                 }
             },
             {
@@ -452,7 +445,7 @@
                 "match_function_name": "url_semantic_match",
                 "content": {
                     "key": "query",
-                    "semantic_match_function": "Decide whether ËûºÍ place is India"
+                    "reference_answer": "Decide whether the place is India"
                 }
             },
             {
@@ -485,47 +478,6 @@
         ]
     },
     {
-        "task": "Browse new laptops from $400 to $500 that offers free shippping in ebay",
-        "reference_task_length": 11,
-        "evaluation": [
-            {
-                "match_function_name": "url_exactly_match",
-                "content": {
-                    "key": "",
-                    "reference_answer": "https://www.ebay.com/"
-                }
-            },
-            {
-                "match_function_name": "url_exactly_match",
-                "content": {
-                    "key": "LH_FS",
-                    "reference_answer": "1"
-                }
-            },
-            {
-                "match_function_name": "url_semantic_match",
-                "content": {
-                    "key": "_nkw",
-                    "semantic_match_function": "mush have two features: new and laptop"
-                }
-            },
-            {
-                "match_function_name": "url_exactly_match",
-                "content": {
-                    "key": "_udlo",
-                    "reference_answer": "1"
-                }
-            },
-            {
-                "match_function_name": "url_exactly_match",
-                "content": {
-                    "key": "_udhi",
-                    "reference_answer": "1"
-                }
-            }
-        ]
-    },
-    {
         "task": "Find Hot Dogs in Oakland, CA that Offers Delivery in yelp",
         "reference_task_length": 6,
         "evaluation": [
@@ -533,7 +485,7 @@
                 "match_function_name": "url_semantic_match",
                 "content": {
                     "key": "find_desc",
-                    "semantic_match_function": "Decide wether the destination is coffee shop"
+                    "reference_answer": "Decide wether the destination is coffee shop"
                 }
             },
             {
@@ -566,14 +518,14 @@
                 "match_function_name": "url_semantic_match",
                 "content": {
                     "key": "find_loc",
-                    "semantic_match_function": "Decide whether the location in Oakland, CA"
+                    "reference_answer": "Decide whether the location in Oakland, CA"
                 }
             },
             {
                 "match_function_name": "url_semantic_match",
                 "content": {
                     "key": "find_desc",
-                    "semantic_match_function": "Decide whether the food is hotdogs"
+                    "reference_answer": "Decide whether the food is hotdogs"
                 }
             },
             {
@@ -592,14 +544,14 @@
             {
                 "match_function_name": "element_value_semantic_match",
                 "content": {
-                    "semantic_match_function": "Decide whether the content represents smartwatch that is compatible with iphone"
+                    "reference_answer": "Decide whether the content represents smartwatch that is compatible with iphone"
                 }
             },
             {
                 "match_function_name": "url_semantic_match",
                 "content": {
                     "key": "k",
-                    "semantic_match_function": "Decide whether the content represents smartwatch that is compatible with iphone"
+                    "reference_answer": "Decide whether the content represents smartwatch that is compatible with iphone"
                 }
             },
             {
@@ -612,14 +564,14 @@
         ]
     },
     {
-        "task": "Browse laptops with at least 16gb of ram and under $700 in new egg",
+        "task": "Browse laptops with 16gb of ram and under $700 in new egg",
         "reference_task_length": 11,
         "evaluation": [
             {
                 "match_function_name": "url_semantic_match",
                 "content": {
                     "key": "d",
-                    "semantic_match_function": "Decide whether are seaerching for laptops"
+                    "reference_answer": "Decide whether are seaerching for laptops"
                 }
             },
             {
