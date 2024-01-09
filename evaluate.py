@@ -31,7 +31,7 @@ def read_file(path="./data/test.json"):
     reference_task_length = test_data[0]["reference_task_length"]
 
     reference_evaluate_steps = []
-    for i, evaluation in enumerate(evaluation_data):
+    for _, evaluation in enumerate(evaluation_data):
         match_function = evaluation["match_function"]
         if "url" in match_function:
             key = evaluation["content"]["key"]
@@ -57,29 +57,23 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, semantic
     for evaluate in evaluate_steps:
         if evaluate["score"] != 1:
             match_function = evaluate["match_function"]
-            if match_function == "url_exact_match":
-                score = URLEvaluator.url_exact_match(
-                    page.url, evaluate["reference_answer"], evaluate["key"])
-            if match_function == "url_include_match":
-                score = URLEvaluator.url_include_match(
-                    page.url, evaluate["reference_answer"], evaluate["key"])
+            if match_function == "url_exactly_match":
+                score = URLEvaluator.url_exact_match(page.url, evaluate["reference_answer"], evaluate["key"])
+            if match_function == "url_included_match":
+                score = URLEvaluator.url_include_match(page.url, evaluate["reference_answer"], evaluate["key"])
             if match_function == "url_semantic_match":
                 score = URLEvaluator.url_semantic_match(
                     page.url, evaluate["reference_answer"], evaluate["key"], semantic_method=semantic_method)
-            if match_function == "path_exact_match":
+            if match_function == "element_path_exactly_match":
                 method = evaluate["method"]
                 print("path_exact_match:", input_path,
                       "***", evaluate["reference_answer"])
                 score = PathEvaluator.path_exact_match(
                     input_path, evaluate["reference_answer"], method, await page.content())
-            if match_function == "path_include_match":
+            if match_function == "element_path_included_match":
                 method = evaluate["method"]
                 score = PathEvaluator.path_included_match(
                     input_path, evaluate["reference_answer"], method, await page.content())
-            if match_function == "path_semantic_match":
-                method = evaluate["method"]
-                score = PathEvaluator.path_semantic_match(
-                    input_path, evaluate["reference_answer"], method, await page.content(), semantic_method)
             if match_function == "text_exact_match":
                 pass  # TODO
             if match_function == "text_include_match":
