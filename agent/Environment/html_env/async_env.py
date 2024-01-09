@@ -50,7 +50,9 @@ class AsyncHTMLEnvironment:
         else:
             self.page = await self.context.new_page()
             self.html_content = await self.page.content()
-
+    async def close(self):
+        await self.context.close()
+        await self.browser.close()
     async def _get_obs(self) -> str:
         try:
             self.tree.fetch_html_content(self.html_content)

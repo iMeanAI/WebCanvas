@@ -137,6 +137,7 @@ async def main(num_steps=0):
         evaluate_steps = reference_evaluate_steps
         total_step_score = 0
         for action_step in range(10):
+            break
             print("planning前previous_trace：", previous_trace)
             print("planning前observation：", observation)
             for _ in range(3):
@@ -209,8 +210,8 @@ async def main(num_steps=0):
         finish_task_score = FinishTaskEvaluator.finish_task_score(len(reference_evaluate_steps), total_step_score)
         print("finish_task_score:", finish_task_score)
         a = input("回车继续，按q退出")
-        env.context.close()
-        env.browser.close()
+        await env.close()
+        del env
         if a == "q":
             break
 
