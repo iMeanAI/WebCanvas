@@ -31,7 +31,7 @@ for task in json_file:
                 elif "element_value_include" in temp["match_function_name"]:
                     temp["content"] = {"reference_answer": func["required"], "value": step["value"]}
                 elif "element_value_semantic" in temp["match_function_name"]:
-                    temp["content"] = {"semantic_match_function": func["optional"]}
+                    temp["content"] = {"reference_answer": func["optional"]}
 
                 elif "url_include" in temp["match_function_name"]:
                     key = func["key"] if "key" in func.keys() else ""
@@ -58,7 +58,7 @@ for task in json_file:
                     temp["content"] = {"key": key, "reference_answer": reference_answer}
                 elif "url_semantic" in temp["match_function_name"]:
                     key = func["key"] if "key" in func.keys() else ""
-                    temp["content"] = {"key": key, "semantic_match_function": func["optional"]}
+                    temp["content"] = {"key": key, "reference_answer": func["optional"]}
                 else:
                     print("*"*50, "\n", "other match function, coming soon!")
                 # print(temp)
