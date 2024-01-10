@@ -72,13 +72,16 @@ class ObservationPromptConstructor(BasePromptConstructor):
         self,
         user_request: str,
         previous_trace: str,
-        observation: str
+        observation: str,
+        feedback: str = ""
     ) -> list:
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request)
         if len(previous_trace) > 0:
             self.prompt_user += HistoryMemory(
                 previous_trace=previous_trace).construct_previous_trace_prompt()
+            if feedback != "":
+                self.prompt_user += f"There an invalid action description is below:\n {feedback}\n"
             self.prompt_user += observation
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]

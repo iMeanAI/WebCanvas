@@ -9,7 +9,7 @@ class Planning:
         pass
 
     @staticmethod
-    async def plan(uuid, user_request, previous_trace, observation):  # TODO
+    async def plan(uuid, user_request, previous_trace, observation,feedback):  # TODO
         start_time = time.time()
         # 创建GPT查询类
         GPT35 = GPTGenerator35()
@@ -29,7 +29,7 @@ class Planning:
 
         # 构建planning prompt及查询
         planning_request = ObservationPromptConstructor().construct(
-            user_request, previous_trace, observation)
+            user_request, previous_trace, observation,feedback)
         print(f"\033[32m{planning_request}")  # 绿色
         print("\033[0m")
         planning_response, error_message = await GPT4.request(planning_request)

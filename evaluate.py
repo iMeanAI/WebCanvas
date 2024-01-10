@@ -138,13 +138,14 @@ async def main(num_steps=0):
     previous_trace = []
     evaluate_steps = reference_evaluate_steps
     total_step_score = 0
-    user_question = "Book me a flight from BWI to NYC for 2 for August 2nd-August 7th in united"
+    user_question = "Ask Satya Nadella to send an email and mention your interest in AI at linkdin"
+    last_action_description = ""
     for index in range(10):
         print("planning前previous_trace：", previous_trace)
         print("planning前observation：", observation)
         for _ in range(3):
             try:
-                dict_to_write = await Planning.plan(uuid=1, user_request=user_question, previous_trace=previous_trace, observation=observation)
+                dict_to_write = await Planning.plan(uuid=1, user_request=user_question, previous_trace=previous_trace, observation=observation,feedback = last_action_description)
                 if dict_to_write is not None:
                     break
             except Exception as e:
@@ -188,12 +189,14 @@ async def main(num_steps=0):
         observation = await env.execute_action(execute_action)
         print("执行动作后的url", env.page.url)
         # current_trace = [current_trace]
-        local_reward = await Planning.evaluate(user_request=user_question, previous_trace=previous_trace, current_trace=current_trace, observation=observation)
-        if local_reward and int(local_reward.get("score")) < 8:
+        current_reward = await Planning.evaluate(user_request=user_question, previous_trace=previous_trace, current_trace=current_trace, observation=observation)
+        if current_reward and int(current_reward.get("score")) < 8:
             execute_action.update(
                 {"element_id": 0, "action_type": ActionTypes.GO_BACK})
             observation = await env.execute_action(execute_action)
+            last_action_description = current_reward.get("description")
         else:
+            last_action_description = ""
             previous_trace.append(current_trace)
 
         input()
