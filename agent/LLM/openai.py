@@ -65,3 +65,7 @@ class GPTGenerator35(GPTGenerator):
 class GPTGenerator4(GPTGenerator):
     def __init__(self):
         self.model = "gpt-4-1106-preview"
+
+class GPTGenerator4V(GPTGenerator):
+    def __init__(self):
+        self.model = "gpt-4-vision-preview"  # 指定模型为GPT-4
