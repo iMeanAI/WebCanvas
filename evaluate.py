@@ -109,7 +109,7 @@ async def aexec_playwright(code, page):
     return await locals()['__ex'](page)
 
 
-async def main(num_steps=0):
+async def main(num_steps=0, mode="dom"):
 
     reference_task_length, reference_evaluate_steps = read_file()
     print("raw data:\n", reference_evaluate_steps)
@@ -121,13 +121,14 @@ async def main(num_steps=0):
         headless=False,
         slow_mo=1000,
         current_viewport_only=False,
-        viewport_size={"width": 1920, "height": 1280} if mode == "dom" else {"width": 1080, "height": 720},  #"width": 1080, "height": 720
+        viewport_size={"width": 1920, "height": 1280} if mode == "dom" else {"width": 1080, "height": 720},
+        # "width": 1080, "height": 720
         save_trace_enabled=False,
         sleep_after_execution=0.0,
         locale="en-US",
         use_vimium_effect=True
     )
-    observation_VforD=None
+    observation_VforD = None
     if mode == "d_v":
         observation, observation_VforD = await env.reset("about:blank")
     else:
@@ -207,7 +208,8 @@ async def main(num_steps=0):
 
         if mode == "dom" or mode == "d_v":
             # current_trace = [current_trace]
-            current_reward = await Planning.evaluate(user_request=user_question, previous_trace=previous_trace, current_trace=current_trace, observation=observation)
+            current_reward = await Planning.evaluate(user_request=user_question, previous_trace=previous_trace,
+                                                     current_trace=current_trace, observation=observation)
             if current_reward and int(current_reward.get("score")) < 8:
                 execute_action.update(
                     {"element_id": 0, "action_type": ActionTypes.GO_BACK})

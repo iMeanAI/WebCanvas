@@ -137,7 +137,8 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
             prompt_elements.append({"type": "text", "text": trace_prompt})
             # self.prompt_user += f"current observation or Dom tree is {observation}"
             if feedback != "":
-                prompt_elements.append({"type": "text", "text": f"There an invalid action description is below:\n {feedback}\n"})
+                prompt_elements.append(
+                    {"type": "text", "text": f"There an invalid action description is below:\n {feedback}\n"})
 
             prompt_elements.append({"type": "text", "text": f"current observation or Dom tree is {observation}"})
             print("Dom tree finished!\n")
