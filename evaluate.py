@@ -114,32 +114,7 @@ async def main(num_steps=0):
     reference_task_length, reference_evaluate_steps = read_file()
     print("raw data:\n", reference_evaluate_steps)
 
-    #! # 1. playwright
-    # # 用playwright运行浏览器
-    # async def run(playwright: Playwright) -> None:
-    #     '''用playwright运行浏览器'''
-    #     evaluate_steps = reference_evaluate_steps
-    #     browser = await playwright.chromium.launch(headless=False)
-    #     context = await browser.new_context()
-    #     page = await context.new_page()
-    #     replay_codes = open("./data/playwright/steam.txt", "r", encoding="utf-8")
-    #     for num_steps, line in enumerate(replay_codes):
-    #         print("step:", num_steps, line)
-    #         selector = None
-    #         if "page.locator" in line:
-    #             selector = re.findall('page.locator\("(.*?)"\).*?\(\)', line)[0]
-    #             print("selector:", selector)
-    #         line = "await "+line
-    #         print(line)
-    #         await aexec_playwright(line, page)
-    #         evaluate_steps = step_evaluate(page=page, evaluate_steps=evaluate_steps, input_path=selector)
-    #         time.sleep(3)
-    #     return num_steps, evaluate_steps
-
-    # async with async_playwright() as playwright:
-    #     num_steps, evaluate_steps = await run(playwright)
-
-    #! # 2. planning
+    # ! # 2. planning
     env = AsyncHTMLEnvironment(
         mode=mode,
         max_page_length=8192,
@@ -190,7 +165,7 @@ async def main(num_steps=0):
             #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
             if action_type in ["fill_form", "click"]:
                 selector = env.tree.get_selector_and_xpath(
-                    env.tree.nodeDict[element_id])  
+                    env.tree.nodeDict[element_id])
             else:
                 selector = None
                 element_id = 0
@@ -198,7 +173,7 @@ async def main(num_steps=0):
                 elementid=element_id, action_type=action_type, action_input=acton_input)
             return execute_action, current_trace, selector
         print("dict_to_write:", dict_to_write)
-        
+
         if mode == "dom" or mode == "d_v":
             execute_action, current_trace, path = parse_current_trace(dict_to_write)
             selector, xpath = (path[0], path[1]) if path is not None else (None, None)
@@ -214,7 +189,7 @@ async def main(num_steps=0):
             # input()
             if mode == "d_v":
                 observation, observation_VforD = await env.execute_action(execute_action)
-            else:   
+            else:
                 observation = await env.execute_action(execute_action)
             print("执行动作后的url", env.page.url)
 
@@ -247,7 +222,7 @@ async def main(num_steps=0):
                 if "loop" in dict_to_write["description"].get('reward').get("status"):
                     previous_trace = []
                     previous_trace.append(current_trace)
-                
+
         input()
     # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
     # print(json5.dumps(a, indent=4))
