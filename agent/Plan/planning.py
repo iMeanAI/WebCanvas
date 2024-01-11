@@ -58,8 +58,10 @@ class Planning:
         elif mode == "d_v":
             planning_request = D_VObservationPromptConstructor().construct(
                 user_request, previous_trace, observation, observation_VforD)
-            print(f"\033[32m{planning_request}")
-            print("\033[0m")
+            print(f"\033[32m{planning_request}") # 绿色 涉及到图片
+            # display_string = planning_request[:100] # 截取字符串的前 max_length 个字符
+            # print(f"\033[32m{display_string}")
+            # print("\033[0m")
             planning_response, error_message = await GPT4V.request(planning_request)
         elif mode == "vision":
             planning_request = VisionObservationPromptConstructor().construct(

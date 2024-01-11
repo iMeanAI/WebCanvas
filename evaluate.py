@@ -122,7 +122,6 @@ async def main(num_steps=0, mode="dom"):
         sleep_after_execution=0.0,
         locale="en-US",
         use_vimium_effect=True
-
     )
     observation_VforD=None
     if mode == "d_v":
