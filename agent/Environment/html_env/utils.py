@@ -1,10 +1,10 @@
-from typing import TypedDict
+from typing import TypedDict,List
 from enum import IntEnum
 
 
 class ElementNode(TypedDict):
     nodeId: int                 # 元素编号
-    childIds: list[int]         # 子元素编号列表
+    childIds: List[int]         # 子元素编号列表
     siblingId: int              # 兄弟元素排名
     twinId: int                 # 相同tag元素排名
     tagName: str                # 元素

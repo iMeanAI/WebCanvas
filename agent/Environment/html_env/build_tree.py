@@ -145,18 +145,23 @@ class HTMLTree:
             tag_name = current_node["tagName"]
             siblingId = str(current_node["siblingId"])
             if current_node["attributes"].get('id'):
+                current_node["attributes"].get('id').replace("[", "\\[").replace("]", "\\]")
                 return "#" + current_node["attributes"].get('id') + selector_str
             if len(self.elementNodes[current_node["parentId"]]["childIds"]) > 1:
-                uu_node = True
+                uu_twin_node = True
+                uu_id = True
                 for childId in self.elementNodes[current_node["parentId"]]["childIds"]:
                     bro_node = self.elementNodes[childId]
                     if bro_node["nodeId"] != current_node["nodeId"] and current_node["attributes"].get('class') and bro_node["attributes"].get("class") == current_node["attributes"].get('class'):
-                        uu_node = False
-                        break
-                if current_node["attributes"].get('class') and uu_node is True:
+                        uu_twin_node = False
+                    if bro_node["nodeId"] != current_node["nodeId"] and current_node["tagName"] == bro_node["tagName"]:
+                        uu_id = False
+                if uu_id:
+                    selector_str = " > " + tag_name + selector_str
+                elif current_node["attributes"].get('class') and uu_twin_node is True:
                     selector_str = " > " + tag_name + "." + \
                         ".".join(current_node["attributes"].get(
-                            'class').replace("\n", " ").split(" ")) + selector_str
+                            'class').replace(" ","\\").replace("\n", " ").split(" ")) + selector_str
                 else:
                     selector_str = " > " + tag_name + \
                         ":nth-child(" + siblingId + ")" + selector_str

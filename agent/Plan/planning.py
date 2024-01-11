@@ -9,7 +9,7 @@ class Planning:
         pass
 
     @staticmethod
-    async def plan(uuid, user_request, previous_trace, observation):  # TODO
+    async def plan(uuid, user_request, previous_trace, observation,feedback):  # TODO
         start_time = time.time()
         # 创建GPT查询类
         GPT35 = GPTGenerator35()
@@ -29,10 +29,10 @@ class Planning:
 
         # 构建planning prompt及查询
         planning_request = ObservationPromptConstructor().construct(
-            user_request, previous_trace, observation)
+            user_request, previous_trace, observation,feedback)
         print(f"\033[32m{planning_request}")  # 绿色
         print("\033[0m")
-        planning_response, error_message = await GPT35.request(planning_request)
+        planning_response, error_message = await GPT4.request(planning_request)
         print(f"\033[34mOpenai_Planning_Response:\n{planning_response}")  # 蓝色
         print("\033[0m")
         # 提取出planning thought(str)和planning action(dict), 其中planning action拥有action, element_id, action_input, description四个字段
@@ -59,8 +59,26 @@ class Planning:
         dict_to_write['error_message'] = error_message
         dict_to_write['openai_response'] = planning_response
 
-        thought = planning_response_thought
-        action = planning_response_action["description"].get('action')
-        current_trace  = {"thought":{thought},"action":action}
-
         return dict_to_write
+
+    @staticmethod
+    async def evaluate(user_request, previous_trace, current_trace, observation):  # TODO
+        GPT4 = GPTGenerator4()
+        current_trace = [current_trace]
+        if len(previous_trace) > 0:
+            stringfy_previous_trace_output = ObservationPromptConstructor(
+            ).stringfy_thought_and_action(previous_trace)
+            stringfy_current_trace_output = ObservationPromptConstructor(
+            ).stringfy_thought_and_action(current_trace)
+            current_reward_response = CurrentRewardPromptConstructor().construct(
+                user_request, stringfy_previous_trace_output, stringfy_current_trace_output, observation)
+            print(f"\033[32m{current_reward_response}")  # 绿色
+            print("\033[0m")
+            evaluate_response, error_message = await GPT4.request(current_reward_response)
+            score_description = ActionParser().extract_score_and_description(
+                evaluate_response)
+            # 蓝色
+            print(f"\033[34mOpenai_evaluate_Response:\n{score_description}")
+            print("\033[0m")
+            return score_description
+        return ""

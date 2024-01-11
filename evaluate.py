@@ -5,10 +5,11 @@ from agent.Environment.html_env.async_env import AsyncHTMLEnvironment
 from evaluate import *
 from agent.Plan import *
 from playwright.async_api import Playwright, async_playwright, expect, Page
-from agent.Environment.html_env.actions import create_action, Action
+from agent.Environment.html_env.actions import create_action, Action, ActionTypes
 
 import re
 import asyncio
+
 
 def read_file(path="./data/test.json"):
     '''读取标签数据'''
@@ -46,15 +47,18 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, semantic
         if evaluate["score"] != 1:
             match_function = evaluate["match_function"]
             if match_function == "url_exact_match":
-                score = URLEvaluator.url_exact_match(page.url, evaluate["reference_answer"], evaluate["key"])
+                score = URLEvaluator.url_exact_match(
+                    page.url, evaluate["reference_answer"], evaluate["key"])
             if match_function == "url_include_match":
-                score = URLEvaluator.url_include_match(page.url, evaluate["reference_answer"], evaluate["key"])
+                score = URLEvaluator.url_include_match(
+                    page.url, evaluate["reference_answer"], evaluate["key"])
             if match_function == "url_semantic_match":
                 score = URLEvaluator.url_semantic_match(
                     page.url, evaluate["reference_answer"], evaluate["key"], semantic_method=semantic_method)
             if match_function == "path_exact_match":
                 method = evaluate["method"]
-                print("path_exact_match:", input_path,"***", evaluate["reference_answer"])
+                print("path_exact_match:", input_path,
+                      "***", evaluate["reference_answer"])
                 score = PathEvaluator.path_exact_match(
                     input_path, evaluate["reference_answer"], method, await page.content())
             if match_function == "path_include_match":
@@ -78,6 +82,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, semantic
     return evaluate_steps
     # print(evaluate_steps)
 
+
 async def aexec_playwright(code, page):
     '''async执行playwright代码'''
     exec(
@@ -86,6 +91,7 @@ async def aexec_playwright(code, page):
     )
     # Get `__ex` from local variables, call it and return the result
     return await locals()['__ex'](page)
+
 
 async def main(num_steps=0):
 
@@ -116,7 +122,7 @@ async def main(num_steps=0):
 
     # async with async_playwright() as playwright:
     #     num_steps, evaluate_steps = await run(playwright)
-    
+
     #! # 2. planning
     env = AsyncHTMLEnvironment(
         max_page_length=8192,
@@ -132,17 +138,20 @@ async def main(num_steps=0):
     previous_trace = []
     evaluate_steps = reference_evaluate_steps
     total_step_score = 0
+    user_question = "Ask Satya Nadella to send an email and mention your interest in AI at linkdin"
+    last_action_description = ""
     for index in range(10):
-        print("planning前previous_trace：",previous_trace)
-        print("planning前observation：",observation)
+        print("planning前previous_trace：", previous_trace)
+        print("planning前observation：", observation)
         for _ in range(3):
             try:
-                dict_to_write = await Planning.plan(uuid=1, user_request='Find Dota 2 game and add all DLC to cart in steam.',previous_trace=previous_trace, observation=observation)
+                dict_to_write = await Planning.plan(uuid=1, user_request=user_question, previous_trace=previous_trace, observation=observation,feedback = last_action_description)
                 if dict_to_write is not None:
                     break
             except Exception as e:
                 traceback.print_exc()
                 continue
+
         def parse_current_trace(response):
             thought = response["description"].get("thought")
             action_type = response['action_type']
@@ -153,39 +162,48 @@ async def main(num_steps=0):
                 element_id = int(response['id'])
             except:
                 element_id = 0
+            #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
+            if action_type in ["fill_form", "click"]:
+                selector = env.tree.get_selector_and_xpath(
+                    env.tree.nodeDict[element_id])  
+            else:
+                selector = None
+                element_id = 0
             execute_action = create_action(
                 elementid=element_id, action_type=action_type, action_input=acton_input)
-            #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
-            selector = env.tree.get_selector_and_xpath(env.tree.nodeDict[element_id]) if action_type in ["fill_form", "click"] else None
             return execute_action, current_trace, selector
-        print("dict_to_write:",dict_to_write)
-        execute_action, current_trace, path = parse_current_trace(dict_to_write)
-        selector, xpath = (path[0], path[1]) if path is not None else (None, None)
-        print("current trace:\n",current_trace)
-        print("response:\n",execute_action)
+        print("dict_to_write:", dict_to_write)
+        execute_action, current_trace, path = parse_current_trace(
+            dict_to_write)
+        selector, xpath = (
+            path[0], path[1]) if path is not None else (None, None)
+        print("current trace:\n", current_trace)
+        print("response:\n", execute_action)
         print("selector:", selector)
         evaluate_steps = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
-        print("执行动作前的url",env.page.url)
+        print("执行动作前的url", env.page.url)
         for evaluate in evaluate_steps:
             total_step_score += evaluate["score"]
-        if total_step_score==len(reference_evaluate_steps):
+        if total_step_score == len(reference_evaluate_steps):
             break
-        # input()
         observation = await env.execute_action(execute_action)
-        print("执行动作后的url",env.page.url)
-        previous_trace.append(current_trace)
-        if dict_to_write["description"].get('reward'):
-            if "loop" in dict_to_write["description"].get('reward').get("status"):
-                previous_trace = []
-                previous_trace.append(current_trace)
-        
+        print("执行动作后的url", env.page.url)
+        # current_trace = [current_trace]
+        current_reward = await Planning.evaluate(user_request=user_question, previous_trace=previous_trace, current_trace=current_trace, observation=observation)
+        if current_reward and int(current_reward.get("score")) < 8:
+            execute_action.update(
+                {"element_id": 0, "action_type": ActionTypes.GO_BACK})
+            observation = await env.execute_action(execute_action)
+            last_action_description = current_reward.get("description")
+        else:
+            last_action_description = ""
+            previous_trace.append(current_trace)
 
         input()
     # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
     # print(json5.dumps(a, indent=4))
     # input()
-    
-    
+
     #! 3.任务评测打分
 
     # step score
@@ -196,14 +214,16 @@ async def main(num_steps=0):
 
     # length score
     task_evaluator = TaskLengthEvaluator()
-    task_length_score = task_evaluator.task_length_score(reference_task_length, num_steps)
+    task_length_score = task_evaluator.task_length_score(
+        reference_task_length, num_steps)
     print("task_length_score:", task_length_score)
 
     # finish score
-    finish_task_score = FinishTaskEvaluator.finish_task_score(len(reference_evaluate_steps), total_step_score)
+    finish_task_score = FinishTaskEvaluator.finish_task_score(
+        len(reference_evaluate_steps), total_step_score)
     print("finish_task_score:", finish_task_score)
 
-    print(f"\033[31mtask finished!\033[0m") # 红色
+    print(f"\033[31mtask finished!\033[0m")  # 红色
     input(f"\033[31m按回车键结束\033[0m")
 
 if __name__ == "__main__":

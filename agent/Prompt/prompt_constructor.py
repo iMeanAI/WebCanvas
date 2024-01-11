@@ -72,14 +72,17 @@ class ObservationPromptConstructor(BasePromptConstructor):
         self,
         user_request: str,
         previous_trace: str,
-        observation: str
+        observation: str,
+        feedback: str = ""
     ) -> list:
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request)
         if len(previous_trace) > 0:
             self.prompt_user += HistoryMemory(
                 previous_trace=previous_trace).construct_previous_trace_prompt()
-            self.prompt_user += f"current observation or Dom tree is {observation}"
+            if feedback != "":
+                self.prompt_user += f"There an invalid action description is below:\n {feedback}\n"
+            self.prompt_user += observation
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
@@ -108,6 +111,22 @@ class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的pr
         return messages
 
 
+# 类：构建reward的prompt
+class CurrentRewardPromptConstructor(BasePromptConstructor):
+    def __init__(self):
+        self.prompt_system = ObservationPrompts.current_reward_prompt_system
+        self.prompt_user = ObservationPrompts.current_reward_prompt_user
+
+    # 构建reward的prompt，输出openai可解析的格式
+    def construct(self, user_request: str, stringfy_previous_trace_output: str, stringfy_current_trace_output: str, observation: str) -> list:
+        self.prompt_user = Template(self.prompt_user).render(
+            user_request=user_request, stringfy_previous_trace_output=stringfy_previous_trace_output, stringfy_current_trace_output=stringfy_current_trace_output)
+        self.prompt_user += f"current observation or accessibility tree is {observation}"
+        messages = [{"role": "system", "content": self.prompt_system}, {
+            "role": "user", "content": self.prompt_user}]
+        return messages
+
+
 # 类：构建判断该元素是否是搜索框的prompt（如果是，则前端需要额外加上回车操作）
 class JudgeSearchbarPromptConstructor(BasePromptConstructor):
     def __init__(self):
@@ -130,7 +149,8 @@ class SemanticMatchPromptConstructor(BasePromptConstructor):
         self.prompt_user = BasePrompts.semantic_match_prompt_user
 
     def construct(self, semantic_method, input_answer, reference_answer) -> list:
-        self.prompt_user = Template(self.prompt_user).render(semantic_method, input_answer, reference_answer)
+        self.prompt_user = Template(self.prompt_user).render(
+            semantic_method, input_answer, reference_answer)
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
