@@ -93,7 +93,6 @@ class HTMLEnvironment:
                                 url = urljoin(base_url, url)
                             self.page = self.context.new_page()
                             self.page.goto(url)
-                            self.page.wait_for_load_state('load')
                             self.html_content = self.page.content()
                             return self._get_obs()
                         except:
@@ -105,7 +104,6 @@ class HTMLEnvironment:
                                     }
                                 }''' % selector)
                                 # await self.page.locator(selector).click()
-                                self.page.wait_for_load_state('load')
                                 self.html_content = self.page.content()
                                 return self._get_obs()
                             except Exception as e:
@@ -119,7 +117,6 @@ class HTMLEnvironment:
                                 }
                             }''' % selector)
                             # await self.page.locator(selector).click()
-                            self.page.wait_for_load_state('load')
                             self.html_content = self.page.content()
                             return self._get_obs()
                         except Exception as e:
@@ -128,7 +125,6 @@ class HTMLEnvironment:
                     try:
                         self.page = self.context.new_page()
                         self.page.goto(action["url"])
-                        self.page.wait_for_load_state('load')
                         self.html_content = self.page.content()
                         return self._get_obs()
                     except Exception as e:
@@ -148,25 +144,22 @@ class HTMLEnvironment:
                             print(
                                 f"selector:{selector},label:{label},element_idx: {element_idx}")
                         try:
-                            self.page.locator(selector).fill(action["fill_text"])
-                            self.page.locator(selector).press("Enter")
-                            self.page.wait_for_load_state('load')
-                            self.html_content = self.page.content()
-                            return self._get_obs()
-                        except:
                             fill_and_press_enter = '''() => {
-                                        const element = document.querySelector('%s');
-                                        if (element) {
-                                            element.value = '%s';
-                                            element.dispatchEvent(new Event('input', { bubbles: true }));
-                                            element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-                                        }
+                                    const element = document.querySelector('%s');
+                                    if (element) {
+                                        element.value = '%s';
+                                        element.dispatchEvent(new Event('input', { bubbles: true }));
+                                        element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
                                     }
-                                ''' % (selector, action['fill_text'])
+                                }
+                            ''' % (selector, action['fill_text'])
                             self.page.evaluate(fill_and_press_enter)
-                            self.page.wait_for_load_state('load')
+                            # self.page.locator(selector).fill(action["fill_text"])
+                            # self.page.locator(selector).press("Enter")
                             self.html_content = self.page.content()
                             return self._get_obs()
+                        except Exception as e:
+                            print(e)
                     except Exception as e:
                         print("can't execute fill form action")
                         print(e)
@@ -174,13 +167,24 @@ class HTMLEnvironment:
                 case ActionTypes.GOOGLE_SEARCH:
                     try:
                         self.page = self.context.new_page()
-                        self.page.goto("https://www.google.com/search?q="+action["fill_text"])
-                        self.page.wait_for_load_state('load')
+                        self.page.goto(action["url"])
+                        self.page.evaluate('''(fill_text) => {
+                            const searchBox = document.querySelector('textarea[name="q"]');
+                            if (searchBox) {
+                                searchBox.value = fill_text;
+                                // 查找并点击提交按钮
+                                const submitButton = document.querySelector('input[type="submit"]');
+                                if (submitButton) {
+                                    submitButton.click();
+                                }
+                            }
+                        }''', action["fill_text"])
                         self.html_content = self.page.content()
                         return self._get_obs()
                     except Exception as e:
                         print("can't execute google search action")
                         print(e)
+                        return ""
                 case _:
                     raise ValueError(
                         f"Unknown action type {action['action_type']}"

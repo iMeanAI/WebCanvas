@@ -40,24 +40,3 @@ class ActionParser():
             traceback.print_exc()
 
         return decoded_result
-    
-    def extract_status_and_summary(self,reward_response):
-        result_thought = "null"
-        try:
-            status = re.findall(
-                "status:(.*?)summerization:", reward_response, re.S)[0].strip()
-        except:
-            try:
-                status = reward_response.split("status:")[0].strip()
-            except:
-                status = "null"
-        try:
-            summary = re.findall("```(.*?)```", reward_response, re.S)[0]
-        except:
-            summary = reward_response.split("summerization:")[-1].strip()
-
-        summary = self.parse_action(summary)
-
-        return {"status":status, "summary":summary}
-
-

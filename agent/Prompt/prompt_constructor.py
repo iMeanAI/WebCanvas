@@ -1,5 +1,3 @@
-import base64
-
 import json5
 from .base_prompts import BasePrompts
 from .obs_prompts import ObservationPrompts
@@ -22,12 +20,12 @@ class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning�
 
     # 构建planning的prompt，输出openai可解析的格式
     def construct(
-            self,
-            user_request: str,
-            previous_trace: str,
-            dom: str,
-            tab_name_list: list,
-            current_tab_name: list,
+        self,
+        user_request: str,
+        previous_trace: str,
+        dom: str,
+        tab_name_list: list,
+        current_tab_name: list,
     ) -> list:
 
         self.prompt_user = Template(self.prompt_user).render(
@@ -42,10 +40,10 @@ class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning�
                 previous_trace=previous_trace).construct_previous_trace_prompt()
             interact_element, link_element, input_element, unknown_element = env.html_denoiser()
             self.prompt_user += f"All tabs are {str(tab_name_list)}. Now you are on tab '{str(current_tab_name)}'.\
-                The current elements with id are as follows:\n\n" \
-                                f"interactable elements(like button, select and option): {str(interact_element)}\n\n" \
-                                f"link element: {str(link_element)}\n\n" \
-                                f"input elements(like input and textarea): {str(input_element)}"
+                The current elements with id are as follows:\n\n"\
+                f"interactable elements(like button, select and option): {str(interact_element)}\n\n"\
+                f"link element: {str(link_element)}\n\n"\
+                f"input elements(like input and textarea): {str(input_element)}"
             if len(unknown_element) > 0:
                 self.prompt_user += f"\n\nother elements with tagname: {str(unknown_element)}"
 
@@ -59,7 +57,7 @@ class PlanningPromptConstructor(BasePromptConstructor):  # 类：构建planning�
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
         for idx, i in enumerate(input_list):
-            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
+            str_output += f'Step{idx+1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
         str_output += "]"
         return str_output
 
@@ -71,10 +69,10 @@ class ObservationPromptConstructor(BasePromptConstructor):
         self.prompt_user = ObservationPrompts.planning_prompt_user
 
     def construct(
-            self,
-            user_request: str,
-            previous_trace: str,
-            observation: str
+        self,
+        user_request: str,
+        previous_trace: str,
+        observation: str
     ) -> list:
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request)
@@ -91,131 +89,15 @@ class ObservationPromptConstructor(BasePromptConstructor):
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
         for idx, i in enumerate(input_list):
-            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
-        str_output += "]"
-        return str_output
-
-
-class D_VObservationPromptConstructor(BasePromptConstructor):
-    def __init__(self):
-        self.prompt_system = ObservationPrompts.d_v_planning_prompt_system
-        self.prompt_user = ObservationPrompts.planning_prompt_user
-
-    @staticmethod
-    def is_valid_base64(base64_string):
-        try:
-            # 尝试解码字符串
-            base64.b64decode(base64_string, validate=True)
-            return True
-        except Exception as e:
-            print(f"Base64验证失败：{e}")
-            return False
-
-    def construct(
-            self,
-            user_request: str,
-            previous_trace: str,
-            observation: str,
-            observation_VforD: str
-    ) -> list:
-        # self.prompt_user = Template(self.prompt_user).render(
-        #     user_request=user_request)
-        if not D_VObservationPromptConstructor.is_valid_base64(observation_VforD):
-            print("提供的observation_VforD不是有效的Base64编码")
-            
-        rendered_prompt = Template(self.prompt_user).render(user_request=user_request)
-        prompt_elements = [{"type": "text", "text": rendered_prompt}]
-        if len(previous_trace) > 0:
-            # self.prompt_user += HistoryMemory(
-            #     previous_trace=previous_trace).construct_previous_trace_prompt()
-            history_memory = HistoryMemory(previous_trace=previous_trace)
-            trace_prompt = history_memory.construct_previous_trace_prompt()
-            prompt_elements.append({"type": "text", "text": trace_prompt})
-            print("trace_prompt finished!\n")
-            # self.prompt_user += f"current observation or Dom tree is {observation}"
-            prompt_elements.append({"type": "text", "text": f"current observation or Dom tree is {observation}"})
-            print("Dom tree finished!\n")
-            prompt_elements.append({"type": "text", "text": "current screenshot is:"})
-            print("current screenshot is: finished!\n")
-            prompt_elements.append(
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{observation_VforD}"}})
-            print("observation_VforD finished!\n")
-        # 构造最终的消息负载
-        messages = [{"role": "system", "content": self.prompt_system},
-                    {"role": "user", "content": prompt_elements}]
-        print(prompt_elements)
-        print("messages finished!\n")
-        return messages
-
-    # 将previous thought和action转化成格式化字符串
-    def stringfy_thought_and_action(self, input_list: list) -> str:
-        input_list = json5.loads(input_list, encoding="utf-8")
-        str_output = "["
-        for idx, i in enumerate(input_list):
-            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
-        str_output += "]"
-        return str_output
-
-
-class VisionObservationPromptConstructor(BasePromptConstructor):
-    def __init__(self):
-        self.prompt_system = ObservationPrompts.vision_planning_prompt_system  # 假设有视觉提示的系统部分
-        self.prompt_user = ObservationPrompts.planning_prompt_user
-
-    def construct(self, user_request: str, previous_trace: str, base64_image: str) -> list:
-        # 使用模板渲染用户请求
-        rendered_prompt = Template(self.prompt_user).render(user_request=user_request)
-        prompt_elements = [{"type": "text", "text": rendered_prompt}]
-
-        # 如果有以前的追踪记录，则添加
-        if len(previous_trace) > 0:
-            history_memory = HistoryMemory(previous_trace=previous_trace)
-            trace_prompt = history_memory.construct_previous_trace_prompt()
-            prompt_elements.append({"type": "text", "text": trace_prompt})
-
-            # 添加当前观察（图像数据）
-            prompt_elements.append({"type": "text", "text": "current observation is:"})
-            prompt_elements.append(
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}})
-
-        # 构造最终的消息负载
-        messages = [{"role": "system", "content": self.prompt_system},
-                    {"role": "user", "content": prompt_elements}]
-        return messages
-
-    # def construct(self, user_request: str, previous_trace: str, base64_image: str) -> list:
-    #     # 使用模板渲染用户请求
-    #     self.prompt_user = Template(self.prompt_user).render(user_request=user_request)
-    #     if len(previous_trace) > 0:
-    #         # 如果有之前的追踪记录
-    #         self.prompt_user += HistoryMemory(
-    #             previous_trace=previous_trace).construct_previous_trace_prompt()
-    #         # 添加观察内容，这里是图像数据
-    #         self.prompt_user.append[{"type": "text",
-    #                               "text": "current observation is:"},
-    #                              {"type": "image_url",
-    #                               "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"
-    #                               }
-    #                              }
-    #                             ]
-    #     messages = [{"role": "system", "content": self.prompt_system},
-    #                 {"role": "user", "content": self.prompt_user}]
-    #     return messages
-
-    # 将previous thought和action转化成格式化字符串
-    def stringfy_thought_and_action(self, input_list: list) -> str:
-        input_list = json5.loads(input_list, encoding="utf-8")
-        str_output = "["
-        for idx, i in enumerate(input_list):
-            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
+            str_output += f'Step{idx+1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
         str_output += "]"
         return str_output
 
 
 class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的prompt
     def __init__(self):
-        self.prompt_system = ObservationPrompts.global_reward_prompt_system
-        self.prompt_user = ObservationPrompts.global_reward_prompt_user
+        self.prompt_system = BasePrompts.reward_prompt_system
+        self.prompt_user = BasePrompts.reward_prompt_user
 
     # 构建reward的prompt，输出openai可解析的格式
     def construct(self, user_request: str, stringfy_thought_and_action_output: str) -> list:
