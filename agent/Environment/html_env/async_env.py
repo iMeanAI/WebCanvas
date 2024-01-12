@@ -1,9 +1,10 @@
+from typing import Tuple, Any
+
 from playwright.async_api import async_playwright, Page
 from playwright.sync_api import ViewportSize
 from urllib.parse import urlparse, urljoin
 from beartype import beartype
 
-from playwright.async_api import async_playwright, Page
 from PIL import Image
 from io import BytesIO
 import asyncio
@@ -12,9 +13,8 @@ import base64
 from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
 import time
-from playwright.sync_api import sync_playwright
 
-vimium_path = "D:\KYXK\imean-agents-dev\\vimium-master"  # Vimium 扩展的路径，需要自定义，相对路径会有点问题 byCarl C:\\Users\Carl Cui\AppData\Local\ms-playwright\chromium-1055\chrome-win\\vimium-master
+vimium_path = "D:\KYXK\imean-agents-dev\\vimium-master"  # Vimium 扩展的路径，需要自定义，相对路径会有点问题，导致路径切换为C:\\...\AppData\Local\ms-playwright\chromium-1055\chrome-win\\vimium-master
 
 
 class AsyncHTMLEnvironment:
@@ -45,19 +45,18 @@ class AsyncHTMLEnvironment:
         self.locale = locale
         self.context = None
 
-
     async def setup(self, start_url: str) -> None:
         if self.mode == "dom" or self.mode == "d_v":
             self.playwright = await async_playwright().start()
-            self.browser = (await self.playwright.chromium.launch(
-                headless=self.headless,
-                slow_mo=self.slow_mo,
-            ))
+            self.browser = await self.playwright.chromium.launch(
+                headless=self.headless, slow_mo=self.slow_mo
+            )
+            start_url = start_url
             self.context = await self.browser.new_context(
             viewport=self.viewport_size,
             device_scale_factor=1,
-            locale=self.locale,
-            )
+            locale=self.locale
+        )
         if self.mode == "vision":
             self.playwright = await async_playwright().start()
             self.context = await self.playwright.chromium.launch_persistent_context(
@@ -72,17 +71,14 @@ class AsyncHTMLEnvironment:
                 ],
                 ignore_https_errors=True,  # 忽略 HTTPS 错误
                 )
-        print("Before new page creation")
         if start_url:
             self.page = await self.context.new_page()
-            print("After start_url new page creation")
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
             await self.page.goto(start_url)
             await self.page.wait_for_timeout(500)
             self.html_content = await self.page.content()
         else:
             self.page = await self.context.new_page()
-            print("After none new page creation")
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
             self.html_content = await self.page.content()
 
@@ -92,7 +88,7 @@ class AsyncHTMLEnvironment:
                 self.tree.fetch_html_content(self.html_content)
                 tab_name = await self.page.title()
                 dom_tree = self.tree.build_dom_tree()
-                observation = f"current web tab name is \'{tab_name}\'\n" + "current accessibility tree is below:\n" + dom_tree
+                observation = f"current web page name is \'{tab_name}\'\n" + "current accessibility tree is below:\n" + dom_tree
                 if self.mode == "d_v":
                     observation_VforD = await self.capture()
             elif self.mode == "vision":
@@ -112,7 +108,7 @@ class AsyncHTMLEnvironment:
         else:
             return observation
 
-    async def reset(self, start_url: str = "") -> str:
+    async def reset(self, start_url: str = "") -> tuple[Any, Any] | str:
         await self.setup(start_url)
         if self.mode == "d_v":
             observation, observation_VforD = await self._get_obs()

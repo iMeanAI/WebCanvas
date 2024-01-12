@@ -122,16 +122,12 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
             observation_VforD: str,
             feedback: str = ""
     ) -> list:
-        # self.prompt_user = Template(self.prompt_user).render(
-        #     user_request=user_request)
         if not D_VObservationPromptConstructor.is_valid_base64(observation_VforD):
             print("提供的observation_VforD不是有效的Base64编码")
             
         rendered_prompt = Template(self.prompt_user).render(user_request=user_request)
         prompt_elements = [{"type": "text", "text": rendered_prompt}]
         if len(previous_trace) > 0:
-            # self.prompt_user += HistoryMemory(
-            #     previous_trace=previous_trace).construct_previous_trace_prompt()
             history_memory = HistoryMemory(previous_trace=previous_trace)
             trace_prompt = history_memory.construct_previous_trace_prompt()
             prompt_elements.append({"type": "text", "text": trace_prompt})
@@ -139,7 +135,6 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
             if feedback != "":
                 prompt_elements.append(
                     {"type": "text", "text": f"There an invalid action description is below:\n {feedback}\n"})
-
             prompt_elements.append({"type": "text", "text": f"current observation or Dom tree is {observation}"})
             print("Dom tree finished!\n")
             prompt_elements.append({"type": "text", "text": "current screenshot is:"})

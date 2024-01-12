@@ -5,15 +5,10 @@ from agent.Environment.html_env.async_env import AsyncHTMLEnvironment
 from evaluate import *
 from agent.Plan import *
 from playwright.async_api import Playwright, async_playwright, expect, Page
-from agent.Environment.html_env.actions import create_action, Action
+from agent.Environment.html_env.actions import create_action, Action, ActionTypes
 
 import re
-from PIL import Image
-from io import BytesIO
 import asyncio
-from agent.LLM import *
-import base64
-import binascii
 import argparse
 
 
@@ -21,7 +16,7 @@ import argparse
 
 # 解析命令行参数
 parser = argparse.ArgumentParser(description="Run the agent in different modes.")
-parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="d_v",
+parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="vision",
                     help="Choose interaction mode: 'dom' for DOM-based interaction, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
 args = parser.parse_args()
 interaction_mode = args.mode
@@ -229,10 +224,6 @@ async def main(num_steps=0, mode="dom"):
     # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
     # print(json5.dumps(a, indent=4))
     # input()
-
-
-
-
 
 
     # ! 3.任务评测打分
