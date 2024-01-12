@@ -22,6 +22,7 @@ args = parser.parse_args()
 interaction_mode = args.mode
 
 
+
 def read_file(path="./data/test.json"):
     '''读取标签数据'''
     return_list = []
