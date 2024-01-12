@@ -12,31 +12,30 @@ class GPTGenerator:
     def __init__(self):
         self.model = ""
 
-    async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7) -> (str, str):
+    async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7
+                      ) -> (str, str):
         try:
             cpu_count = multiprocessing.cpu_count()
             with ThreadPoolExecutor(max_workers=cpu_count * 2) as pool:
                 future_answer = pool.submit(
                     self.chat, messages, max_tokens, temperature)
-            future_answer_result = await future_answer.result()
-            openai_response = list(future_answer_result.choices)[
-                0].to_dict()['message']['content']
-            pool.shutdown()
-            return openai_response, ""
+                future_answer_result = await future_answer.result()
+                openai_response = list(future_answer_result.choices)[
+                    0].to_dict()['message']['content']
+                pool.shutdown()
+                return openai_response, ""
         except openai.error.APIError as e:
             # Handle API error here, e.g. retry or log
             logger.error(f"OpenAI API returned an API Error: {e}")
             error_message = f"OpenAI API returned an API Error: {e}"
             OpenAI_error_flag = True
             return "", error_message
-
         except openai.error.APIConnectionError as e:
             # Handle connection error here
             error_message = f"Failed to connect to OpenAI API: {e}"
             OpenAI_error_flag = True
             logger.error(f"Failed to connect to OpenAI API: {e}")
             return "", error_message
-
         except openai.error.RateLimitError as e:
             # Handle rate limit error (we recommend using exponential backoff)
             OpenAI_error_flag = True
@@ -65,3 +64,8 @@ class GPTGenerator35(GPTGenerator):
 class GPTGenerator4(GPTGenerator):
     def __init__(self):
         self.model = "gpt-4-1106-preview"
+
+
+class GPTGenerator4V(GPTGenerator):
+    def __init__(self):
+        self.model = "gpt-4-vision-preview"  # 指定模型为GPT-4 Vision
