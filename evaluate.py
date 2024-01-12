@@ -16,7 +16,7 @@ import argparse
 
 # 解析命令行参数
 parser = argparse.ArgumentParser(description="Run the agent in different modes.")
-parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="d_v",
+parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="dom",
                     help="Choose interaction mode: 'dom' for DOM-based interaction, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
 args = parser.parse_args()
 interaction_mode = args.mode
@@ -154,10 +154,11 @@ async def main(num_steps=0, mode="dom"):
 
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
-        total_step_score = 0
+        
         # task_name = "Ask Satya Nadella to send an email and mention your interest in AI at linkdin"
         last_action_description = ""
         for action_step in range(10):
+            total_step_score = 0
             # break
             print("planning前previous_trace：", previous_trace)
             print("planning前observation：", observation)
