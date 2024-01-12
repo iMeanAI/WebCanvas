@@ -75,7 +75,7 @@ class PathEvaluator(StepEvaluator):
                 reference_elements = tree.xpath(reference_answer)
             except:
                 score = 0
-            if input_elements and reference_elements:
+            if (input_elements is not None) and (reference_elements is not None):
                 score = input_elements[0] is reference_elements[0]
                 try:
                     if reference_elements[0].tag == "span":
@@ -90,16 +90,17 @@ class PathEvaluator(StepEvaluator):
             try:
                 soup = BeautifulSoup(html_content, 'html.parser')
                 input_element = soup.select_one(input_answer)
-                reference_elements = soup.select_one(reference_answer)
-                score = input_element is reference_elements
+                reference_element = soup.select_one(reference_answer)
+                if (input_element is not None) and (reference_element is not None):
+                    score = input_element is reference_element
 
-                try:
-                    if reference_elements.name == "span":
-                        parent_elements = reference_elements.parent
-                        score_parent = input_element is parent_elements
-                        score = max(score, score_parent)
-                except:
-                    pass
+                    try:
+                        if reference_element.name == "span":
+                            parent_elements = reference_element.parent
+                            score_parent = input_element is parent_elements
+                            score = max(score, score_parent)
+                    except:
+                        pass
             except:
                 score = 0
         # result_score = MatchFunction.include_match(
