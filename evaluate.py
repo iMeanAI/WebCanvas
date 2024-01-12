@@ -137,7 +137,7 @@ async def main(num_steps=0):
         evaluate_steps = reference_evaluate_steps
         total_step_score = 0
         for action_step in range(10):
-            break
+            # break
             print("planning前previous_trace：", previous_trace)
             print("planning前observation：", observation)
             for _ in range(3):
