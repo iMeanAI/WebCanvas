@@ -1,48 +1,591 @@
 [
     {
-        "task": "Find Dota 2 game and add all DLC to cart in steam.",
-        "reference_task_length":7,
+        "task": "Find Dota 2 game and add all DLC to cart in steam",
+        "reference_task_length": 6,
         "evaluation": [
             {
-                "match_function": "path_exact_match",
-                "method":"selector",
+                "match_function_name": "url_included_match",
                 "content": {
-                    "reference_answer": "#dlc_purchase_action > div.btn_addtocart > a"
+                    "key": "",
+                    "reference_answer": "app/570/Dota_2/"
                 }
             },
             {
-                "match_function": "url_include_match",
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
                 "content": {
-                    "key": "",
-                    "reference_answer": "app/570"
+                    "reference_answer": "body>div>div>div>div>div>div>div>div>div>div>div>form>div>div>div>div>a>span"
                 }
             }
-            
         ]
     },
     {
-        "task": "Look for a place with a good swimming pool that charges between $200 and $300 per night.",
-        "reference_task_length":10,
+        "task": "Show popular news which is at number one in comics in ign",
+        "reference_task_length": 5,
         "evaluation": [
             {
-                "match_function": "url_exact_match",
+                "match_function_name": "url_included_match",
                 "content": {
-                    "key": "category_tag",
-                    "reference_answer": "Tag%3A677"
+                    "key": "",
+                    "reference_answer": "/comics"
                 }
             },
             {
-                "match_function": "url_exact_match",
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "body>div>div>main>section>div>section>section>div>a>div>span"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "filter",
+                    "reference_answer": "popular"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Find adventure movies coming to theaters in rottentomatoes",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "browse/movies_coming_soon"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "genres:adventure"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Find the most played games sorted by daily player count in steam",
+        "reference_task_length": 5,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "charts/mostplayed"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "body>div>div>div>div"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Add $100 Google Play Gift Card to cart and recipient email address as abc@abc.com, user's name as Micheal in Amazon",
+        "reference_task_length": 9,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "Google-Play-Gift-Code-mail"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "body>div>div>div>div>div>form>div>div>div>div>div>div>span>textarea"
+                }
+            },
+            {
+                "match_function_name": "element_value_exactly_match",
+                "content": {
+                    "value": "abc@abc.com"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "body>div>div>div>div>div>div>div>span>div>span>span>input"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Search for flights available from Calgary (CYYC) to New York (ZNY) in flightaware",
+        "reference_task_length": 9,
+        "evaluation": [
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "origin",
+                    "reference_answer": "CYYC"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "destination",
+                    "reference_answer": "ZNY"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Locate the list of movies \"at home\", sorted by most recent in rottentomatoes",
+        "reference_task_length": 8,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "browse/movies_at_home"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "sort:newest"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Find the user reviews for the game \"Cyberpunk 2077\" in ign ",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "cyberpunk-2077/user-reviews"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Follow the Denver Nuggets NBA team in Yahoosports",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "body>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div>h1>button>span>span"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "nba/teams/denver/"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Find videos from the Oscar 2023 in IMDB",
+        "reference_task_length": 5,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "event/ev0000003/2023"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Find a person by phone number 123456789 in yellowpages",
+        "reference_task_length": 8,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "whitepages/phone-lookup"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "phone",
+                    "reference_answer": "123456789"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Give me the IMDB recommendations of what to watch in IMDB",
+        "reference_task_length": 4,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "imdb.com/what-to-watch"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Search receipt with the eTicket 12345678 for the trip reserved by Jason Two in united",
+        "reference_task_length": 11,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/receipts"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "body>div>div>div>div>div>div>div>main>div>section>section>div>div>form>fieldset>div>ul>li>label"
+                }
+            },
+            {
+                "match_function_name": "element_value_exactly_match",
+                "content": {
+                    "value": "12345678"
+                }
+            },
+            {
+                "match_function_name": "element_value_exactly_match",
+                "content": {
+                    "value": "Jason"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "body>div>div>div>div>div>div>div>main>div>section>section>div>div>form>div>div>div>input"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "body>div>div>div>div>div>div>div>main>div>section>section>div>div>form>button"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Search for women's sports wear, size S in uniqlo",
+        "reference_task_length": 8,
+        "evaluation": [
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "q",
+                    "reference_answer": "Decide whether are searching for women's sports wear"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "sizeCodes",
+                    "reference_answer": "SMA003"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Browse restaurants, open 24 hours, and sorted by rating in yellowpages",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "restaurants/open-24-hours"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "s",
+                    "reference_answer": "average_rating"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Find popular tracks from the rock band Nirvana in soundcloud",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/nirvana/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/popular-tracks"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Look for a place with a good swimming pool that charges between $200 and $300 per night in airbnb",
+        "reference_task_length": 10,
+        "evaluation": [
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "category_tag",
+                    "reference_answer": "Tag:677"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "price_max",
+                    "reference_answer": "300"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
                 "content": {
                     "key": "price_min",
                     "reference_answer": "200"
                 }
+            }
+        ]
+    },
+    {
+        "task": "Add a smartwatch to the cart that is compatible with an iPhone in amazon ",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "k",
+                    "reference_answer": "Decide whether they are smartphone "
+                }
             },
             {
-                "match_function": "url_exact_match",
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "body>div>div>div>div>div>div>span>div>div>div>div>ul>span>span>li>span>a>div>label>i"
+                }
+            },
+            {
+                "match_function_name": "element_value_semantic_match",
+                "content": {
+                    "reference_answer": "Whether the are smartphone for Iphone"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "body>div>div>div>div>div>div>div>div>div>div>div>form>div>div>div>div>div>div>div>div>span>span>span>input"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Find all Uniqlo's located in Chicago, IL in uniqlo",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "10200108"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Find vintage clothing and sort the results by price from low to high in ebay",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "_nkw",
+                    "reference_answer": "must include two features: vintage and clothing"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "body>div>div>div>div>div>div>div>div>span>span>ul>li>a>span"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Find a treehouse in India below $100 per night in Airbnb",
+        "reference_task_length": 12,
+        "evaluation": [
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "query",
+                    "reference_answer": "Decide whether the place is India"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
                 "content": {
                     "key": "price_max",
-                    "reference_answer": "300"
+                    "reference_answer": "100"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "category_tag",
+                    "reference_answer": "Tag:8188"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Show me the best seller accessories for the Model X in tesla's website",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "category/vehicle-accessories/model-x"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Find Hot Dogs in Oakland, CA that Offers Delivery in yelp",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "find_desc",
+                    "reference_answer": "Decide wether the destination is coffee shop"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "attrs",
+                    "reference_answer": "WiFi.free"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Find the list of injured NBA players in Yahoosports",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "nba/injuries/"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Find Hot Dogs in Oakland, CA that Offers Delivery in yelp",
+        "reference_task_length": 8,
+        "evaluation": [
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "find_loc",
+                    "reference_answer": "Decide whether the location in Oakland, CA"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "find_desc",
+                    "reference_answer": "Decide whether the food is hotdogs"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "attrs",
+                    "reference_answer": "RestaurantsDelivery"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Add a smartwatch to the cart that is compatible with an iPhone in amazon",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "element_value_semantic_match",
+                "content": {
+                    "reference_answer": "Decide whether the content represents smartwatch that is compatible with iphone"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "k",
+                    "reference_answer": "Decide whether the content represents smartwatch that is compatible with iphone"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "body>div>div>div>div>div>div>div>div>div>div>div>form>div>div>div>div>div>div>div>div>span>span>span>input"
+                }
+            }
+        ]
+    },
+    {
+        "task": "Browse laptops with 16gb of ram and under $700 in new egg",
+        "reference_task_length": 11,
+        "evaluation": [
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "d",
+                    "reference_answer": "Decide whether are seaerching for laptops"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "LeftPriceRange",
+                    "reference_answer": "700"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "N",
+                    "reference_answer": "600136700"
                 }
             }
         ]

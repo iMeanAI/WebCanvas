@@ -85,21 +85,11 @@ class AsyncHTMLEnvironment:
 
     async def _get_obs(self) -> tuple[str | Any, str | Any] | str | Any:
         try:
-            if self.mode == "dom" or self.mode == "d_v":
-                self.tree.fetch_html_content(self.html_content)
-                tab_name = await self.page.title()
-                dom_tree = self.tree.build_dom_tree()
-                observation = f"current web page name is \'{tab_name}\'\n" + "current accessibility tree is below:\n" + dom_tree
-                if self.mode == "d_v":
-                    observation_VforD = await self.capture()
-            elif self.mode == "vision":
-                # 视觉模式下的处理逻辑
-                if self.use_vimium_effect:
-                    # 获取带有 Vimium 效果的屏幕截图
-                    observation = await self.capture_with_vim_effect()
-                else:
-                    # 获取普通屏幕截图
-                    observation = await self.capture()
+            self.tree.fetch_html_content(self.html_content)
+            tab_name = await self.page.title()
+            dom_tree = self.tree.build_dom_tree()
+            observation = f"current web tab name is \'{tab_name}\'\n" + \
+                "current accessiability tree is below:\n" + dom_tree
         except:
             observation = ""
             if self.mode == "d_v":
@@ -122,7 +112,7 @@ class AsyncHTMLEnvironment:
         '''找到可交互元素并执行相应的动作得到新的observation'''
         if "element_id" in action and action["element_id"] != 0:
             print('action["element_id"]:', action["element_id"])
-            print('tree.nodeDict[action["element_id"]]:',self.tree.nodeDict[action["element_id"]])
+            print('tree.nodeDict[action["element_id"]]:', self.tree.nodeDict[action["element_id"]])
             action["element_id"] = self.tree.nodeDict[action["element_id"]]
         try:
             match action["action_type"]:
