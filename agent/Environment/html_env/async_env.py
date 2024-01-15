@@ -81,12 +81,9 @@ class AsyncHTMLEnvironment:
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
             self.html_content = await self.page.content()
+        self.last_page = self.page
 
-    async def close(self):
-        await self.context.close()
-        await self.browser.close()
-
-    async def _get_obs(self) -> str:
+    async def _get_obs(self) -> tuple[str | Any, str | Any] | str | Any:
         try:
             self.tree.fetch_html_content(self.html_content)
             tab_name = await self.page.title()
