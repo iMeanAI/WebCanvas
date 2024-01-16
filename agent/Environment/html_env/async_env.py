@@ -1,4 +1,4 @@
-from typing import Tuple, Any
+from typing import Any, Union, Tuple
 
 from playwright.async_api import async_playwright, Page
 from playwright.sync_api import ViewportSize
@@ -53,10 +53,10 @@ class AsyncHTMLEnvironment:
             )
             start_url = start_url
             self.context = await self.browser.new_context(
-            viewport=self.viewport_size,
-            device_scale_factor=1,
-            locale=self.locale
-        )
+                viewport=self.viewport_size,
+                device_scale_factor=1,
+                locale=self.locale
+            )
         if self.mode == "vision":
             self.playwright = await async_playwright().start()
             self.context = await self.playwright.chromium.launch_persistent_context(
@@ -70,7 +70,7 @@ class AsyncHTMLEnvironment:
                     f"--load-extension={vimium_path}",  # 加载 Vimium 扩展
                 ],
                 ignore_https_errors=True,  # 忽略 HTTPS 错误
-                )
+            )
         if start_url:
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
@@ -83,23 +83,31 @@ class AsyncHTMLEnvironment:
             self.html_content = await self.page.content()
         self.last_page = self.page
 
-    async def _get_obs(self) -> tuple[str | Any, str | Any] | str | Any:
-        try:
-            self.tree.fetch_html_content(self.html_content)
-            tab_name = await self.page.title()
-            dom_tree = self.tree.build_dom_tree()
-            observation = f"current web tab name is \'{tab_name}\'\n" + \
-                "current accessiability tree is below:\n" + dom_tree
-        except:
-            observation = ""
-            if self.mode == "d_v":
-                observation_VforD = ""
+    async def _get_obs(self) -> Union[str, Tuple[str, str]]:
+        observation = ""
         if self.mode == "d_v":
-            return observation, observation_VforD
-        else:
-            return observation
+            observation_VforD = ""  # 仅在 "d_v" 模式下使用
+        try:
+            if self.mode in ["dom", "d_v"]:
+                self.tree.fetch_html_content(self.html_content)
+                tab_name = await self.page.title()
+                dom_tree = self.tree.build_dom_tree()
+                observation = f"current web page name is \'{tab_name}\'\n" + "current accessibility tree is below:\n" + dom_tree
+                if self.mode == "d_v":
+                    observation_VforD = await self.capture()
+            elif self.mode == "vision":
+                # 视觉模式下的处理逻辑
+                if self.use_vimium_effect:
+                    # 获取带有 Vimium 效果的屏幕截图
+                    observation = await self.capture_with_vim_effect()
+                else:
+                    # 获取普通屏幕截图
+                    observation = await self.capture()
+        except Exception as e:
+            pass
+        return (observation, observation_VforD) if self.mode == "d_v" else observation
 
-    async def reset(self, start_url: str = "") -> tuple[Any, Any] | str:
+    async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
         await self.setup(start_url)
         if self.mode == "d_v":
             observation, observation_VforD = await self._get_obs()
@@ -108,7 +116,7 @@ class AsyncHTMLEnvironment:
             observation = await self._get_obs()
             return observation
 
-    async def execute_action(self, action: Action) -> str:
+    async def execute_action(self, action: Action) -> Union[str, Tuple[str, str]]:
         '''找到可交互元素并执行相应的动作得到新的observation'''
         if "element_id" in action and action["element_id"] != 0:
             print('action["element_id"]:', action["element_id"])
@@ -135,7 +143,7 @@ class AsyncHTMLEnvironment:
                                 if bool(urlparse(url).netloc) is False:
                                     base_url = self.page.url()
                                     url = urljoin(base_url, url)
-                                self.last_page =  self.page
+                                self.last_page = self.page
                                 self.page = await self.context.new_page()
                                 await self.page.goto(url)
                                 await self.page.wait_for_load_state('load')
@@ -143,7 +151,7 @@ class AsyncHTMLEnvironment:
                                 return await self._get_obs()
                             except:
                                 try:
-                                    self.last_page =  self.page
+                                    self.last_page = self.page
                                     await self.page.evaluate('''() => {
                                         const element = document.querySelector('%s');
                                         if (element) {
@@ -176,7 +184,7 @@ class AsyncHTMLEnvironment:
                         return await self._get_obs()
                 case ActionTypes.GOTO:
                     try:
-                        self.last_page =  self.page
+                        self.last_page = self.page
                         self.page = await self.context.new_page()
                         await self.page.goto(action["url"])
                         await self.page.wait_for_load_state('load')
@@ -189,7 +197,7 @@ class AsyncHTMLEnvironment:
                 case ActionTypes.FILL_FORM:
                     try:
                         try:
-                            self.last_page =  self.page
+                            self.last_page = self.page
                             label, element_idx = self.tree.get_tag_name(
                                 self.tree.elementNodes[action["element_id"]])
                             action.update({"element_id": element_idx,
@@ -200,14 +208,14 @@ class AsyncHTMLEnvironment:
                             print(
                                 f"selector:{selector},label_name:{label},element_idx: {element_idx}")
                         try:
-                            self.last_page =  self.page
+                            self.last_page = self.page
                             await self.page.locator(selector).fill(action["fill_text"])
                             await self.page.locator(selector).press("Enter")
                             await self.page.wait_for_load_state('load')
                             self.html_content = await self.page.content()
                             return await self._get_obs()
                         except:
-                            self.last_page =  self.page
+                            self.last_page = self.page
                             fill_and_press_enter = '''() => {
                                         const element = document.querySelector('%s');
                                         if (element) {
@@ -227,9 +235,9 @@ class AsyncHTMLEnvironment:
                         return await self._get_obs()
                 case ActionTypes.GOOGLE_SEARCH:
                     try:
-                        self.last_page =  self.page
+                        self.last_page = self.page
                         self.page = await self.context.new_page()
-                        await self.page.goto("https://www.google.com/search?q="+action["fill_text"])
+                        await self.page.goto("https://www.google.com/search?q=" + action["fill_text"])
                         await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
                         return await self._get_obs()
@@ -239,7 +247,7 @@ class AsyncHTMLEnvironment:
                 case ActionTypes.GO_BACK:
                     try:
                         tmp_page = self.last_page
-                        self.page =  self.last_page
+                        self.page = self.last_page
                         self.last_page = tmp_page
                         await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
@@ -264,7 +272,7 @@ class AsyncHTMLEnvironment:
         return self.page, selector
 
     async def transfomer_status(self, element_id: int) -> (Page, str):
-        self.last_page.screenshot(path="example.png",full_page=True)
+        self.last_page.screenshot(path="example.png", full_page=True)
         self.page.screenshot(path="example.png")
 
     async def vision_execute_action(self, action: Action) -> str:
@@ -280,7 +288,6 @@ class AsyncHTMLEnvironment:
         elif "click" in action:
             await self.click(action["click"])
 
-    
     async def navigate(self, url):
         await self.page.goto(url=url if "://" in url else "https://" + url, timeout=60000)
         print("After navigate goto")
@@ -332,7 +339,7 @@ class AsyncHTMLEnvironment:
         # 确保页面已经加载
         if not self.page:
             raise ValueError("Page not initialized or loaded.")
-        
+
         await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
         # 捕获屏幕截图
         screenshot_bytes = await self.page.screenshot()
