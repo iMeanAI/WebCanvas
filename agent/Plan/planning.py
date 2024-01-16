@@ -26,10 +26,12 @@ class Planning:
                 previous_trace)
             reward_request = RewardPromptConstructor().construct(
                 user_request, stringfy_thought_and_action_output)
+            print(f"\033[32mGlobal_reward_Request{reward_request}")  # 绿色
+            print("\033[0m")
             reward_response, error_message = await GPT4.request(reward_request)
             status_and_description = ActionParser().extract_status_and_description(
                 reward_response)
-            print(f"\033[34mOpenai_Reward_Response:\n{reward_response}")  # 蓝色
+            print(f"\033[34mGlobal_Reward_Response:\n{reward_response}")  # 蓝色
             print("\033[0m")
         else:
             reward_response = ""

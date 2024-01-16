@@ -233,10 +233,10 @@ async def main(num_steps=0, mode="dom"):
 
             if mode == "dom" or mode == "d_v":
                 # current_trace = [current_trace]
-                observation_VforD = await env.capture()
+                # observation_VforD = await env.capture()
                 current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
-                                                         current_trace=current_trace, observation=observation, observation_VforD=observation_VforD)
-                if current_reward and int(current_reward.get("score")) < 8:
+                                                         current_trace=current_trace, observation=observation)
+                if current_reward and int(current_reward.get("score")) < 7:
                     execute_action.update(
                         {"element_id": 0, "action_type": ActionTypes.GO_BACK})
                     observation = await env.execute_action(execute_action)
