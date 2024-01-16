@@ -16,7 +16,7 @@ import argparse
 
 # 解析命令行参数
 parser = argparse.ArgumentParser(description="Run the agent in different modes.")
-parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="d_v",
+parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="dom",
                     help="Choose interaction mode: 'dom' for DOM-based interaction, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
 args = parser.parse_args()
 interaction_mode = args.mode
@@ -155,8 +155,7 @@ async def main(num_steps=0, mode="dom"):
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
         
-        # Ask Satya Nadella to send an email and mention your interest in AI at linkdin
-        task_name = "Find vintage clothing and sort the results by price from high to low."
+        # task_name = "Ask Satya Nadella to send an email and mention your interest in AI at linkdin"
         last_action_description = ""
         for action_step in range(10):
             total_step_score = 0
@@ -165,7 +164,7 @@ async def main(num_steps=0, mode="dom"):
             print("planning前observation：", observation)
             for _ in range(3):
                 try:
-                    dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation, feedback = last_action_description,mode=mode, observation_VforD=observation_VforD)
+                    dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation,feedback = last_action_description,mode=mode, observation_VforD=observation_VforD)
                     if dict_to_write is not None:
                         break
                 except Exception as e:
