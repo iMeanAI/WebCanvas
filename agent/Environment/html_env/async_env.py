@@ -14,7 +14,8 @@ from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
 import time
 
-vimium_path = "D:\KYXK\imean-agents-dev\\vimium-master"  # Vimium 扩展的路径，需要自定义，相对路径会有点问题，导致路径切换为C:\\...\AppData\Local\ms-playwright\chromium-1055\chrome-win\\vimium-master
+# Vimium 扩展的路径，需要自定义，相对路径会有点问题，导致路径切换为C:\\...\AppData\Local\ms-playwright\chromium-1055\chrome-win\\vimium-master
+vimium_path = "D:\KYXK\imean-agents-dev\\vimium-master"
 
 
 class AsyncHTMLEnvironment:
@@ -44,6 +45,7 @@ class AsyncHTMLEnvironment:
         self.tree = HTMLTree()
         self.locale = locale
         self.context = None
+        self.browser = None
 
     async def setup(self, start_url: str) -> None:
         if self.mode == "dom" or self.mode == "d_v":
@@ -53,10 +55,10 @@ class AsyncHTMLEnvironment:
             )
             start_url = start_url
             self.context = await self.browser.new_context(
-            viewport=self.viewport_size,
-            device_scale_factor=1,
-            locale=self.locale
-        )
+                viewport=self.viewport_size,
+                device_scale_factor=1,
+                locale=self.locale
+            )
         if self.mode == "vision":
             self.playwright = await async_playwright().start()
             self.context = await self.playwright.chromium.launch_persistent_context(
@@ -66,11 +68,12 @@ class AsyncHTMLEnvironment:
                 device_scale_factor=1,
                 locale=self.locale,
                 args=[
-                    f"--disable-extensions-except={vimium_path}",  # 禁用除 Vimium 外的扩展
+                    # 禁用除 Vimium 外的扩展
+                    f"--disable-extensions-except={vimium_path}",
                     f"--load-extension={vimium_path}",  # 加载 Vimium 扩展
                 ],
                 ignore_https_errors=True,  # 忽略 HTTPS 错误
-                )
+            )
         if start_url:
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
@@ -89,7 +92,7 @@ class AsyncHTMLEnvironment:
             tab_name = await self.page.title()
             dom_tree = self.tree.build_dom_tree()
             observation = f"current web tab name is \'{tab_name}\'\n" + \
-                "current accessiability tree is below:\n" + dom_tree
+                "current accessibility tree is below:\n" + dom_tree
         except:
             observation = ""
             if self.mode == "d_v":
@@ -112,7 +115,8 @@ class AsyncHTMLEnvironment:
         '''找到可交互元素并执行相应的动作得到新的observation'''
         if "element_id" in action and action["element_id"] != 0:
             print('action["element_id"]:', action["element_id"])
-            print('tree.nodeDict[action["element_id"]]:', self.tree.nodeDict[action["element_id"]])
+            print('tree.nodeDict[action["element_id"]]:',
+                  self.tree.nodeDict[action["element_id"]])
             action["element_id"] = self.tree.nodeDict[action["element_id"]]
         try:
             match action["action_type"]:
@@ -135,7 +139,7 @@ class AsyncHTMLEnvironment:
                                 if bool(urlparse(url).netloc) is False:
                                     base_url = self.page.url()
                                     url = urljoin(base_url, url)
-                                self.last_page =  self.page
+                                self.last_page = self.page
                                 self.page = await self.context.new_page()
                                 await self.page.goto(url)
                                 await self.page.wait_for_load_state('load')
@@ -143,7 +147,7 @@ class AsyncHTMLEnvironment:
                                 return await self._get_obs()
                             except:
                                 try:
-                                    self.last_page =  self.page
+                                    self.last_page = self.page
                                     await self.page.evaluate('''() => {
                                         const element = document.querySelector('%s');
                                         if (element) {
@@ -176,7 +180,7 @@ class AsyncHTMLEnvironment:
                         return await self._get_obs()
                 case ActionTypes.GOTO:
                     try:
-                        self.last_page =  self.page
+                        self.last_page = self.page
                         self.page = await self.context.new_page()
                         await self.page.goto(action["url"])
                         await self.page.wait_for_load_state('load')
@@ -189,7 +193,7 @@ class AsyncHTMLEnvironment:
                 case ActionTypes.FILL_FORM:
                     try:
                         try:
-                            self.last_page =  self.page
+                            self.last_page = self.page
                             label, element_idx = self.tree.get_tag_name(
                                 self.tree.elementNodes[action["element_id"]])
                             action.update({"element_id": element_idx,
@@ -200,14 +204,14 @@ class AsyncHTMLEnvironment:
                             print(
                                 f"selector:{selector},label_name:{label},element_idx: {element_idx}")
                         try:
-                            self.last_page =  self.page
+                            self.last_page = self.page
                             await self.page.locator(selector).fill(action["fill_text"])
                             await self.page.locator(selector).press("Enter")
                             await self.page.wait_for_load_state('load')
                             self.html_content = await self.page.content()
                             return await self._get_obs()
                         except:
-                            self.last_page =  self.page
+                            self.last_page = self.page
                             fill_and_press_enter = '''() => {
                                         const element = document.querySelector('%s');
                                         if (element) {
@@ -227,7 +231,7 @@ class AsyncHTMLEnvironment:
                         return await self._get_obs()
                 case ActionTypes.GOOGLE_SEARCH:
                     try:
-                        self.last_page =  self.page
+                        self.last_page = self.page
                         self.page = await self.context.new_page()
                         await self.page.goto("https://www.google.com/search?q="+action["fill_text"])
                         await self.page.wait_for_load_state('load')
@@ -239,7 +243,7 @@ class AsyncHTMLEnvironment:
                 case ActionTypes.GO_BACK:
                     try:
                         tmp_page = self.last_page
-                        self.page =  self.last_page
+                        self.page = self.last_page
                         self.last_page = tmp_page
                         await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
@@ -262,10 +266,11 @@ class AsyncHTMLEnvironment:
         except:
             selector = ""
         return self.page, selector
-
-    async def transfomer_status(self, element_id: int) -> (Page, str):
-        self.last_page.screenshot(path="example.png",full_page=True)
-        self.page.screenshot(path="example.png")
+    
+    async def close(self):
+        await self.context.close()
+        await self.browser.close()
+        await self.playwright.stop()
 
     async def vision_execute_action(self, action: Action) -> str:
         if "done" in action:
@@ -280,7 +285,6 @@ class AsyncHTMLEnvironment:
         elif "click" in action:
             await self.click(action["click"])
 
-    
     async def navigate(self, url):
         await self.page.goto(url=url if "://" in url else "https://" + url, timeout=60000)
         print("After navigate goto")
@@ -288,8 +292,9 @@ class AsyncHTMLEnvironment:
     async def type(self, text):
         time.sleep(1)
         for char in text:
-            await self.page.keyboard.type(char)  # Type each character individually
-            await asyncio.sleep(0.1)  # Short delay between key presses  
+            # Type each character individually
+            await self.page.keyboard.type(char)
+            await asyncio.sleep(0.1)  # Short delay between key presses
         # await self.page.keyboard.type(text)
         print(f"Typing text: {text}")
         await self.page.keyboard.press("Enter")
@@ -332,7 +337,7 @@ class AsyncHTMLEnvironment:
         # 确保页面已经加载
         if not self.page:
             raise ValueError("Page not initialized or loaded.")
-        
+
         await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
         # 捕获屏幕截图
         screenshot_bytes = await self.page.screenshot()

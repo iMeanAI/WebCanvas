@@ -1,3 +1,5 @@
-from .base_prompts import *
+from .old_base_prompts import *
 from .prompt_constructor import *
-from .obs_prompts import *
+from .base_prompts import *
+from .dom_vision_prompts import *
+from .vision_prompts import *

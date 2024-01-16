@@ -32,7 +32,7 @@ class ActionParser():
 
     def parse_action(self, message):
         message_substring = extract_longest_substring(message)
-        decoded_result = None
+        decoded_result = {}
         try:
             decoded_result = json5.loads(message_substring)
         except Exception as e:
@@ -41,23 +41,23 @@ class ActionParser():
 
         return decoded_result
 
-    def extract_status_and_summary(self, message) -> dict:
+    def extract_status_and_description(self, message) -> dict:
         result_status = "null"
         try:
             result_status = re.findall(
-                "status:(.*?)summarization:", message, re.S)[0].strip()
+                "status:(.*?)description:", message, re.S)[0].strip()
             print(result_status)
         except:
             try:
-                result_status = message.split("summarization:")[0].strip()
+                result_status = message.split("description:")[0].strip()
             except:
                 result_status = "null"
         try:
-            summary = re.findall("```(.*?)```", message, re.S)[0]
+            description = re.findall("```(.*?)```", message, re.S)[0]
         except:
-            summary = message.split("summarization:")[-1].strip()
-        status_summary = self.parse_action(summary)
-        return status_summary
+            description = message.split("description:")[-1].strip()
+        status_description = self.parse_action(description)
+        return status_description
 
     def extract_score_and_description(self, message) -> dict:
         result_score = "null"

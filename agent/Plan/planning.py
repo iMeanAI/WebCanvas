@@ -20,14 +20,15 @@ class Planning:
         GPT35 = GPTGenerator35()
         GPT4 = GPTGenerator4()
         GPT4V = GPTGenerator4V()
+        status_and_description = None
         if len(previous_trace) > 0:
             stringfy_thought_and_action_output = ObservationPromptConstructor().stringfy_thought_and_action(
                 previous_trace)
-            reward_request = RewardPromptConstructor().construct(user_request, stringfy_thought_and_action_output)
+            reward_request = RewardPromptConstructor().construct(
+                user_request, stringfy_thought_and_action_output)
             reward_response, error_message = await GPT4.request(reward_request)
-            status_summary = ActionParser().extract_status_and_summary(
+            status_and_description = ActionParser().extract_status_and_description(
                 reward_response)
-
             print(f"\033[34mOpenai_Reward_Response:\n{reward_response}")  # 蓝色
             print("\033[0m")
         else:
@@ -35,8 +36,10 @@ class Planning:
 
         # 构建planning prompt及查询
         if mode == "dom":
+            status_description = status_and_description.get(
+                "description") if status_and_description and status_and_description.get("description") else ""
             planning_request = ObservationPromptConstructor().construct(
-                user_request, previous_trace, observation, feedback)
+                user_request, previous_trace, observation, feedback, status_description)
             print(f"\033[32m{planning_request}")  # 绿色
             print("\033[0m")
             planning_response, error_message = await GPT4.request(planning_request)
@@ -62,7 +65,7 @@ class Planning:
             planning_response)
         # description应该包括thought(GPT4返回的)和action(planning解析的)两个字段
         planning_response_action["description"] = {
-            "reward": status_summary if len(reward_response) > 0 else None,
+            "reward": status_and_description if len(reward_response) > 0 else None,
             "thought": planning_response_thought,
             "action": (
                 f'{planning_response_action["action"]}: {planning_response_action["action_input"]}' if "description" not in planning_response_action.keys() else
@@ -95,24 +98,62 @@ class Planning:
 
         return dict_to_write
 
+    # @staticmethod
+    # async def evaluate(user_request, previous_trace, current_trace, observation):  # TODO
+    #     GPT4 = GPTGenerator4()
+    #     current_trace = [current_trace]
+    #     if len(previous_trace) > 0:
+    #         stringfy_previous_trace_output = ObservationPromptConstructor(
+    #         ).stringfy_thought_and_action(previous_trace)
+    #         stringfy_current_trace_output = ObservationPromptConstructor(
+    #         ).stringfy_thought_and_action(current_trace)
+    #         current_reward_response = CurrentRewardPromptConstructor().construct(
+    #             user_request, stringfy_previous_trace_output, stringfy_current_trace_output, observation)
+    #         print(f"\033[32m{current_reward_response}")  # 绿色
+    #         print("\033[0m")
+    #         evaluate_response, error_message = await GPT4.request(current_reward_response)
+    #         score_description = ActionParser().extract_score_and_description(
+    #             evaluate_response)
+    #         # 蓝色
+    #         print(f"\033[34mOpenai_evaluate_Response:\n{score_description}")
+    #         print("\033[0m")
+    #         return score_description
+    #     return ""
+
     @staticmethod
-    async def evaluate(user_request, previous_trace, current_trace, observation):  # TODO
+    async def evaluate(user_request, previous_trace, current_trace, observation, observation_VforD=""):  # TODO
         GPT4 = GPTGenerator4()
+        GPT4V = GPTGenerator4V()
         current_trace = [current_trace]
         if len(previous_trace) > 0:
             stringfy_previous_trace_output = ObservationPromptConstructor(
             ).stringfy_thought_and_action(previous_trace)
             stringfy_current_trace_output = ObservationPromptConstructor(
             ).stringfy_thought_and_action(current_trace)
-            current_reward_response = CurrentRewardPromptConstructor().construct(
-                user_request, stringfy_previous_trace_output, stringfy_current_trace_output, observation)
-            print(f"\033[32m{current_reward_response}")  # 绿色
-            print("\033[0m")
-            evaluate_response, error_message = await GPT4.request(current_reward_response)
-            score_description = ActionParser().extract_score_and_description(
-                evaluate_response)
-            # 蓝色
-            print(f"\033[34mOpenai_evaluate_Response:\n{score_description}")
-            print("\033[0m")
-            return score_description
+            if observation_VforD == "":
+                current_reward_resquest = CurrentRewardPromptConstructor().construct(
+                    user_request, stringfy_previous_trace_output, stringfy_current_trace_output, observation)
+                print(f"\033[32m{current_reward_resquest}")  # 绿色
+                print("\033[0m")
+                evaluate_response, error_message = await GPT4.request(current_reward_resquest)
+                score_description = ActionParser().extract_score_and_description(
+                    evaluate_response)
+                # 蓝色
+                print(
+                    f"\033[34mCurrent_reward_Response:\n{score_description}")
+                print("\033[0m")
+                return score_description
+            else:
+                vision_reward_resquest = VisionRewardPromptConstructor().construct(user_request,
+                                                                                   stringfy_previous_trace_output, stringfy_current_trace_output, observation, observation_VforD)
+                print(f"\033[32m{vision_reward_resquest}")  # 绿色
+                print("\033[0m")
+                evaluate_response, error_message = await GPT4V.request(vision_reward_resquest)
+                score_description = ActionParser().extract_score_and_description(
+                    evaluate_response)
+                # 蓝色
+                print(
+                    f"\033[34mVision_reward_Response:\n{score_description}")
+                print("\033[0m")
+                return score_description
         return ""
