@@ -183,7 +183,7 @@ class AsyncHTMLEnvironment:
                         self.last_page = self.page
                         self.page = await self.context.new_page()
                         await self.page.goto(action["url"])
-                        await self.page.wait_for_load_state('load')
+                        await self.page.wait_for_load_state('load',timeout=3000)
                         self.html_content = await self.page.content()
                         return await self._get_obs()
                     except Exception as e:

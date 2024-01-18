@@ -159,7 +159,7 @@ async def main(num_steps=0, mode="dom"):
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
 
-        # task_name = "Ask Satya Nadella to send an email and mention your interest in AI at linkdin"
+        # task_name = "Locate the list of movies \"at home\", sorted by most recent in rottentomatoes"
         last_action_description = ""
         for action_step in range(10):
             total_step_score = 0

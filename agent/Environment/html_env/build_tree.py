@@ -159,7 +159,8 @@ class HTMLTree:
                 if uu_id:
                     selector_str = " > " + tag_name + selector_str
                 elif current_node["attributes"].get('class') and uu_twin_node is True:
-                    selector_str = " > " + tag_name + "." + ".".join(current_node["attributes"].get('class').replace(" ",".").replace("\n", " ").split(" ")) + selector_str
+                    # fix div.IbBox.Whs\(n\)
+                    selector_str = " > " + tag_name + "." + ".".join(current_node["attributes"].get('class').replace("(","\(").replace(")","\)").replace(" ",".").replace("\n", " ").split(" ")) + selector_str
                 else:
                     selector_str = " > " + tag_name + \
                         ":nth-child(" + siblingId + ")" + selector_str
