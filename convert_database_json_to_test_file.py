@@ -8,7 +8,7 @@ json_file = json5.load(f)
 
 output = []
 
-for task in json_file:
+for index, task in enumerate(json_file):
     task_name = task["title"]
     evaluation = []
     print("task_name:", task_name)
@@ -80,7 +80,7 @@ for task in json_file:
                 evaluation.append(temp)
     print(evaluation)
     # input()
-    output.append({"task": task_name, "reference_task_length": reference_steps, "evaluation": evaluation})
+    output.append({"index":index, "task": task_name, "reference_task_length": reference_steps, "evaluation": evaluation})
 print(output)
 
 f_out = open("output.json", "w")
