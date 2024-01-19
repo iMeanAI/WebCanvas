@@ -1,5 +1,6 @@
 [
     {
+        "index": 0,
         "task": "Find Dota 2 game and add all DLC to cart in steam",
         "reference_task_length": 6,
         "evaluation": [
@@ -21,6 +22,7 @@
         ]
     },
     {
+        "index": 1,
         "task": "Show popular news which is at number one in comics in ign",
         "reference_task_length": 5,
         "evaluation": [
@@ -49,6 +51,7 @@
         ]
     },
     {
+        "index": 2,
         "task": "Find adventure movies coming to theaters in rottentomatoes",
         "reference_task_length": 6,
         "evaluation": [
@@ -69,6 +72,7 @@
         ]
     },
     {
+        "index": 3,
         "task": "Add $100 Google Play Gift Card to cart and recipient email address as abc@abc.com, user's name as Micheal in Amazon",
         "reference_task_length": 9,
         "evaluation": [
@@ -105,6 +109,7 @@
         ]
     },
     {
+        "index": 4,
         "task": "Search for flights available from Calgary (CYYC) to New York (ZNY) in flightaware",
         "reference_task_length": 9,
         "evaluation": [
@@ -125,6 +130,7 @@
         ]
     },
     {
+        "index": 5,
         "task": "Locate the list of movies \"at home\", sorted by most recent in rottentomatoes",
         "reference_task_length": 8,
         "evaluation": [
@@ -145,6 +151,7 @@
         ]
     },
     {
+        "index": 6,
         "task": "Find the user reviews for the game \"Cyberpunk 2077\" in ign",
         "reference_task_length": 7,
         "evaluation": [
@@ -158,6 +165,7 @@
         ]
     },
     {
+        "index": 7,
         "task": "Follow the Denver Nuggets NBA team in Yahoosports",
         "reference_task_length": 7,
         "evaluation": [
@@ -179,6 +187,7 @@
         ]
     },
     {
+        "index": 8,
         "task": "Find videos from the Oscar 2023 in IMDB",
         "reference_task_length": 5,
         "evaluation": [
@@ -192,6 +201,7 @@
         ]
     },
     {
+        "index": 9,
         "task": "Find a person by phone number 123456789 in yellowpages",
         "reference_task_length": 8,
         "evaluation": [
@@ -212,6 +222,7 @@
         ]
     },
     {
+        "index": 10,
         "task": "Give me the IMDB recommendations of what to watch in IMDB",
         "reference_task_length": 4,
         "evaluation": [
@@ -225,6 +236,7 @@
         ]
     },
     {
+        "index": 11,
         "task": "Search receipt with the eTicket 12345678 for the trip reserved by Jason Two in united",
         "reference_task_length": 11,
         "evaluation": [
@@ -276,6 +288,7 @@
         ]
     },
     {
+        "index": 12,
         "task": "Search for women's sports wear, size S in uniqlo",
         "reference_task_length": 8,
         "evaluation": [
@@ -296,6 +309,7 @@
         ]
     },
     {
+        "index": 13,
         "task": "Browse restaurants, open 24 hours, and sorted by rating in yellowpages",
         "reference_task_length": 6,
         "evaluation": [
@@ -316,6 +330,7 @@
         ]
     },
     {
+        "index": 14,
         "task": "Find popular tracks from the rock band Nirvana in soundcloud",
         "reference_task_length": 7,
         "evaluation": [
@@ -336,6 +351,7 @@
         ]
     },
     {
+        "index": 15,
         "task": "Look for a place with a good swimming pool that charges between $200 and $300 per night in airbnb",
         "reference_task_length": 10,
         "evaluation": [
@@ -363,6 +379,7 @@
         ]
     },
     {
+        "index": 16,
         "task": "Add a smartwatch to the cart that is compatible with an iPhone in amazon",
         "reference_task_length": 7,
         "evaluation": [
@@ -399,6 +416,7 @@
         ]
     },
     {
+        "index": 17,
         "task": "Find all Uniqlo's located in Chicago, IL in uniqlo",
         "reference_task_length": 7,
         "evaluation": [
@@ -412,6 +430,7 @@
         ]
     },
     {
+        "index": 18,
         "task": "Find a treehouse in India below $100 per night in Airbnb",
         "reference_task_length": 12,
         "evaluation": [
@@ -439,6 +458,7 @@
         ]
     },
     {
+        "index": 19,
         "task": "Show me the best seller accessories for the Model X in tesla's website",
         "reference_task_length": 7,
         "evaluation": [
@@ -452,6 +472,7 @@
         ]
     },
     {
+        "index": 20,
         "task": "Find a coffee shop with wi-fi in yelp",
         "reference_task_length": 6,
         "evaluation": [
@@ -472,6 +493,7 @@
         ]
     },
     {
+        "index": 21,
         "task": "Find the list of injured NBA players in Yahoosports",
         "reference_task_length": 6,
         "evaluation": [
@@ -485,6 +507,7 @@
         ]
     },
     {
+        "index": 22,
         "task": "Find Hot Dogs in Oakland, CA that Offers Delivery in yelp",
         "reference_task_length": 8,
         "evaluation": [
@@ -512,6 +535,7 @@
         ]
     },
     {
+        "index": 23,
         "task": "Browse laptops with 16gb of ram and under $700 in new egg",
         "reference_task_length": 11,
         "evaluation": [
