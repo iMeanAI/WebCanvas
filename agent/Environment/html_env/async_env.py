@@ -1,4 +1,5 @@
-from typing import Tuple, Any
+from math import ceil
+from typing import Any, Union, Tuple
 
 from playwright.async_api import async_playwright, Page
 from playwright.sync_api import ViewportSize
@@ -13,6 +14,8 @@ import base64
 from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
 import time
+
+from ...Prompt import D_VObservationPromptConstructor  # byCarl
 
 vimium_path = "D:\KYXK\imean-agents-dev\\vimium-master"  # Vimium 扩展的路径，需要自定义，相对路径会有点问题，导致路径切换为C:\\...\AppData\Local\ms-playwright\chromium-1055\chrome-win\\vimium-master
 
@@ -73,33 +76,49 @@ class AsyncHTMLEnvironment:
                 )
         if start_url:
             self.page = await self.context.new_page()
+            print("After start_url new page creation")
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
             await self.page.goto(start_url)
             await self.page.wait_for_timeout(500)
             self.html_content = await self.page.content()
         else:
             self.page = await self.context.new_page()
+            print("After new page creation without start_url")
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
             self.html_content = await self.page.content()
         self.last_page = self.page
 
-    async def _get_obs(self) -> tuple[str | Any, str | Any] | str | Any:
-        try:
-            self.tree.fetch_html_content(self.html_content)
-            tab_name = await self.page.title()
-            dom_tree = self.tree.build_dom_tree()
-            observation = f"current web tab name is \'{tab_name}\'\n" + \
-                "current accessiability tree is below:\n" + dom_tree
-        except:
-            observation = ""
-            if self.mode == "d_v":
-                observation_VforD = ""
+    async def _get_obs(self) -> Union[str, Tuple[str, str]]:
+        observation = ""
         if self.mode == "d_v":
-            return observation, observation_VforD
-        else:
-            return observation
+            observation_VforD = ""  # 仅在 "d_v" 模式下使用
+        try:
+            if self.mode in ["dom", "d_v"]:
+                print("async_env.py now in _get_obs method")
+                self.tree.fetch_html_content(self.html_content)
+                print("async_env.py _get_obs fetch_html_content(self.html_content) finished!")
+                tab_name = await self.page.title()
+                dom_tree = self.tree.build_dom_tree()
+                observation = f"current web tab name is \'{tab_name}\'\n" + \
+                              "current accessibility tree is below:\n" + dom_tree
+                if self.mode == "d_v":
+                    observation_VforD = await self.capture()
+            elif self.mode == "vision":
+                # 视觉模式下的处理逻辑
+                if self.use_vimium_effect:
+                    # 获取带有 Vimium 效果的屏幕截图
+                    observation = await self.capture_with_vim_effect()
+                else:
+                    # 获取普通屏幕截图
+                    observation = await self.capture()
+        except:
+            pass
+        # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(observation_VforD)
+        print("async_env.py _get_obs observation_VforD:", message)
+        return (observation, observation_VforD) if self.mode == "d_v" else observation
 
-    async def reset(self, start_url: str = "") -> tuple[Any, Any] | str:
+    async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
         await self.setup(start_url)
         if self.mode == "d_v":
             observation, observation_VforD = await self._get_obs()
@@ -108,8 +127,15 @@ class AsyncHTMLEnvironment:
             observation = await self._get_obs()
             return observation
 
-    async def execute_action(self, action: Action) -> str:
-        '''找到可交互元素并执行相应的动作得到新的observation'''
+    async def execute_action(self, action: Action) -> Union[str, Tuple[str, str]]:
+        """
+        找到可交互元素并执行相应的动作得到新的observation \n
+        注意：本方法mode为d_v时，返回的分别observation和observation_VforD，在调用时需要分别接收 \n
+        if mode == "d_v":
+            observation, observation_VforD = await env.execute_action( )
+        else:
+            observation = await env.execute_action( )
+        """
         if "element_id" in action and action["element_id"] != 0:
             print('action["element_id"]:', action["element_id"])
             print('tree.nodeDict[action["element_id"]]:', self.tree.nodeDict[action["element_id"]])
@@ -282,7 +308,7 @@ class AsyncHTMLEnvironment:
         elif "click" in action:
             await self.click(action["click"])
 
-    
+
     async def navigate(self, url):
         await self.page.goto(url=url if "://" in url else "https://" + url, timeout=60000)
         print("After navigate goto")
@@ -321,10 +347,12 @@ class AsyncHTMLEnvironment:
         encoded_screenshot = self.encode_and_resize(screenshot)
         return encoded_screenshot
 
-    def encode_and_resize(self, image):
-        IMG_RES = 1080
-        W, H = image.size
-        image = image.resize((IMG_RES, int(IMG_RES * H / W)))
+    @staticmethod
+    def encode_and_resize(image):
+        img_res = 1080
+        w, h = image.size
+        img_res_h = int(img_res * h / w)
+        image = image.resize((img_res, img_res_h))
         buffer = BytesIO()
         image.save(buffer, format="PNG")
         encoded_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
@@ -334,7 +362,7 @@ class AsyncHTMLEnvironment:
         # 确保页面已经加载
         if not self.page:
             raise ValueError("Page not initialized or loaded.")
-        
+
         await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
         # 捕获屏幕截图
         screenshot_bytes = await self.page.screenshot()
@@ -344,6 +372,9 @@ class AsyncHTMLEnvironment:
         # 接着，使用 convert("RGB") 方法将图像转换为 RGB 格式。
         screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGB")
         encoded_screenshot = self.encode_and_resize(screenshot)
+        # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(encoded_screenshot)
+        print("async_env.py encoded_screenshot:", message)
         return encoded_screenshot
 
     @staticmethod
