@@ -65,6 +65,14 @@ class Planning:
         # 提取出planning thought(str)和planning action(dict), 其中planning action拥有action, element_id, action_input, description四个字段
         planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(
             planning_response)
+
+        if planning_response_action.get('action') == "fill_form":
+            JudgeSearchbarRequest = JudgeSearchbarPromptConstructor().construct(
+                input_element=observation, planning_response_action=planning_response_action)
+            Judge_response, error_message = await GPT35.request(JudgeSearchbarRequest)
+            if Judge_response.lower() == "yes":
+                planning_response_action['action'] = "fill_search"
+
         # description应该包括thought(GPT4返回的)和action(planning解析的)两个字段
         planning_response_action["description"] = {
             "reward": status_and_description if len(reward_response) > 0 else None,

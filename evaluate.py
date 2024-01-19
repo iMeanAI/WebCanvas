@@ -159,7 +159,7 @@ async def main(num_steps=0, mode="dom"):
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
 
-        # task_name = "Locate the list of movies \"at home\", sorted by most recent in rottentomatoes"
+        task_name = "Search for flights available from Calgary (CYYC) to New York (ZNY) in flightaware"
         last_action_description = ""
         for action_step in range(10):
             total_step_score = 0
@@ -186,7 +186,7 @@ async def main(num_steps=0, mode="dom"):
                 except:
                     element_id = 0
                 #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
-                if action_type in ["fill_form", "click"]:
+                if action_type in ["fill_form", "fill_search", "click"]:
                     try:
                         selector = env.tree.get_selector_and_xpath(
                             env.tree.nodeDict[element_id])

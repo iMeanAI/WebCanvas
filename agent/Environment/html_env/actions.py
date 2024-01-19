@@ -19,6 +19,7 @@ class ActionTypes(IntEnum):
     FILL_FORM = 4
     SWITCH_TAB = 5
     GO_BACK = 6
+    FILL_SEARCH = 7
 
 
 @beartype
@@ -66,6 +67,17 @@ def create_fill_action(elementid: int, fill_text: str) -> Action:
 
 
 @beartype
+def create_fill_search_action(elementid: int, fill_text: str) -> Action:
+    return {
+        "action_type": ActionTypes.FILL_SEARCH,
+        "element_id": elementid,
+        "url": "",
+        "fill_text": fill_text,
+        "element_name": ""
+    }
+
+
+@beartype
 def create_search_action(elementid: int, text: str) -> Action:
     return {
         "action_type": ActionTypes.GOOGLE_SEARCH,
@@ -92,6 +104,8 @@ def create_action(elementid: int, action_type: str, action_input: str) -> Action
         return create_click_action(elementid=elementid)
     elif action_type == "fill_form":
         return create_fill_action(elementid=elementid, fill_text=action_input)
+    elif action_type == "fill_search":
+        return create_fill_search_action(elementid=elementid, fill_text=action_input)
     elif action_type == "goto":
         return create_goto_action(elementid=elementid, url=action_input)
     elif action_type == "google_search":
@@ -111,5 +125,6 @@ __all__ = [
     "create_goto_action",
     "create_search_action",
     "create_go_back_action",
+    "create_fill_search_action",
     "create_action"
 ]

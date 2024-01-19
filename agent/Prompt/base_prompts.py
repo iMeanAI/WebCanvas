@@ -74,7 +74,7 @@ class BasePrompts:
 
     judge_searchbar_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can.\n"\
         "Your target is to judge whether the input is the search bar.\n"
-    judge_searchbar_prompt_user = "Now the webpage's input elements are below: {{input_element}}\n"\
+    judge_searchbar_prompt_user = "Now the webpage's accessibility tree(the key information of current web page)is below: {{input_element}}\n"\
         "Last step you have fill in the input(id={{element_id}}) with text:{{action_input}}"\
         "Judge whether the input is the search bar. If the blank is search bar, return yes, else return no. You should only return one word!"
     semantic_match_prompt_system = "Now you are an assistant to judge whether 2 elements are semantically same.\n"\

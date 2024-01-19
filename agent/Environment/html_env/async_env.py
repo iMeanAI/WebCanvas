@@ -190,6 +190,45 @@ class AsyncHTMLEnvironment:
                         print("can't execute goto action")
                         print(e)
                         return await self._get_obs()
+                case ActionTypes.FILL_SEARCH:
+                    try:
+                        try:
+                            self.last_page = self.page
+                            label, element_idx = self.tree.get_tag_name(
+                                self.tree.elementNodes[action["element_id"]])
+                            action.update({"element_id": element_idx,
+                                           "element_name": label})
+                            selector, xpath = self.tree.get_selector_and_xpath(
+                                action["element_id"])
+                        except Exception as e:
+                            print(
+                                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                        try:
+                            self.last_page = self.page
+                            await self.page.locator(selector).fill(action["fill_text"])
+                            await self.page.locator(selector).press("Enter")
+                            await self.page.wait_for_load_state('load')
+                            self.html_content = await self.page.content()
+                            return await self._get_obs()
+                        except:
+                            self.last_page = self.page
+                            fill_and_press_enter = '''() => {
+                                        const element = document.querySelector('%s');
+                                        if (element) {
+                                            element.value = '%s';
+                                            element.dispatchEvent(new Event('input', { bubbles: true }));
+                                            element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+                                        }
+                                    }
+                                ''' % (selector, action['fill_text'])
+                            await self.page.evaluate(fill_and_press_enter)
+                            await self.page.wait_for_load_state('load')
+                            self.html_content = await self.page.content()
+                            return await self._get_obs()
+                    except Exception as e:
+                        print("can't execute fill search action")
+                        print(e)
+                        return await self._get_obs()
                 case ActionTypes.FILL_FORM:
                     try:
                         try:
@@ -206,7 +245,6 @@ class AsyncHTMLEnvironment:
                         try:
                             self.last_page = self.page
                             await self.page.locator(selector).fill(action["fill_text"])
-                            # await self.page.locator(selector).press("Enter")
                             await self.page.wait_for_load_state('load')
                             self.html_content = await self.page.content()
                             return await self._get_obs()
@@ -220,7 +258,6 @@ class AsyncHTMLEnvironment:
                                         }
                                     }
                                 ''' % (selector, action['fill_text'])
-                            # element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
                             await self.page.evaluate(fill_and_press_enter)
                             await self.page.wait_for_load_state('load')
                             self.html_content = await self.page.content()
@@ -242,9 +279,8 @@ class AsyncHTMLEnvironment:
                         print(e)
                 case ActionTypes.GO_BACK:
                     try:
-                        tmp_page = self.last_page
                         self.page = self.last_page
-                        self.last_page = tmp_page
+                        self.last_page = self.page
                         await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
                         return await self._get_obs()

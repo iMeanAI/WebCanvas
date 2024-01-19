@@ -283,9 +283,9 @@ class JudgeSearchbarPromptConstructor(BasePromptConstructor):
 
     # 构建判断是否是搜索框的prompt，输出openai可解析的格式
     # TODO 改掉decoded_result
-    def construct(self, input_element, decoded_result) -> list:
+    def construct(self, input_element, planning_response_action) -> list:
         self.prompt_user = Template(self.prompt_user).render(input_element=str(
-            input_element), element_id=decoded_result['element_id'], action_input=decoded_result['action_input'])
+            input_element), element_id=planning_response_action['element_id'], action_input=planning_response_action['action_input'])
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
