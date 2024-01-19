@@ -183,7 +183,7 @@ class AsyncHTMLEnvironment:
                         self.last_page = self.page
                         self.page = await self.context.new_page()
                         await self.page.goto(action["url"])
-                        await self.page.wait_for_load_state('load',timeout=3000)
+                        await self.page.wait_for_load_state('load', timeout=3000)
                         self.html_content = await self.page.content()
                         return await self._get_obs()
                     except Exception as e:
@@ -206,7 +206,7 @@ class AsyncHTMLEnvironment:
                         try:
                             self.last_page = self.page
                             await self.page.locator(selector).fill(action["fill_text"])
-                            await self.page.locator(selector).press("Enter")
+                            # await self.page.locator(selector).press("Enter")
                             await self.page.wait_for_load_state('load')
                             self.html_content = await self.page.content()
                             return await self._get_obs()
@@ -217,10 +217,10 @@ class AsyncHTMLEnvironment:
                                         if (element) {
                                             element.value = '%s';
                                             element.dispatchEvent(new Event('input', { bubbles: true }));
-                                            element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
                                         }
                                     }
                                 ''' % (selector, action['fill_text'])
+                            # element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
                             await self.page.evaluate(fill_and_press_enter)
                             await self.page.wait_for_load_state('load')
                             self.html_content = await self.page.content()
@@ -251,6 +251,12 @@ class AsyncHTMLEnvironment:
                     except Exception as e:
                         print("can't execute go back action")
                         print(e)
+                case ActionTypes.NONE:
+                    try:
+                        return await self._get_obs()
+                    except:
+                        print("can't execute none action")
+                        print(e)
                 case _:
                     raise ValueError(
                         f"Unknown action type {action['action_type']}"
@@ -266,7 +272,7 @@ class AsyncHTMLEnvironment:
         except:
             selector = ""
         return self.page, selector
-    
+
     async def close(self):
         await self.context.close()
         await self.browser.close()

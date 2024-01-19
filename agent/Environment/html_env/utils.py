@@ -70,9 +70,15 @@ ConditionTagNameList = [
 ]
 
 
+TypeList = [
+    "submit"
+]
+
+
 __all__ = [
     "ElementNode",
     "TagNameList",
     "DelTagNameList",
     "ConditionTagNameList",
+    "TypeList"
 ]

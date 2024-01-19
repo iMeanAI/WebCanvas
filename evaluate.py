@@ -187,8 +187,14 @@ async def main(num_steps=0, mode="dom"):
                     element_id = 0
                 #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
                 if action_type in ["fill_form", "click"]:
-                    selector = env.tree.get_selector_and_xpath(
-                        env.tree.nodeDict[element_id])
+                    try:
+                        selector = env.tree.get_selector_and_xpath(
+                            env.tree.nodeDict[element_id])
+                    except:
+                        print("accessibility tree don't have this element_id")
+                        selector = None
+                        element_id = 0
+                        action_type = "None"
                 else:
                     selector = None
                     element_id = 0
