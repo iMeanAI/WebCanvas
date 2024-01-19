@@ -98,6 +98,7 @@ class ObservationPromptConstructor(BasePromptConstructor):
         str_output += "]"
         return str_output
 
+
 # 类：构建根据dom tree和vision得到的planning的prompt
 class D_VObservationPromptConstructor(BasePromptConstructor):
     def __init__(self):
@@ -105,14 +106,32 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
         self.prompt_user = ObservationPrompts.planning_prompt_user
 
     @staticmethod
-    def is_valid_base64(base64_string):
+    def is_valid_base64(s):
+        """
+        Validate if a given string is a valid Base64 encoded string.
+
+        :param s: String to be checked.
+        :return: A tuple (bool, str) where the first element is True if the string is a valid Base64 encoded string,
+                 and the second element is a message indicating the result or the type of error.
+
+        byCarl: 本方法仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+        """
+        if s is None:
+            return False, "The string is None."
+
+        if not isinstance(s, str):
+            return False, "The input is not a string."
+
+        if len(s) == 0:
+            return False, "The string is empty."
+
         try:
-            # 尝试解码字符串
-            base64.b64decode(base64_string, validate=True)
-            return True
-        except Exception as e:
-            print(f"Base64验证失败：{e}")
-            return False
+            # 尝试对字符串进行 Base64 解码
+            base64.b64decode(s, validate=True)
+            return True, "The string is a valid Base64 encoded string."
+        except ValueError:
+            # 如果解码抛出 ValueError 异常，则字符串不是有效的 Base64 编码
+            return False, "The string is NOT a valid Base64 encoded string."
 
     def construct(
             self,
@@ -122,32 +141,28 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
             observation_VforD: str,
             feedback: str = ""
     ) -> list:
-        # if not D_VObservationPromptConstructor.is_valid_base64(observation_VforD):
-        #     print("提供的observation_VforD不是有效的Base64编码")
+        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(observation_VforD)
+        print("prompt_constructor.py D_VObservationPromptConstructor:", message, "\n")
         rendered_prompt = Template(self.prompt_user).render(user_request=user_request)
         prompt_elements = [{"type": "text", "text": rendered_prompt}]
         if len(previous_trace) > 0:
             history_memory = HistoryMemory(previous_trace=previous_trace)
             trace_prompt = history_memory.construct_previous_trace_prompt()
             prompt_elements.append({"type": "text", "text": trace_prompt})
-            # self.prompt_user += f"current observation or Dom tree is {observation}"
             if feedback != "":
                 prompt_elements.append(
                     {"type": "text", "text": f"There an invalid action description is below:\n {feedback}\n"})
-                print("feedback:", feedback)
             prompt_elements.append({"type": "text", "text": f"current observation or Dom tree is {observation}"})
-            print("Dom tree finished!\n")
             prompt_elements.append({"type": "text", "text": "current screenshot is:"})
-            print("current screenshot is: finished!\n")
+            print("len of prompt_elements before observation_VforD:", len(prompt_elements))
+            prompt_elements_str = json5.dumps(prompt_elements)
+            print("len of prompt_elements_str before observation_VforD:", len(prompt_elements_str))  # 这将打印出转换为JSON字符串的prompt_elements的长度
+            print("len of about gpt token of prompt_elements_str before observation_VforD:", len(prompt_elements_str)/5.42, "\n")
             prompt_elements.append(
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{observation_VforD}"}})
-            print("observation_VforD finished!\n")
         # 构造最终的消息负载
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
-        prompt_elements_str = json5.dumps(prompt_elements)
-        print("len of prompt_elements:", len(prompt_elements))
-        print("len of prompt_elements_str:", len(prompt_elements_str), "\n")  # 这将打印出转换为JSON字符串的prompt_elements的长度
         print("messages finished!\n")
         return messages
 

@@ -39,12 +39,12 @@ def read_file(path="./data/test.json"):
                 key = evaluation["content"]["key"]
                 reference_answer = evaluation["content"]["reference_answer"]
                 reference_evaluate_steps.append({"match_function": match_function,
-                                                "key": key, "reference_answer": reference_answer, "score": 0})
+                                                 "key": key, "reference_answer": reference_answer, "score": 0})
             elif "path" in match_function:  # TODO
                 reference_answer = evaluation["content"]["reference_answer"]
                 method = evaluation["method"]
                 reference_evaluate_steps.append({"match_function": match_function, "method": method,
-                                                "reference_answer": reference_answer, "score": 0})
+                                                 "reference_answer": reference_answer, "score": 0})
         return_list.append([task_name, reference_task_length, reference_evaluate_steps])
     # print(return_list)
     # return_list=return_list[1:]
@@ -156,7 +156,8 @@ async def main(num_steps=0, mode="dom"):
         evaluate_steps = reference_evaluate_steps
         
         # Ask Satya Nadella to send an email and mention your interest in AI at linkdin
-        task_name = "Find vintage clothing and sort the results by price from high to low."
+        # Find vintage clothing and sort the results by price from high to low.
+        # task_name = ""
         last_action_description = ""
         for action_step in range(10):
             total_step_score = 0
@@ -233,7 +234,10 @@ async def main(num_steps=0, mode="dom"):
                 if current_reward and int(current_reward.get("score")) < 8:
                     execute_action.update(
                         {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                    observation = await env.execute_action(execute_action)
+                    if mode == "d_v":
+                        observation, observation_VforD = await env.execute_action(execute_action)
+                    else:
+                        observation = await env.execute_action(execute_action)
                     last_action_description = current_reward.get("description")
                 else:
                     last_action_description = ""
