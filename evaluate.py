@@ -16,8 +16,10 @@ import argparse
 parser = argparse.ArgumentParser(description="Run the agent in different modes.")
 parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="dom",
                     help="Choose interaction mode: 'dom' for DOM-based interaction, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
+parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
 interaction_mode = args.mode
+raw_data_index = args.index
 
 
 def read_file(path="./data/test.json"):
@@ -155,8 +157,21 @@ async def aexec_playwright(code, page):
 async def main(num_steps=0, mode="dom"):
 
     file = read_file()
-    for task in file:
+
+    # 评测输入范围内的任务
+    if raw_data_index != -1:
+        re_result = re.split(r'\s|,', raw_data_index)
+        raw_data_start_index = int(re_result[0])
+        raw_data_end_index = int(re_result[-1]) + 1
+    else:
+        raw_data_start_index = 0
+        raw_data_end_index = len(file)
+    print(raw_data_start_index, raw_data_end_index)
+
+    for task_index in range(raw_data_start_index, raw_data_end_index):
+        task = file[task_index]
         task_name, reference_task_length, reference_evaluate_steps = task
+        print("task_name:", task_name)
         print("reference_task_length:", reference_task_length)
         print("raw data:\n", reference_evaluate_steps)
         # #! # 1. playwright
