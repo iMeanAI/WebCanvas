@@ -99,6 +99,7 @@ class ObservationPromptConstructor(BasePromptConstructor):
         return str_output
 
 
+# 类：构建根据dom tree和vision得到的planning的prompt
 class D_VObservationPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = ObservationPrompts.d_v_planning_prompt_system
