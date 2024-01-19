@@ -202,6 +202,8 @@ class AsyncHTMLEnvironment:
                         try:
                             self.last_page =  self.page
                             await self.page.locator(selector).fill(action["fill_text"])
+                            time.sleep(1)
+                            print("sleep 1s")
                             await self.page.locator(selector).press("Enter")
                             await self.page.wait_for_load_state('load')
                             self.html_content = await self.page.content()

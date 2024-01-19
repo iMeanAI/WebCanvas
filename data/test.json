@@ -14,7 +14,8 @@
                 "match_function_name": "element_path_exactly_match",
                 "method": "selector",
                 "content": {
-                    "reference_answer": "body>div>div>div>div>div>div>div>div>div>div>div>form>div>div>div>div>a>span"
+                    "reference_answer": "body>div>div>div>div>div>div>div>div>div>div>div>form>div>div>div>div>a>span",
+                    "netloc": "store"
                 }
             }
         ]
@@ -34,7 +35,8 @@
                 "match_function_name": "element_path_exactly_match",
                 "method": "selector",
                 "content": {
-                    "reference_answer": "body>div>div>main>section>div>section>section>div>a>div>span"
+                    "reference_answer": "body>div>div>main>section>div>section>section>div>a>div>span",
+                    "netloc": "ign"
                 }
             },
             {
@@ -67,26 +69,6 @@
         ]
     },
     {
-        "task": "Find the most played games sorted by daily player count in steam",
-        "reference_task_length": 5,
-        "evaluation": [
-            {
-                "match_function_name": "url_included_match",
-                "content": {
-                    "key": "",
-                    "reference_answer": "charts/mostplayed"
-                }
-            },
-            {
-                "match_function_name": "element_path_exactly_match",
-                "method": "selector",
-                "content": {
-                    "reference_answer": "body>div>div>div>div"
-                }
-            }
-        ]
-    },
-    {
         "task": "Add $100 Google Play Gift Card to cart and recipient email address as abc@abc.com, user's name as Micheal in Amazon",
         "reference_task_length": 9,
         "evaluation": [
@@ -101,20 +83,23 @@
                 "match_function_name": "element_path_exactly_match",
                 "method": "selector",
                 "content": {
-                    "reference_answer": "body>div>div>div>div>div>form>div>div>div>div>div>div>span>textarea"
+                    "reference_answer": "body>div>div>div>div>div>form>div>div>div>div>div>div>span>textarea",
+                    "netloc": "amazon"
                 }
             },
             {
                 "match_function_name": "element_value_exactly_match",
                 "content": {
-                    "value": "abc@abc.com"
+                    "reference_answer": "abc@abc.com",
+                    "netloc": "amazon"
                 }
             },
             {
                 "match_function_name": "element_path_exactly_match",
                 "method": "selector",
                 "content": {
-                    "reference_answer": "body>div>div>div>div>div>div>div>span>div>span>span>input"
+                    "reference_answer": "body>div>div>div>div>div>div>div>span>div>span>span>input",
+                    "netloc": "amazon"
                 }
             }
         ]
@@ -160,7 +145,7 @@
         ]
     },
     {
-        "task": "Find the user reviews for the game \"Cyberpunk 2077\" in ign ",
+        "task": "Find the user reviews for the game \"Cyberpunk 2077\" in ign",
         "reference_task_length": 7,
         "evaluation": [
             {
@@ -180,7 +165,8 @@
                 "match_function_name": "element_path_exactly_match",
                 "method": "selector",
                 "content": {
-                    "reference_answer": "body>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div>h1>button>span>span"
+                    "reference_answer": "body>div>div>div>div>div>div>div>div>div>div>div>div>div>div>div>h1>button>span>span",
+                    "netloc": "sports"
                 }
             },
             {
@@ -253,33 +239,38 @@
                 "match_function_name": "element_path_exactly_match",
                 "method": "selector",
                 "content": {
-                    "reference_answer": "body>div>div>div>div>div>div>div>main>div>section>section>div>div>form>fieldset>div>ul>li>label"
+                    "reference_answer": "body>div>div>div>div>div>div>div>main>div>section>section>div>div>form>fieldset>div>ul>li>label",
+                    "netloc": "united"
                 }
             },
             {
                 "match_function_name": "element_value_exactly_match",
                 "content": {
-                    "value": "12345678"
+                    "reference_answer": "12345678",
+                    "netloc": "united"
                 }
             },
             {
                 "match_function_name": "element_value_exactly_match",
                 "content": {
-                    "value": "Jason"
+                    "reference_answer": "Jason",
+                    "netloc": "united"
                 }
             },
             {
                 "match_function_name": "element_path_exactly_match",
                 "method": "selector",
                 "content": {
-                    "reference_answer": "body>div>div>div>div>div>div>div>main>div>section>section>div>div>form>div>div>div>input"
+                    "reference_answer": "body>div>div>div>div>div>div>div>main>div>section>section>div>div>form>div>div>div>input",
+                    "netloc": "united"
                 }
             },
             {
                 "match_function_name": "element_path_exactly_match",
                 "method": "selector",
                 "content": {
-                    "reference_answer": "body>div>div>div>div>div>div>div>main>div>section>section>div>div>form>button"
+                    "reference_answer": "body>div>div>div>div>div>div>div>main>div>section>section>div>div>form>button",
+                    "netloc": "united"
                 }
             }
         ]
@@ -372,7 +363,7 @@
         ]
     },
     {
-        "task": "Add a smartwatch to the cart that is compatible with an iPhone in amazon ",
+        "task": "Add a smartwatch to the cart that is compatible with an iPhone in amazon",
         "reference_task_length": 7,
         "evaluation": [
             {
@@ -386,20 +377,23 @@
                 "match_function_name": "element_path_exactly_match",
                 "method": "selector",
                 "content": {
-                    "reference_answer": "body>div>div>div>div>div>div>span>div>div>div>div>ul>span>span>li>span>a>div>label>i"
+                    "reference_answer": "body>div>div>div>div>div>div>span>div>div>div>div>ul>span>span>li>span>a>div>label>i",
+                    "netloc": "amazon"
                 }
             },
             {
                 "match_function_name": "element_value_semantic_match",
                 "content": {
-                    "reference_answer": "Whether the are smartphone for Iphone"
+                    "reference_answer": "Whether they are smartwatch for Iphone",
+                    "netloc": "amazon"
                 }
             },
             {
                 "match_function_name": "element_path_exactly_match",
                 "method": "selector",
                 "content": {
-                    "reference_answer": "body>div>div>div>div>div>div>div>div>div>div>div>form>div>div>div>div>div>div>div>div>span>span>span>input"
+                    "reference_answer": "body>div>div>div>div>div>div>div>div>div>div>div>form>div>div>div>div>div>div>div>div>span>span>span>input",
+                    "netloc": "amazon"
                 }
             }
         ]
@@ -413,26 +407,6 @@
                 "content": {
                     "key": "",
                     "reference_answer": "10200108"
-                }
-            }
-        ]
-    },
-    {
-        "task": "Find vintage clothing and sort the results by price from low to high in ebay",
-        "reference_task_length": 7,
-        "evaluation": [
-            {
-                "match_function_name": "url_semantic_match",
-                "content": {
-                    "key": "_nkw",
-                    "reference_answer": "must include two features: vintage and clothing"
-                }
-            },
-            {
-                "match_function_name": "element_path_exactly_match",
-                "method": "selector",
-                "content": {
-                    "reference_answer": "body>div>div>div>div>div>div>div>div>span>span>ul>li>a>span"
                 }
             }
         ]
@@ -478,14 +452,14 @@
         ]
     },
     {
-        "task": "Find Hot Dogs in Oakland, CA that Offers Delivery in yelp",
+        "task": "Find a coffee shop with wi-fi in yelp",
         "reference_task_length": 6,
         "evaluation": [
             {
                 "match_function_name": "url_semantic_match",
                 "content": {
                     "key": "find_desc",
-                    "reference_answer": "Decide wether the destination is coffee shop"
+                    "reference_answer": "Decide whether the destination is coffee shop"
                 }
             },
             {
@@ -533,32 +507,6 @@
                 "content": {
                     "key": "attrs",
                     "reference_answer": "RestaurantsDelivery"
-                }
-            }
-        ]
-    },
-    {
-        "task": "Add a smartwatch to the cart that is compatible with an iPhone in amazon",
-        "reference_task_length": 7,
-        "evaluation": [
-            {
-                "match_function_name": "element_value_semantic_match",
-                "content": {
-                    "reference_answer": "Decide whether the content represents smartwatch that is compatible with iphone"
-                }
-            },
-            {
-                "match_function_name": "url_semantic_match",
-                "content": {
-                    "key": "k",
-                    "reference_answer": "Decide whether the content represents smartwatch that is compatible with iphone"
-                }
-            },
-            {
-                "match_function_name": "element_path_exactly_match",
-                "method": "selector",
-                "content": {
-                    "reference_answer": "body>div>div>div>div>div>div>div>div>div>div>div>form>div>div>div>div>div>div>div>div>span>span>span>input"
                 }
             }
         ]

@@ -1,0 +1,5 @@
+page.goto("https://www.newegg.com/p/pl?d=16gb+ram+laptop")
+page.get_by_role("textbox", name="price to").click()
+page.get_by_role("textbox", name="price to").fill("700")
+page.goto("https://www.newegg.com/p/pl?d=16gb+ram+laptop&LeftPriceRange=0+700")
+

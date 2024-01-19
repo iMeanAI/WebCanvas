@@ -1,0 +1,8 @@
+page.goto("https://www.united.com/en/us/receipts")
+page.locator("#app > div > div > div > div.page.app-containers-App-AppHeader-styles__other--_plX6 > div.relativePosition > div > main > div > section:nth-child(2) > section > div.atm-c-box-section__body > div > form > fieldset > div > ul > li:nth-child(2) > label").click()
+page.locator("#jp07t3NiK").fill("12345678")
+page.locator("#DjIlnqcMPu").click()
+page.locator("#DjIlnqcMPu").fill("Jason")
+page.locator("#hSDWguDPRN").click()
+page.locator("#hSDWguDPRN").fill("Two")
+page.locator("#app > div > div > div > div.page.app-containers-App-AppHeader-styles__other--_plX6 > div.relativePosition > div > main > div > section:nth-child(2) > section > div.atm-c-box-section__body > div > form > button").click()

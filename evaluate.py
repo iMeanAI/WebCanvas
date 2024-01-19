@@ -12,15 +12,12 @@ import asyncio
 import argparse
 
 
-
-
 # 解析命令行参数
 parser = argparse.ArgumentParser(description="Run the agent in different modes.")
 parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="dom",
                     help="Choose interaction mode: 'dom' for DOM-based interaction, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
 args = parser.parse_args()
 interaction_mode = args.mode
-
 
 
 def read_file(path="./data/test.json"):
@@ -40,18 +37,34 @@ def read_file(path="./data/test.json"):
                 reference_answer = evaluation["content"]["reference_answer"]
                 reference_evaluate_steps.append({"match_function": match_function,
                                                 "key": key, "reference_answer": reference_answer, "score": 0})
-            elif "path" in match_function:  # TODO
+            elif "element_path" in match_function:  # TODO
                 reference_answer = evaluation["content"]["reference_answer"]
                 method = evaluation["method"]
+                netloc = evaluation["content"]["netloc"]
                 reference_evaluate_steps.append({"match_function": match_function, "method": method,
-                                                "reference_answer": reference_answer, "score": 0})
+                                                "reference_answer": reference_answer, "netloc": netloc, "score": 0})
+            elif "element_value" in match_function:
+                reference_answer = evaluation["content"]["reference_answer"]
+                netloc = evaluation["content"]["netloc"]
+                reference_evaluate_steps.append({"match_function": match_function,
+                                                "reference_answer": reference_answer, "netloc": netloc, "score": 0})
         return_list.append([task_name, reference_task_length, reference_evaluate_steps])
     # print(return_list)
     # return_list=return_list[1:]
     return return_list
 
 
-async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, semantic_method=None):
+def get_netloc(url: str) -> str:
+    # 提取出域名，如zhihu.com提取出zhihu，www.google.com.hk提取出google
+    url = urlparse(url)
+    if url.netloc.startswith("www"):
+        netloc = re.findall(".*?\.(.*?)\..*?", url.netloc)[0]
+    else:
+        netloc = re.findall("(.*?)\..*?", url.netloc)[0]
+    return netloc
+
+
+async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
     '''评测步骤打分'''
     # reference_evaluate_steps, num_steps
     # num_steps += 1
@@ -63,29 +76,68 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, semantic
             match_function = evaluate["match_function"]
             if match_function == "url_exactly_match":
                 score = URLEvaluator.url_exact_match(page.url, evaluate["reference_answer"], evaluate["key"])
-            if match_function == "url_included_match":
+            elif match_function == "url_included_match":
                 score = URLEvaluator.url_include_match(page.url, evaluate["reference_answer"], evaluate["key"])
-            if match_function == "url_semantic_match":
-                score = URLEvaluator.url_semantic_match(page.url, evaluate["reference_answer"], evaluate["key"], semantic_method=semantic_method)
-            if match_function == "element_path_exactly_match":
+            elif match_function == "url_semantic_match":
+                score = await URLEvaluator.url_semantic_match(
+                    page.url, evaluate["reference_answer"], evaluate["key"])
+                print(score, "url_semantic_match")
+            elif match_function == "element_path_exactly_match":
+                input_netloc = get_netloc(page.url)
                 method = evaluate["method"]
-                score = PathEvaluator.path_exact_match(
-                    input_path, evaluate["reference_answer"], method, await page.content())
+                score = ElementEvaluator.path_exact_match(
+                    input_path, evaluate["reference_answer"], method, await page.content(), input_netloc, evaluate["netloc"])
                 print(score, "path_exact_match:", input_path, "***", evaluate["reference_answer"])
-            if match_function == "element_path_included_match":
-                method = evaluate["method"]
-                score = PathEvaluator.path_included_match(
-                    input_path, evaluate["reference_answer"], method, await page.content())
-            if match_function == "text_exact_match":
-                pass  # TODO
-            if match_function == "text_include_match":
+            elif match_function == "element_path_included_match":
                 pass
-            if match_function == "text_semantic_match":
+                # * 暂时不做
+                # method = evaluate["method"]
+                # score = ElementEvaluator.path_included_match(
+                #     input_path, evaluate["reference_answer"], method, await page.content())
+            elif match_function == "element_value_exactly_match":
+                if input_path is not None:
+                    input_netloc = get_netloc(page.url)
+                    # page_content = await page.content()
+                    # soup = BeautifulSoup(page_content, 'html.parser')
+                    # element_value = soup.select_one(input_path)#.text.strip()
+                    element_value = await page.input_value(input_path)
+                    print(element_value)
+                    print(await page.locator(input_path).input_value())
+                    score = ElementEvaluator.element_value_exact_match(
+                        element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
+                    print(score, "element_value_exactly_match", element_value, "*", evaluate["reference_answer"])
+            elif match_function == "element_value_included_match":
+                if input_path is not None:
+                    input_netloc = get_netloc(page.url)
+                    # page_content = await page.content()
+                    # soup = BeautifulSoup(page_content, 'html.parser')
+                    # element_value = soup.select_one(input_path).text.strip()
+                    element_value = await page.input_value(input_path)
+                    score = ElementEvaluator.element_value_include_match(
+                        element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
+                    print(score, "element_value_included_match", element_value, "*", evaluate["reference_answer"])
+
+            elif match_function == "element_value_semantic_match":
+                if input_path is not None:
+                    input_netloc = get_netloc(page.url)
+                    # page_content = await page.content()
+                    # soup = BeautifulSoup(page_content, 'html.parser')
+                    # element_value = soup.select_one(input_path).text.strip()
+                    element_value = await page.input_value(input_path)
+                    if len(element_value) > 0:
+                        score = await ElementEvaluator.element_value_semantic_match(
+                            element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
+                        print(score, "element_value_semantic_match", element_value, "*", evaluate["reference_answer"])
+            elif match_function == "text_exact_match":
+                pass  # TODO
+            elif match_function == "text_include_match":
+                pass
+            elif match_function == "text_semantic_match":
                 pass
 
             evaluate["score"] = max(evaluate["score"], score)
         step_score += evaluate["score"]
-    print("current step score:", step_score,"/",len(evaluate_steps))
+    print("current step score:", step_score, "/", len(evaluate_steps))
     return evaluate_steps
     # print(evaluate_steps)
 
@@ -107,31 +159,33 @@ async def main(num_steps=0, mode="dom"):
         task_name, reference_task_length, reference_evaluate_steps = task
         print("reference_task_length:", reference_task_length)
         print("raw data:\n", reference_evaluate_steps)
-        #! # 1. playwright
+        # #! # 1. playwright
         # # 用playwright运行浏览器
+
         # async def run(playwright: Playwright) -> None:
         #     '''用playwright运行浏览器'''
         #     evaluate_steps = reference_evaluate_steps
         #     browser = await playwright.chromium.launch(headless=False)
         #     context = await browser.new_context()
         #     page = await context.new_page()
-        #     replay_codes = open("./data/playwright/steam.txt", "r", encoding="utf-8")
+        #     replay_codes = open("./data/playwright/google.txt", "r", encoding="utf-8")
         #     for num_steps, line in enumerate(replay_codes):
         #         print("step:", num_steps, line)
         #         selector = None
         #         if "page.locator" in line:
-        #             selector = re.findall('page.locator\("(.*?)"\).*?\(\)', line)[0]
+        #             selector = re.findall('page.locator\("(.*?)"\).*?\(.*?\)', line)[0]
         #             print("selector:", selector)
         #         line = "await "+line
         #         print(line)
         #         await aexec_playwright(line, page)
-        #         evaluate_steps = step_evaluate(page=page, evaluate_steps=evaluate_steps, input_path=selector)
+        #         time.sleep(1)
+        #         evaluate_steps = await step_evaluate(page=page, evaluate_steps=evaluate_steps, input_path=selector)
         #         time.sleep(3)
         #     return num_steps, evaluate_steps
 
         # async with async_playwright() as playwright:
         #     num_steps, evaluate_steps = await run(playwright)
-        
+
         # ! # 2. planning
         env = AsyncHTMLEnvironment(
             mode=mode,
@@ -154,7 +208,7 @@ async def main(num_steps=0, mode="dom"):
 
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
-        
+
         # task_name = "Ask Satya Nadella to send an email and mention your interest in AI at linkdin"
         last_action_description = ""
         for action_step in range(10):
@@ -164,7 +218,7 @@ async def main(num_steps=0, mode="dom"):
             print("planning前observation：", observation)
             for _ in range(3):
                 try:
-                    dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation,feedback = last_action_description,mode=mode, observation_VforD=observation_VforD)
+                    dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation, feedback=last_action_description, mode=mode, observation_VforD=observation_VforD)
                     if dict_to_write is not None:
                         break
                 except Exception as e:
@@ -203,7 +257,7 @@ async def main(num_steps=0, mode="dom"):
                 print("执行动作前的url", env.page.url)
                 for evaluate in evaluate_steps:
                     total_step_score += evaluate["score"]
-                print(total_step_score,"/",len(reference_evaluate_steps))
+                print(total_step_score, "/", len(reference_evaluate_steps))
                 if total_step_score == len(reference_evaluate_steps):
                     break
                 # input()
@@ -228,7 +282,7 @@ async def main(num_steps=0, mode="dom"):
             if mode == "dom" or mode == "d_v":
                 # current_trace = [current_trace]
                 current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
-                                                        current_trace=current_trace, observation=observation)
+                                                         current_trace=current_trace, observation=observation)
                 if current_reward and int(current_reward.get("score")) < 8:
                     execute_action.update(
                         {"element_id": 0, "action_type": ActionTypes.GO_BACK})
@@ -250,7 +304,6 @@ async def main(num_steps=0, mode="dom"):
         # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
         # print(json5.dumps(a, indent=4))
         # input()
-
 
         # ! 3.任务评测打分
         if mode == "dom" or mode == "d_v":
