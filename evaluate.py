@@ -57,7 +57,7 @@ def read_file(path="./data/test.json"):
 
 
 def get_netloc(url: str) -> str:
-    # 提取出域名，如zhihu.com提取出zhihu，www.google.com.hk提取出google
+    '''提取出域名，如zhihu.com提取出zhihu，www.google.com.hk提取出google'''
     url = urlparse(url)
     try:
         if url.netloc.startswith("www"):
@@ -67,6 +67,21 @@ def get_netloc(url: str) -> str:
     except:
         netloc = ""
     return netloc
+
+async def get_element_content(page: Page, selector):
+    '''获取元素内容'''
+    try:
+        # 获取元素的标签名
+        tag_name = await page.eval_on_selector(selector, "element => element.tagName.toLowerCase()")
+
+        if tag_name in ["input", "textarea"]:
+            # 对于 input 或 textarea 元素
+            return await page.input_value(selector)
+        else:
+            # 对于其他元素
+            return await page.text_content(selector)
+    except:
+        return ""
 
 
 async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
@@ -105,9 +120,10 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
                     # page_content = await page.content()
                     # soup = BeautifulSoup(page_content, 'html.parser')
                     # element_value = soup.select_one(input_path)#.text.strip()
-                    element_value = await page.input_value(input_path)
+                    # element_value = await page.input_value(input_path)
+                    element_value = await get_element_content(page, input_path)
                     print(element_value)
-                    print(await page.locator(input_path).input_value())
+                    # print(await page.locator(input_path).input_value())
                     score = ElementEvaluator.element_value_exact_match(
                         element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
                     print(score, "element_value_exactly_match", element_value, "*", evaluate["reference_answer"])
@@ -117,7 +133,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
                     # page_content = await page.content()
                     # soup = BeautifulSoup(page_content, 'html.parser')
                     # element_value = soup.select_one(input_path).text.strip()
-                    element_value = await page.input_value(input_path)
+                    # element_value = await page.input_value(input_path)
+                    element_value = await get_element_content(page, input_path)
                     score = ElementEvaluator.element_value_include_match(
                         element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
                     print(score, "element_value_included_match", element_value, "*", evaluate["reference_answer"])
@@ -128,7 +145,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
                     # page_content = await page.content()
                     # soup = BeautifulSoup(page_content, 'html.parser')
                     # element_value = soup.select_one(input_path).text.strip()
-                    element_value = await page.input_value(input_path)
+                    # element_value = await page.input_value(input_path)
+                    element_value = await get_element_content(page, input_path)
                     if len(element_value) > 0:
                         score = await ElementEvaluator.element_value_semantic_match(
                             element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
@@ -184,7 +202,7 @@ async def main(num_steps=0, mode="dom"):
         #     '''用playwright运行浏览器'''
         #     evaluate_steps = reference_evaluate_steps
         #     browser = await playwright.chromium.launch(headless=False)
-        #     context = await browser.new_context()
+        #     context = await browser.new_context(locale="en-US")
         #     page = await context.new_page()
         #     replay_codes = open("./data/playwright/google.txt", "r", encoding="utf-8")
         #     for num_steps, line in enumerate(replay_codes):
@@ -195,10 +213,10 @@ async def main(num_steps=0, mode="dom"):
         #             print("selector:", selector)
         #         line = "await "+line
         #         print(line)
-        #         await aexec_playwright(line, page)
-        #         time.sleep(1)
         #         evaluate_steps = await step_evaluate(page=page, evaluate_steps=evaluate_steps, input_path=selector)
         #         time.sleep(3)
+        #         await aexec_playwright(line, page)
+        #         time.sleep(2)
         #     return num_steps, evaluate_steps
 
         # async with async_playwright() as playwright:
