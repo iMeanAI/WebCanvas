@@ -304,7 +304,10 @@ async def main(num_steps=0, mode="dom"):
                 if current_reward and int(current_reward.get("score")) < 8:
                     execute_action.update(
                         {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                    observation = await env.execute_action(execute_action)
+                    if mode == "d_v":
+                        observation, observation_VforD = await env.execute_action(execute_action)
+                    else:
+                        observation = await env.execute_action(execute_action)
                     last_action_description = current_reward.get("description")
                 else:
                     last_action_description = ""
