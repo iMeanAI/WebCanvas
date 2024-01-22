@@ -77,6 +77,7 @@ class AsyncHTMLEnvironment:
                 ignore_https_errors=True,  # 忽略 HTTPS 错误
             )
         if start_url:
+            
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
             await self.page.goto(start_url)

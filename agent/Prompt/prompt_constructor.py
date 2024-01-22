@@ -109,6 +109,7 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
         self.prompt_system = DomVisionPrompts.d_v_planning_prompt_system
         self.prompt_user = DomVisionPrompts.d_v_planning_prompt_user
 
+
     @staticmethod
     def is_valid_base64(s):
         """

@@ -181,10 +181,10 @@ async def main(num_steps=0, mode="dom"):
 
     # for task_index in range(raw_data_start_index, raw_data_end_index):
     start_index = 22
-    for task_index in range(start_index,len(file)):
+    for task_index in range(start_index, len(file)):
         task = file[task_index]
         task_name, reference_task_length, reference_evaluate_steps = task
-        print("task index:",task_index)
+        print("task index:", task_index)
         print("task_name:", task_name)
         print("reference_task_length:", reference_task_length)
         print("raw data:\n", reference_evaluate_steps)
@@ -291,6 +291,7 @@ async def main(num_steps=0, mode="dom"):
                 print("current trace:\n", current_trace)
                 print("response:\n", execute_action)
                 print("selector:", selector)
+                
                 evaluate_steps = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
                 print("执行动作前的url", env.page.url)
                 for evaluate in evaluate_steps:
