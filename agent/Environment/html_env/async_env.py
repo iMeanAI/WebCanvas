@@ -1,4 +1,4 @@
-from typing import Tuple, Any
+from typing import Tuple, Any, Union
 
 from playwright.async_api import async_playwright, Page
 from playwright.sync_api import ViewportSize
@@ -14,6 +14,8 @@ from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
 import time
 
+from ...Prompt import D_VObservationPromptConstructor
+
 # Vimium 扩展的路径，需要自定义，相对路径会有点问题，导致路径切换为C:\\...\AppData\Local\ms-playwright\chromium-1055\chrome-win\\vimium-master
 vimium_path = "D:\KYXK\imean-agents-dev\\vimium-master"
 
@@ -21,17 +23,17 @@ vimium_path = "D:\KYXK\imean-agents-dev\\vimium-master"
 class AsyncHTMLEnvironment:
     @beartype
     def __init__(
-            self,
-            mode="dom",
-            max_page_length: int = 8192,
-            headless: bool = True,
-            slow_mo: int = 0,
-            current_viewport_only: bool = False,
-            viewport_size: ViewportSize = {"width": 1280, "height": 720},
-            save_trace_enabled: bool = False,
-            sleep_after_execution: float = 0.0,
-            locale: str = "en-US",
-            use_vimium_effect=True
+        self,
+        mode="dom",
+        max_page_length: int = 8192,
+        headless: bool = True,
+        slow_mo: int = 0,
+        current_viewport_only: bool = False,
+        viewport_size: ViewportSize = {"width": 1280, "height": 720},
+        save_trace_enabled: bool = False,
+        sleep_after_execution: float = 0.0,
+        locale: str = "en-US",
+        use_vimium_effect=True
     ):
         self.use_vimium_effect = use_vimium_effect
         self.mode = mode
@@ -86,23 +88,39 @@ class AsyncHTMLEnvironment:
             self.html_content = await self.page.content()
         self.last_page = self.page
 
-    async def _get_obs(self) -> tuple[str | Any, str | Any] | str | Any:
+    async def _get_obs(self) -> Union[str, Tuple[str, str]]:
+        observation = ""
+        observation_VforD = ""
         try:
-            self.tree.fetch_html_content(self.html_content)
-            tab_name = await self.page.title()
-            dom_tree = self.tree.build_dom_tree()
-            observation = f"current web tab name is \'{tab_name}\'\n" + \
-                "current accessibility tree is below:\n" + dom_tree
-        except:
-            observation = ""
-            if self.mode == "d_v":
-                observation_VforD = ""
+            if self.mode in ["dom", "d_v"]:
+                print("async_env.py now in _get_obs method")
+                self.tree.fetch_html_content(self.html_content)
+                print(
+                    "async_env.py _get_obs fetch_html_content(self.html_content) finished!")
+                tab_name = await self.page.title()
+                dom_tree = self.tree.build_dom_tree()
+                observation = f"current web tab name is \'{tab_name}\'\n" + \
+                              "current accessibility tree is below:\n" + dom_tree
+                if self.mode == "d_v":
+                    observation_VforD = await self.capture()
+            elif self.mode == "vision":
+                # 视觉模式下的处理逻辑
+                if self.use_vimium_effect:
+                    # 获取带有 Vimium 效果的屏幕截图
+                    observation = await self.capture_with_vim_effect()
+                else:
+                    # 获取普通屏幕截图
+                    observation = await self.capture()
+        except Exception as e:
+            print(f"Error in _get_obs: {e}")
         if self.mode == "d_v":
-            return observation, observation_VforD
-        else:
-            return observation
+            # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+            is_valid, message = D_VObservationPromptConstructor.is_valid_base64(
+                observation_VforD)
+            print("async_env.py _get_obs observation_VforD:", message)
+        return (observation, observation_VforD) if self.mode == "d_v" else observation
 
-    async def reset(self, start_url: str = "") -> tuple[Any, Any] | str:
+    async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
         await self.setup(start_url)
         if self.mode == "d_v":
             observation, observation_VforD = await self._get_obs()

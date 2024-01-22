@@ -85,7 +85,8 @@ class ObservationPromptConstructor(BasePromptConstructor):
             self.prompt_user += HistoryMemory(
                 previous_trace=previous_trace).construct_previous_trace_prompt()
             if status_description != "":
-                self.prompt_user + f"Task completion description is {status_description}"
+                self.prompt_user + \
+                    f"Task completion description is {status_description}"
             if feedback != "":
                 self.prompt_user += f"An invalid action description is below:\n {feedback}\n"
             self.prompt_user += observation
@@ -109,14 +110,32 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
         self.prompt_user = DomVisionPrompts.d_v_planning_prompt_user
 
     @staticmethod
-    def is_valid_base64(base64_string):
+    def is_valid_base64(s):
+        """
+        Validate if a given string is a valid Base64 encoded string.
+
+        :param s: String to be checked.
+        :return: A tuple (bool, str) where the first element is True if the string is a valid Base64 encoded string,
+                 and the second element is a message indicating the result or the type of error.
+
+        byCarl: 本方法仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+        """
+        if s is None:
+            return False, "The string is None."
+
+        if not isinstance(s, str):
+            return False, "The input is not a string."
+
+        if len(s) == 0:
+            return False, "The string is empty."
+
         try:
-            # 尝试解码字符串
-            base64.b64decode(base64_string, validate=True)
-            return True
-        except Exception as e:
-            print(f"Base64验证失败：{e}")
-            return False
+            # 尝试对字符串进行 Base64 解码
+            base64.b64decode(s, validate=True)
+            return True, "The string is a valid Base64 encoded string."
+        except ValueError:
+            # 如果解码抛出 ValueError 异常，则字符串不是有效的 Base64 编码
+            return False, "The string is NOT a valid Base64 encoded string."
 
     def construct(
         self,
@@ -126,9 +145,9 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
         observation_VforD: str,
         feedback: str = ""
     ) -> list:
-        if not D_VObservationPromptConstructor.is_valid_base64(observation_VforD):
-            print("提供的observation_VforD不是有效的Base64编码")
-
+        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(
+            observation_VforD)
+        print("prompt_constructor.py D_VObservationPromptConstructor:", message, "\n")
         rendered_prompt = Template(self.prompt_user).render(
             user_request=user_request)
         prompt_elements = [{"type": "text", "text": rendered_prompt}]
@@ -136,62 +155,27 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
             history_memory = HistoryMemory(previous_trace=previous_trace)
             trace_prompt = history_memory.construct_previous_trace_prompt()
             prompt_elements.append({"type": "text", "text": trace_prompt})
-            # self.prompt_user += f"current observation or Dom tree is {observation}"
             if feedback != "":
                 prompt_elements.append(
                     {"type": "text", "text": f"There an invalid action description is below:\n {feedback}\n"})
             prompt_elements.append(
-                {"type": "text", "text": f"{observation}"})
-            print("Dom tree finished!\n")
+                {"type": "text", "text": f"current observation or Dom tree is {observation}"})
             prompt_elements.append(
                 {"type": "text", "text": "current screenshot is:"})
-            print("current screenshot is: finished!\n")
+            print("len of prompt_elements before observation_VforD:",
+                  len(prompt_elements))
+            prompt_elements_str = json5.dumps(prompt_elements)
+            print("len of prompt_elements_str before observation_VforD:", len(
+                prompt_elements_str))  # 这将打印出转换为JSON字符串的prompt_elements的长度
+            print("len of about gpt token of prompt_elements_str before observation_VforD:", len(
+                prompt_elements_str)/5.42, "\n")
             prompt_elements.append(
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{observation_VforD}"}})
-            print("observation_VforD finished!\n")
         # 构造最终的消息负载
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
-        print(prompt_elements)
+        # print(prompt_elements)
         print("messages finished!\n")
-        return messages
-
-    # 将previous thought和action转化成格式化字符串
-    def stringfy_thought_and_action(self, input_list: list) -> str:
-        input_list = json5.loads(input_list, encoding="utf-8")
-        str_output = "["
-        for idx, i in enumerate(input_list):
-            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
-        str_output += "]"
-        return str_output
-
-
-class VisionObservationPromptConstructor(BasePromptConstructor):
-    def __init__(self):
-        self.prompt_system = VisionPrompts.vision_planning_prompt_system  # 假设有视觉提示的系统部分
-        self.prompt_user = VisionPrompts.vision_prompt_user
-
-    def construct(self, user_request: str, previous_trace: str, base64_image: str) -> list:
-        # 使用模板渲染用户请求
-        rendered_prompt = Template(self.prompt_user).render(
-            user_request=user_request)
-        prompt_elements = [{"type": "text", "text": rendered_prompt}]
-
-        # 如果有以前的追踪记录，则添加
-        if len(previous_trace) > 0:
-            history_memory = HistoryMemory(previous_trace=previous_trace)
-            trace_prompt = history_memory.construct_previous_trace_prompt()
-            prompt_elements.append({"type": "text", "text": trace_prompt})
-
-            # 添加当前观察（图像数据）
-            prompt_elements.append(
-                {"type": "text", "text": "current observation is:"})
-            prompt_elements.append(
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}})
-
-        # 构造最终的消息负载
-        messages = [{"role": "system", "content": self.prompt_system},
-                    {"role": "user", "content": prompt_elements}]
         return messages
 
     # 将previous thought和action转化成格式化字符串
