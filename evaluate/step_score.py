@@ -43,7 +43,11 @@ class URLEvaluator(StepEvaluator):
             except:
                 return 0
         else:
-            input_answer = input_url
+            try:
+                parsed_url = urlparse(input_url)
+                input_answer = parsed_url.netloc + parsed_url.path
+            except:
+                input_answer = input_url 
         input_answer = unquote(input_answer)
         result_score = MatchFunction.include_match(input_answer, reference_answer)
         print("score:", result_score, input_answer)
