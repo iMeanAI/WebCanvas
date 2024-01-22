@@ -51,10 +51,12 @@ def read_file(path="./data/test.json"):
                 netloc = evaluation["content"]["netloc"]
                 reference_evaluate_steps.append({"match_function": match_function,
                                                 "reference_answer": reference_answer, "netloc": netloc, "score": 0})
-        return_list.append([task_name, reference_task_length, reference_evaluate_steps])
+        return_list.append(
+            [task_name, reference_task_length, reference_evaluate_steps])
     # print(return_list)
     # return_list=return_list[1:]
     return return_list
+
 
 def get_netloc(url: str) -> str:
     # 提取出域名，如zhihu.com提取出zhihu，www.google.com.hk提取出google
@@ -69,7 +71,6 @@ def get_netloc(url: str) -> str:
     return netloc
 
 
-
 async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
     '''评测步骤打分'''
     # reference_evaluate_steps, num_steps
@@ -81,9 +82,11 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
         if evaluate["score"] != 1:
             match_function = evaluate["match_function"]
             if match_function == "url_exactly_match":
-                score = URLEvaluator.url_exact_match(page.url, evaluate["reference_answer"], evaluate["key"])
+                score = URLEvaluator.url_exact_match(
+                    page.url, evaluate["reference_answer"], evaluate["key"])
             elif match_function == "url_included_match":
-                score = URLEvaluator.url_include_match(page.url, evaluate["reference_answer"], evaluate["key"])
+                score = URLEvaluator.url_include_match(
+                    page.url, evaluate["reference_answer"], evaluate["key"])
             elif match_function == "url_semantic_match":
                 score = await URLEvaluator.url_semantic_match(
                     page.url, evaluate["reference_answer"], evaluate["key"])
@@ -93,7 +96,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
                 method = evaluate["method"]
                 score = ElementEvaluator.path_exact_match(
                     input_path, evaluate["reference_answer"], method, await page.content(), input_netloc, evaluate["netloc"])
-                print(score, "path_exact_match:", input_path, "***", evaluate["reference_answer"])
+                print(score, "path_exact_match:", input_path,
+                      "***", evaluate["reference_answer"])
             elif match_function == "element_path_included_match":
                 pass
                 # * 暂时不做
@@ -111,7 +115,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
                     print(await page.locator(input_path).input_value())
                     score = ElementEvaluator.element_value_exact_match(
                         element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
-                    print(score, "element_value_exactly_match", element_value, "*", evaluate["reference_answer"])
+                    print(score, "element_value_exactly_match",
+                          element_value, "*", evaluate["reference_answer"])
             elif match_function == "element_value_included_match":
                 if input_path is not None:
                     input_netloc = get_netloc(page.url)
@@ -121,7 +126,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
                     element_value = await page.input_value(input_path)
                     score = ElementEvaluator.element_value_include_match(
                         element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
-                    print(score, "element_value_included_match", element_value, "*", evaluate["reference_answer"])
+                    print(score, "element_value_included_match",
+                          element_value, "*", evaluate["reference_answer"])
 
             elif match_function == "element_value_semantic_match":
                 if input_path is not None:
@@ -133,7 +139,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
                     if len(element_value) > 0:
                         score = await ElementEvaluator.element_value_semantic_match(
                             element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
-                        print(score, "element_value_semantic_match", element_value, "*", evaluate["reference_answer"])
+                        print(score, "element_value_semantic_match",
+                              element_value, "*", evaluate["reference_answer"])
             elif match_function == "text_exact_match":
                 pass  # TODO
             elif match_function == "text_include_match":
@@ -172,9 +179,12 @@ async def main(num_steps=0, mode="dom"):
         raw_data_end_index = len(file)
     print(raw_data_start_index, raw_data_end_index)
 
-    for task_index in range(raw_data_start_index, raw_data_end_index):
+    # for task_index in range(raw_data_start_index, raw_data_end_index):
+    start_index = 22
+    for task_index in range(start_index,len(file)):
         task = file[task_index]
         task_name, reference_task_length, reference_evaluate_steps = task
+        print("task index:",task_index)
         print("task_name:", task_name)
         print("reference_task_length:", reference_task_length)
         print("raw data:\n", reference_evaluate_steps)
@@ -334,7 +344,6 @@ async def main(num_steps=0, mode="dom"):
         # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
         # print(json5.dumps(a, indent=4))
         # input()
-
 
         # ! 3.任务评测打分
         if mode == "dom" or mode == "d_v":
