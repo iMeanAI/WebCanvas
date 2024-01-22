@@ -90,8 +90,7 @@ class AsyncHTMLEnvironment:
 
     async def _get_obs(self) -> Union[str, Tuple[str, str]]:
         observation = ""
-        if self.mode == "d_v":
-            observation_VforD = ""  # 仅在 "d_v" 模式下使用
+        observation_VforD = ""
         try:
             if self.mode in ["dom", "d_v"]:
                 print("async_env.py now in _get_obs method")
@@ -103,6 +102,9 @@ class AsyncHTMLEnvironment:
                               "current accessibility tree is below:\n" + dom_tree
                 if self.mode == "d_v":
                     observation_VforD = await self.capture()
+                    # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+                    is_valid, message = D_VObservationPromptConstructor.is_valid_base64(observation_VforD)
+                    print("async_env.py _get_obs observation_VforD:", message)
             elif self.mode == "vision":
                 # 视觉模式下的处理逻辑
                 if self.use_vimium_effect:
@@ -113,9 +115,6 @@ class AsyncHTMLEnvironment:
                     observation = await self.capture()
         except:
             pass
-        # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
-        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(observation_VforD)
-        print("async_env.py _get_obs observation_VforD:", message)
         return (observation, observation_VforD) if self.mode == "d_v" else observation
 
     async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
