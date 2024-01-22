@@ -60,10 +60,13 @@ def read_file(path="./data/test.json"):
 def get_netloc(url: str) -> str:
     # 提取出域名，如zhihu.com提取出zhihu，www.google.com.hk提取出google
     url = urlparse(url)
-    if url.netloc.startswith("www"):
-        netloc = re.findall(".*?\.(.*?)\..*?", url.netloc)[0]
-    else:
-        netloc = re.findall("(.*?)\..*?", url.netloc)[0]
+    try:
+        if url.netloc.startswith("www"):
+            netloc = re.findall(".*?\.(.*?)\..*?", url.netloc)[0]
+        else:
+            netloc = re.findall("(.*?)\..*?", url.netloc)[0]
+    except:
+        netloc = ""
     return netloc
 
 
