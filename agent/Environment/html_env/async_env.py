@@ -115,6 +115,9 @@ class AsyncHTMLEnvironment:
                     observation = await self.capture()
         except:
             pass
+        # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(observation_VforD)
+        print("async_env.py _get_obs observation_VforD:", message)
         return (observation, observation_VforD) if self.mode == "d_v" else observation
 
     async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
