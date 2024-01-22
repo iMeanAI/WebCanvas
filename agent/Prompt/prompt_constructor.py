@@ -296,9 +296,9 @@ class SemanticMatchPromptConstructor(BasePromptConstructor):
         self.prompt_system = BasePrompts.semantic_match_prompt_system
         self.prompt_user = BasePrompts.semantic_match_prompt_user
 
-    def construct(self, semantic_method, input_answer, reference_answer) -> list:
+    def construct(self, input_answer, semantic_method) -> list:
         self.prompt_user = Template(self.prompt_user).render(
-            semantic_method, input_answer, reference_answer)
+            semantic_method=semantic_method, input_answer=input_answer)
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
