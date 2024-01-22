@@ -55,7 +55,7 @@ class Planning:
                 else:
                     return str(obj)[:limit]
 
-            print(f"\033[32m{print_limited_json(planning_request, limit=100)}")
+            print(f"\033[32m{print_limited_json(planning_request, limit=1000)}")
             print("\033[0m")
             planning_response, error_message = await GPT4V.request(planning_request)
         elif mode == "vision":

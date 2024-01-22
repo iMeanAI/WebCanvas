@@ -102,9 +102,6 @@ class AsyncHTMLEnvironment:
                               "current accessibility tree is below:\n" + dom_tree
                 if self.mode == "d_v":
                     observation_VforD = await self.capture()
-                    # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
-                    is_valid, message = D_VObservationPromptConstructor.is_valid_base64(observation_VforD)
-                    print("async_env.py _get_obs observation_VforD:", message)
             elif self.mode == "vision":
                 # 视觉模式下的处理逻辑
                 if self.use_vimium_effect:
@@ -113,11 +110,12 @@ class AsyncHTMLEnvironment:
                 else:
                     # 获取普通屏幕截图
                     observation = await self.capture()
-        except:
-            pass
-        # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
-        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(observation_VforD)
-        print("async_env.py _get_obs observation_VforD:", message)
+        except Exception as e:
+            print(f"Error in _get_obs: {e}")
+        if self.mode == "d_v":
+            # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+            is_valid, message = D_VObservationPromptConstructor.is_valid_base64(observation_VforD)
+            print("async_env.py _get_obs observation_VforD:", message)
         return (observation, observation_VforD) if self.mode == "d_v" else observation
 
     async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
@@ -368,7 +366,7 @@ class AsyncHTMLEnvironment:
         await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
         # 捕获屏幕截图
         screenshot_bytes = await self.page.screenshot()
-
+        print("async_env.py screenshot_bytes finished!")
         # 使用 PIL 库将截图转换为 RGB 格式的图像:
         # 使用 Python 的 BytesIO 类来处理截图的二进制数据，并使用 PIL（Python Imaging Library）库的 Image.open() 方法将其转换成一个图像对象。
         # 接着，使用 convert("RGB") 方法将图像转换为 RGB 格式。
