@@ -68,7 +68,7 @@ class URLEvaluator(StepEvaluator):
 class ElementEvaluator(StepEvaluator):
     '''元素评测打分'''
     @staticmethod
-    def path_exact_match(input_answer, reference_answer, method, html_content,  input_netloc, reference_netloc):
+    def path_exact_match(input_answer, reference_answer, method, html_content, input_netloc, reference_netloc):
         score = 0
         if method == "xpath":
             if reference_netloc != input_netloc:
