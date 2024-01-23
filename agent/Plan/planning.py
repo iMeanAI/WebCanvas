@@ -46,11 +46,22 @@ class Planning:
             print("\033[0m")
             planning_response, error_message = await GPT4.request(planning_request)
         elif mode == "d_v":
+            status_description = status_and_description.get(
+                "description") if status_and_description and status_and_description.get("description") else ""
             planning_request = D_VObservationPromptConstructor().construct(
-                user_request, previous_trace, observation, observation_VforD, feedback)
-            print(f"\033[32m{planning_request}")  # 绿色 涉及到图片
+                user_request, previous_trace, observation, observation_VforD, feedback, status_description)
+            # print(f"\033[32m{planning_request}")  # 绿色 涉及到图片
             # display_string = planning_request[:100] # 截取字符串的前 max_length 个字符
             # print(f"\033[32m{display_string}")
+            def print_limited_json(obj, limit=100):
+                if isinstance(obj, dict):
+                    return {k: print_limited_json(v, limit) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [print_limited_json(element, limit) for element in obj]
+                else:
+                    return str(obj)[:limit]
+
+            print(f"\033[32m{print_limited_json(planning_request, limit=1000)}")
             print("\033[0m")
             planning_response, error_message = await GPT4V.request(planning_request)
         elif mode == "vision":

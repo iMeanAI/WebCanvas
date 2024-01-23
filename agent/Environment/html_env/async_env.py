@@ -17,6 +17,7 @@ import time
 from ...Prompt import D_VObservationPromptConstructor
 
 # Vimium 扩展的路径，需要自定义，相对路径会有点问题，导致路径切换为C:\\...\AppData\Local\ms-playwright\chromium-1055\chrome-win\\vimium-master
+# 只有vision mode需要Vimium 扩展，run in d_v mode不需要
 vimium_path = "D:\KYXK\imean-agents-dev\\vimium-master"
 
 
@@ -70,7 +71,6 @@ class AsyncHTMLEnvironment:
                 device_scale_factor=1,
                 locale=self.locale,
                 args=[
-                    # 禁用除 Vimium 外的扩展
                     f"--disable-extensions-except={vimium_path}",
                     f"--load-extension={vimium_path}",  # 加载 Vimium 扩展
                 ],
@@ -130,8 +130,15 @@ class AsyncHTMLEnvironment:
             observation = await self._get_obs()
             return observation
 
-    async def execute_action(self, action: Action) -> str:
-        '''找到可交互元素并执行相应的动作得到新的observation'''
+    async def execute_action(self, action: Action) -> Union[str, Tuple[str, str]]:
+        """
+        找到可交互元素并执行相应的动作得到新的observation \n
+        注意：本方法mode为d_v时，返回的分别observation和observation_VforD，在调用时需要分别接收 \n
+        if mode == "d_v":
+            observation, observation_VforD = await env.execute_action( )
+        else:
+            observation = await env.execute_action( )
+        """
         if "element_id" in action and action["element_id"] != 0:
             print('action["element_id"]:', action["element_id"])
             print('tree.nodeDict[action["element_id"]]:',
@@ -387,10 +394,12 @@ class AsyncHTMLEnvironment:
         encoded_screenshot = self.encode_and_resize(screenshot)
         return encoded_screenshot
 
-    def encode_and_resize(self, image):
-        IMG_RES = 1080
-        W, H = image.size
-        image = image.resize((IMG_RES, int(IMG_RES * H / W)))
+    @staticmethod
+    def encode_and_resize(image):
+        img_res = 1080
+        w, h = image.size
+        img_res_h = int(img_res * h / w)
+        image = image.resize((img_res, img_res_h))
         buffer = BytesIO()
         image.save(buffer, format="PNG")
         encoded_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
@@ -404,12 +413,15 @@ class AsyncHTMLEnvironment:
         await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
         # 捕获屏幕截图
         screenshot_bytes = await self.page.screenshot()
-
+        print("async_env.py screenshot_bytes finished!")
         # 使用 PIL 库将截图转换为 RGB 格式的图像:
         # 使用 Python 的 BytesIO 类来处理截图的二进制数据，并使用 PIL（Python Imaging Library）库的 Image.open() 方法将其转换成一个图像对象。
         # 接着，使用 convert("RGB") 方法将图像转换为 RGB 格式。
         screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGB")
         encoded_screenshot = self.encode_and_resize(screenshot)
+        # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(encoded_screenshot)
+        print("async_env.py encoded_screenshot:", message)
         return encoded_screenshot
 
     @staticmethod
