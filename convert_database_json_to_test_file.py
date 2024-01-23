@@ -33,24 +33,29 @@ for index, task in enumerate(json_file):
                         netloc = re.findall(".*?\.(.*?)\..*?", url.netloc)[0]
                     else:
                         netloc = re.findall("(.*?)\..*?", url.netloc)[0]
-                    
+
                     # *element path match
                     if "element_path_exact" in temp["match_function_name"]:
                         temp["method"] = "selector"
-                        temp["content"] = {"reference_answer": step["path"], "netloc": netloc}
+                        temp["content"] = {
+                            "reference_answer": step["path"], "netloc": netloc}
 
                     # *element value match
                     elif "element_value_exact" in temp["match_function_name"]:
-                        temp["content"] = {"reference_answer": step["value"], "netloc": netloc}
+                        temp["content"] = {
+                            "reference_answer": step["value"], "netloc": netloc}
                     elif "element_value_include" in temp["match_function_name"]:
-                        temp["content"] = {"reference_answer": func["required"], "netloc": netloc}
+                        temp["content"] = {
+                            "reference_answer": func["required"], "netloc": netloc}
                     elif "element_value_semantic" in temp["match_function_name"]:
-                        temp["content"] = {"reference_answer": func["optional"], "netloc": netloc}
+                        temp["content"] = {
+                            "reference_answer": func["optional"], "netloc": netloc}
 
                 # *url match
                 elif "url_include" in temp["match_function_name"]:
                     key = func["key"] if "key" in func.keys() else ""
-                    temp["content"] = {"key": key, "reference_answer": func["required"]}
+                    temp["content"] = {"key": key,
+                                       "reference_answer": func["required"]}
                 elif "url_exact" in temp["match_function_name"]:
                     key = func["key"] if "key" in func.keys() else ""
                     if "optional" in func.keys():
@@ -70,18 +75,22 @@ for index, task in enumerate(json_file):
                     reference_answer = unquote(reference_answer)
 
                     # reference_answer = func["optional"] if "optional" in func.keys() else step["href"]
-                    temp["content"] = {"key": key, "reference_answer": reference_answer}
+                    temp["content"] = {"key": key,
+                                       "reference_answer": reference_answer}
                 elif "url_semantic" in temp["match_function_name"]:
                     key = func["key"] if "key" in func.keys() else ""
-                    temp["content"] = {"key": key, "reference_answer": func["optional"]}
+                    temp["content"] = {"key": key,
+                                       "reference_answer": func["optional"]}
                 else:
                     print("*"*50, "\n", "other match function, coming soon!")
                 # print(temp)
                 evaluation.append(temp)
     print(evaluation)
     # input()
-    output.append({"index":index, "task": task_name, "reference_task_length": reference_steps, "evaluation": evaluation})
+    output.append({"index": index, "task": task_name,
+                  "reference_task_length": reference_steps, "evaluation": evaluation})
 print(output)
 
 f_out = open("output.json", "w")
-json5.dump(output, fp=f_out, ensure_ascii=False, indent=4, quote_keys=True, trailing_commas=False)
+json5.dump(output, fp=f_out, ensure_ascii=False, indent=4,
+           quote_keys=True, trailing_commas=False)

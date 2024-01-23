@@ -1,4 +1,4 @@
-from typing import TypedDict,List
+from typing import TypedDict, List
 from enum import IntEnum
 
 
@@ -70,9 +70,15 @@ ConditionTagNameList = [
 ]
 
 
+TypeList = [
+    "submit"
+]
+
+
 __all__ = [
     "ElementNode",
     "TagNameList",
     "DelTagNameList",
     "ConditionTagNameList",
+    "TypeList"
 ]

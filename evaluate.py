@@ -13,8 +13,9 @@ import argparse
 
 
 # 解析命令行参数
-parser = argparse.ArgumentParser(description="Run the agent in different modes.")
-parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="dom",
+parser = argparse.ArgumentParser(
+    description="Run the agent in different modes.")
+parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="d_v",
                     help="Choose interaction mode: 'dom' for DOM-based interaction, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
@@ -50,7 +51,8 @@ def read_file(path="./data/test.json"):
                 netloc = evaluation["content"]["netloc"]
                 reference_evaluate_steps.append({"match_function": match_function,
                                                 "reference_answer": reference_answer, "netloc": netloc, "score": 0})
-        return_list.append([task_name, reference_task_length, reference_evaluate_steps])
+        return_list.append(
+            [task_name, reference_task_length, reference_evaluate_steps])
     # print(return_list)
     # return_list=return_list[1:]
     return return_list
@@ -95,9 +97,11 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
         if evaluate["score"] != 1:
             match_function = evaluate["match_function"]
             if match_function == "url_exactly_match":
-                score = URLEvaluator.url_exact_match(page.url, evaluate["reference_answer"], evaluate["key"])
+                score = URLEvaluator.url_exact_match(
+                    page.url, evaluate["reference_answer"], evaluate["key"])
             elif match_function == "url_included_match":
-                score = URLEvaluator.url_include_match(page.url, evaluate["reference_answer"], evaluate["key"])
+                score = URLEvaluator.url_include_match(
+                    page.url, evaluate["reference_answer"], evaluate["key"])
             elif match_function == "url_semantic_match":
                 score = await URLEvaluator.url_semantic_match(
                     page.url, evaluate["reference_answer"], evaluate["key"])
@@ -107,7 +111,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
                 method = evaluate["method"]
                 score = ElementEvaluator.path_exact_match(
                     input_path, evaluate["reference_answer"], method, await page.content(), input_netloc, evaluate["netloc"])
-                print(score, "path_exact_match:", input_path, "***", evaluate["reference_answer"])
+                print(score, "path_exact_match:", input_path,
+                      "***", evaluate["reference_answer"])
             elif match_function == "element_path_included_match":
                 pass
                 # * 暂时不做
@@ -126,7 +131,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
                     # print(await page.locator(input_path).input_value())
                     score = ElementEvaluator.element_value_exact_match(
                         element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
-                    print(score, "element_value_exactly_match", element_value, "*", evaluate["reference_answer"])
+                    print(score, "element_value_exactly_match",
+                          element_value, "*", evaluate["reference_answer"])
             elif match_function == "element_value_included_match":
                 if input_path is not None:
                     input_netloc = get_netloc(page.url)
@@ -137,7 +143,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
                     element_value = await get_element_content(page, input_path)
                     score = ElementEvaluator.element_value_include_match(
                         element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
-                    print(score, "element_value_included_match", element_value, "*", evaluate["reference_answer"])
+                    print(score, "element_value_included_match",
+                          element_value, "*", evaluate["reference_answer"])
 
             elif match_function == "element_value_semantic_match":
                 if input_path is not None:
@@ -150,7 +157,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
                     if len(element_value) > 0:
                         score = await ElementEvaluator.element_value_semantic_match(
                             element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
-                        print(score, "element_value_semantic_match", element_value, "*", evaluate["reference_answer"])
+                        print(score, "element_value_semantic_match",
+                              element_value, "*", evaluate["reference_answer"])
             elif match_function == "text_exact_match":
                 pass  # TODO
             elif match_function == "text_include_match":
@@ -189,9 +197,12 @@ async def main(num_steps=0, mode="dom"):
         raw_data_end_index = len(file)
     print(raw_data_start_index, raw_data_end_index)
 
-    for task_index in range(raw_data_start_index, raw_data_end_index):
+    # for task_index in range(raw_data_start_index, raw_data_end_index):
+    start_index = 22
+    for task_index in range(start_index, len(file)):
         task = file[task_index]
         task_name, reference_task_length, reference_evaluate_steps = task
+        print("task index:", task_index)
         print("task_name:", task_name)
         print("reference_task_length:", reference_task_length)
         print("raw data:\n", reference_evaluate_steps)
@@ -229,7 +240,8 @@ async def main(num_steps=0, mode="dom"):
             headless=False,
             slow_mo=1000,
             current_viewport_only=False,
-            viewport_size={"width": 1920, "height": 1280} if mode == "dom" else {"width": 1080, "height": 720},
+            viewport_size={"width": 1920, "height": 1280} if mode == "dom" else {
+                "width": 1080, "height": 720},
             # "width": 1080, "height": 720
             save_trace_enabled=False,
             sleep_after_execution=0.0,
@@ -245,7 +257,7 @@ async def main(num_steps=0, mode="dom"):
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
 
-        # task_name = "Ask Satya Nadella to send an email and mention your interest in AI at linkdin"
+        # task_name = "Search for flights available from Calgary (CYYC) to New York (ZNY) in flightaware"
         last_action_description = ""
         for action_step in range(10):
             total_step_score = 0
@@ -272,9 +284,15 @@ async def main(num_steps=0, mode="dom"):
                 except:
                     element_id = 0
                 #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
-                if action_type in ["fill_form", "click"]:
-                    selector = env.tree.get_selector_and_xpath(
-                        env.tree.nodeDict[element_id])
+                if action_type in ["fill_form", "fill_search", "click"]:
+                    try:
+                        selector = env.tree.get_selector_and_xpath(
+                            env.tree.nodeDict[element_id])
+                    except:
+                        print("accessibility tree don't have this element_id")
+                        selector = None
+                        element_id = 0
+                        action_type = "None"
                 else:
                     selector = None
                     element_id = 0
@@ -284,11 +302,14 @@ async def main(num_steps=0, mode="dom"):
             print("dict_to_write:", dict_to_write)
 
             if mode == "dom" or mode == "d_v":
-                execute_action, current_trace, path = parse_current_trace(dict_to_write)
-                selector, xpath = (path[0], path[1]) if path is not None else (None, None)
+                execute_action, current_trace, path = parse_current_trace(
+                    dict_to_write)
+                selector, xpath = (
+                    path[0], path[1]) if path is not None else (None, None)
                 print("current trace:\n", current_trace)
                 print("response:\n", execute_action)
                 print("selector:", selector)
+                
                 evaluate_steps = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
                 print("执行动作前的url", env.page.url)
                 for evaluate in evaluate_steps:
@@ -319,10 +340,13 @@ async def main(num_steps=0, mode="dom"):
                 # current_trace = [current_trace]
                 current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
                                                          current_trace=current_trace, observation=observation)
-                if current_reward and int(current_reward.get("score")) < 8:
+                if current_reward and int(current_reward.get("score")) < 7:
                     execute_action.update(
                         {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                    observation = await env.execute_action(execute_action)
+                    if mode == "d_v":
+                        observation, observation_VforD = await env.execute_action(execute_action)
+                    else:
+                        observation = await env.execute_action(execute_action)
                     last_action_description = current_reward.get("description")
                 else:
                     last_action_description = ""
@@ -347,15 +371,18 @@ async def main(num_steps=0, mode="dom"):
             total_step_score = 0
             for evaluate in evaluate_steps:
                 total_step_score += evaluate["score"]
-            print("\ntotal step score:", total_step_score, "/", len(reference_evaluate_steps))
+            print("\ntotal step score:", total_step_score,
+                  "/", len(reference_evaluate_steps))
 
             # length score
             task_evaluator = TaskLengthEvaluator()
-            task_length_score = task_evaluator.task_length_score(reference_task_length, num_steps)
+            task_length_score = task_evaluator.task_length_score(
+                reference_task_length, num_steps)
             print("task_length_score:", task_length_score)
 
             # finish score
-            finish_task_score = FinishTaskEvaluator.finish_task_score(len(reference_evaluate_steps), total_step_score)
+            finish_task_score = FinishTaskEvaluator.finish_task_score(
+                len(reference_evaluate_steps), total_step_score)
             print("finish_task_score:", finish_task_score)
 
         a = input("回车继续，按q退出")

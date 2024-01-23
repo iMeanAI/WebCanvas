@@ -1,4 +1,4 @@
-from .utils import ElementNode, ConditionTagNameList
+from .utils import ElementNode, ConditionTagNameList, TypeList
 import re
 
 
@@ -111,4 +111,7 @@ class ActiveElements:
         aria_checked = element['attributes'].get('aria-checked')
         if aria_checked:
             return aria_checked
+        element_type = element["attributes"].get('type')
+        if element_type in TypeList:
+            return element_type
         return ""
