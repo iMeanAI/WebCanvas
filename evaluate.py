@@ -15,7 +15,7 @@ import argparse
 # 解析命令行参数
 parser = argparse.ArgumentParser(
     description="Run the agent in different modes.")
-parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="d_v",
+parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="dom",
                     help="Choose interaction mode: 'dom' for DOM-based interaction, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
@@ -69,6 +69,7 @@ def get_netloc(url: str) -> str:
     except:
         netloc = ""
     return netloc
+
 
 async def get_element_content(page: Page, selector):
     '''获取元素内容'''
@@ -309,7 +310,7 @@ async def main(num_steps=0, mode="dom"):
                 print("current trace:\n", current_trace)
                 print("response:\n", execute_action)
                 print("selector:", selector)
-                
+
                 evaluate_steps = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
                 print("执行动作前的url", env.page.url)
                 for evaluate in evaluate_steps:
