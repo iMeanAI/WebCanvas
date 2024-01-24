@@ -250,7 +250,14 @@ class HTMLTree:
             tag_idx = element["nodeId"]
             # TODO 添加更多映射关系
             if tag_name in MapTagNameList:
-                parent_element = self.elementNodes[element["parentId"]]
+                # 从兄弟节点获得可交互元素且优先级高于父节点
+                parent_element = self.pruningTreeNode[element["parentId"]]
+                for broId in parent_element["childIds"]:
+                    if broId != tag_idx:
+                        bro_element = self.pruningTreeNode[broId]
+                        bro_element_tag_name = ActiveElements.get_element_tagName(bro_element)
+                        if bro_element_tag_name != "unknown":
+                            return (bro_element_tag_name,broId)
                 return self.get_tag_name(parent_element)
             else:
                 return ("statictext", tag_idx)

@@ -77,7 +77,7 @@ class AsyncHTMLEnvironment:
                 ignore_https_errors=True,  # 忽略 HTTPS 错误
             )
         if start_url:
-            
+
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
             await self.page.goto(start_url)
@@ -420,7 +420,8 @@ class AsyncHTMLEnvironment:
         screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGB")
         encoded_screenshot = self.encode_and_resize(screenshot)
         # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
-        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(encoded_screenshot)
+        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(
+            encoded_screenshot)
         print("async_env.py encoded_screenshot:", message)
         return encoded_screenshot
 
