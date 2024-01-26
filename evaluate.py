@@ -10,12 +10,13 @@ from agent.Environment.html_env.actions import create_action, Action, ActionType
 import re
 import asyncio
 import argparse
+import toml
 
 
 # 解析命令行参数
 parser = argparse.ArgumentParser(
     description="Run the agent in different modes.")
-parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="dom",
+parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="d_v",
                     help="Choose interaction mode: 'dom' for DOM-based interaction, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
@@ -188,6 +189,9 @@ async def main(num_steps=0, mode="dom"):
 
     file = read_file()
 
+    with open('./configs/dom.toml', 'r') as f:
+        config = toml.load(f)
+
     # 评测输入范围内的任务
     if raw_data_index != -1:
         re_result = re.split(r'\s|,', raw_data_index)
@@ -199,6 +203,7 @@ async def main(num_steps=0, mode="dom"):
     print(raw_data_start_index, raw_data_end_index)
 
     # for task_index in range(raw_data_start_index, raw_data_end_index):
+
     start_index = 22
     for task_index in range(start_index, len(file)):
         task = file[task_index]
@@ -249,6 +254,12 @@ async def main(num_steps=0, mode="dom"):
             locale="en-US",
             use_vimium_effect=True
         )
+
+        DF = config['basic']['default']
+        GR = config['basic']['global_reward']
+        CR = config['basic']['current_step_reward']
+        PT = config['basic']['previous_trace']
+
         observation_VforD = None
         if mode == "d_v":
             observation, observation_VforD = await env.reset("about:blank")
@@ -258,18 +269,32 @@ async def main(num_steps=0, mode="dom"):
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
 
-        # task_name = "Search for flights available from Calgary (CYYC) to New York (ZNY) in flightaware"
+        # task_name = "Add a blue iPad to your cart and select the option for free engraving with \"hello world\" with no other accessaries."
         last_action_description = ""
-        for action_step in range(10):
+        dict_to_write = None
+        for action_step in range(config['basic']['Max_Action_Step']):
             total_step_score = 0
             # break
             print("planning前previous_trace：", previous_trace)
             print("planning前observation：", observation)
             for _ in range(3):
                 try:
-                    dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation, feedback=last_action_description, mode=mode, observation_VforD=observation_VforD)
-                    if dict_to_write is not None:
-                        break
+                    if DF:
+                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation, feedback=last_action_description, mode=mode, observation_VforD=observation_VforD)
+                        if dict_to_write is not None:
+                            break
+                    elif GR == False:
+                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation, feedback=last_action_description, mode=mode, observation_VforD=observation_VforD, global_reward=False)
+                        if dict_to_write is not None:
+                            break
+                    elif CR == False:
+                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation, feedback="", mode=mode, observation_VforD=observation_VforD)
+                        if dict_to_write is not None:
+                            break
+                    elif PT == False:
+                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name, observation=observation, feedback=last_action_description, mode=mode, observation_VforD=observation_VforD)
+                        if dict_to_write is not None:
+                            break
                 except Exception as e:
                     traceback.print_exc()
                     continue
@@ -341,7 +366,7 @@ async def main(num_steps=0, mode="dom"):
                 # current_trace = [current_trace]
                 current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
                                                          current_trace=current_trace, observation=observation)
-                if current_reward and int(current_reward.get("score")) < 7:
+                if current_reward and int(current_reward.get("score")) < config['basic']['Step_Score_Threshold']:
                     execute_action.update(
                         {"element_id": 0, "action_type": ActionTypes.GO_BACK})
                     if mode == "d_v":
