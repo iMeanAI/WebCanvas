@@ -36,6 +36,13 @@ class Planning:
         else:
             reward_response = ""
 
+        def print_limited_json(obj, limit=1000):
+            if isinstance(obj, dict):
+                return {k: print_limited_json(v, limit) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [print_limited_json(element, limit) for element in obj]
+            else:
+                return str(obj)[:limit]
         # 构建planning prompt及查询
         if mode == "dom":
             status_description = status_and_description.get(
@@ -45,23 +52,33 @@ class Planning:
             print(f"\033[32m{planning_request}")  # 绿色
             print("\033[0m")
             planning_response, error_message = await GPT4.request(planning_request)
+        elif mode == "dom_v_desc":
+            status_description = status_and_description.get(
+                "description") if status_and_description and status_and_description.get("description") else ""
+            if observation_VforD != "":
+                vision_disc_request = VisionDiscPromptConstructor().construct(
+                    user_request, observation_VforD)
+                vision_disc_response, error_message = await GPT4V.request(vision_disc_request)
+            else:
+                vision_disc_response = ""
+            print(f"\033[36mvision_disc_response:\n{vision_disc_response}")  # 蓝色
+            planning_request = ObservationVisionDiscPromptConstructor().construct(
+                user_request, previous_trace, observation, feedback, status_description, vision_disc_response)
+            # print(f"\033[32m{planning_request}")
+            print(f"\033[35mplanning_request:\n{print_limited_json(planning_request, limit=1000)}")  # 紫色
+            print("\033[0m")
+            planning_response, error_message = await GPT4.request(planning_request)
         elif mode == "d_v":
             status_description = status_and_description.get(
                 "description") if status_and_description and status_and_description.get("description") else ""
             planning_request = D_VObservationPromptConstructor().construct(
                 user_request, previous_trace, observation, observation_VforD, feedback, status_description)
+
             # print(f"\033[32m{planning_request}")  # 绿色 涉及到图片
             # display_string = planning_request[:100] # 截取字符串的前 max_length 个字符
             # print(f"\033[32m{display_string}")
-            def print_limited_json(obj, limit=100):
-                if isinstance(obj, dict):
-                    return {k: print_limited_json(v, limit) for k, v in obj.items()}
-                elif isinstance(obj, list):
-                    return [print_limited_json(element, limit) for element in obj]
-                else:
-                    return str(obj)[:limit]
 
-            print(f"\033[32m{print_limited_json(planning_request, limit=1000)}")
+            print(f"\033[32mplanning_request:\n{print_limited_json(planning_request, limit=1000)}")
             print("\033[0m")
             planning_response, error_message = await GPT4V.request(planning_request)
         elif mode == "vision":
@@ -91,11 +108,11 @@ class Planning:
             "action": (
                 f'{planning_response_action["action"]}: {planning_response_action["action_input"]}' if "description" not in planning_response_action.keys() else
                 planning_response_action["description"])
-            if mode == "dom" or mode == "d_v" else (
+            if mode in ["dom", "d_v", "dom_v_desc"] else (
                 planning_response_action["action"] if "description" not in planning_response_action.keys() else
                 planning_response_action["description"])
         }
-        if mode == "dom" or mode == "d_v":
+        if mode in ["dom", "d_v", "dom_v_desc"]:
             planning_response_action = {element: planning_response_action.get(
                 element, "") for element in ["element_id", "action", "action_input", "description"]}
         elif mode == "vision":
@@ -106,7 +123,7 @@ class Planning:
         logger.info(planning_response_action)
         dict_to_write = {}
         dict_to_write['uuid'] = uuid
-        if mode == "dom" or mode == "d_v":
+        if mode in ["dom", "d_v", "dom_v_desc"]:
             dict_to_write['id'] = planning_response_action['element_id']
             dict_to_write['action_type'] = planning_response_action['action']
             dict_to_write['value'] = planning_response_action['action_input']

@@ -1,6 +1,8 @@
 import base64
 
 import json5
+
+from .dom_vision_disc_prompts import DomVisionDiscPrompts
 from .old_base_prompts import OldBasePrompts
 from .base_prompts import BasePrompts
 from .dom_vision_prompts import DomVisionPrompts
@@ -103,6 +105,65 @@ class ObservationPromptConstructor(BasePromptConstructor):
         str_output += "]"
         return str_output
 
+
+class VisionDiscPromptConstructor(BasePromptConstructor):
+    def __init__(self):
+        self.prompt_system = DomVisionDiscPrompts.dom_vision_disc_prompt_system
+        self.prompt_user = DomVisionDiscPrompts.dom_vision_disc_planning_prompt_user
+
+    def construct(
+            self,
+            user_request: str,
+            base64_image: str
+    ) -> list:
+        rendered_prompt = Template(self.prompt_user).render(user_request=user_request)
+        prompt_elements = [{"type": "text", "text": rendered_prompt},
+                           {"type": "text", "text": "current web page screenshot is:"},
+                           {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}]
+
+        # 构造最终的消息负载
+        messages = [{"role": "system", "content": self.prompt_system},
+                    {"role": "user", "content": prompt_elements}]
+        return messages
+
+class ObservationVisionDiscPromptConstructor(BasePromptConstructor):
+    def __init__(self):
+        self.prompt_system = BasePrompts.planning_prompt_system
+        self.prompt_user = BasePrompts.planning_prompt_user
+
+    def construct(
+            self,
+            user_request: str,
+            previous_trace: str,
+            observation: str,
+            feedback: str = "",
+            status_description: str = "",
+            vision_disc_response: str = ""
+    ) -> list:
+        self.prompt_user = Template(self.prompt_user).render(
+            user_request=user_request)
+        if len(previous_trace) > 0:
+            self.prompt_user += HistoryMemory(
+                previous_trace=previous_trace).construct_previous_trace_prompt()
+            if status_description != "":
+                self.prompt_user += \
+                    f"Task completion description is {status_description}"
+            if feedback != "":
+                self.prompt_user += f"An invalid action description is below:\n {feedback}\n"
+            self.prompt_user += observation
+            self.prompt_user += vision_disc_response
+        messages = [{"role": "system", "content": self.prompt_system}, {
+            "role": "user", "content": self.prompt_user}]
+        return messages
+
+    # 将previous thought和action转化成格式化字符串
+    def stringfy_thought_and_action(self, input_list: list) -> str:
+        input_list = json5.loads(input_list, encoding="utf-8")
+        str_output = "["
+        for idx, i in enumerate(input_list):
+            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
+        str_output += "]"
+        return str_output
 
 class D_VObservationPromptConstructor(BasePromptConstructor):
     def __init__(self):

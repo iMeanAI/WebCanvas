@@ -51,7 +51,7 @@ class AsyncHTMLEnvironment:
         self.browser = None
 
     async def setup(self, start_url: str) -> None:
-        if self.mode == "dom" or self.mode == "d_v":
+        if self.mode in ["dom", "d_v", "dom_v_desc"]:
             self.playwright = await async_playwright().start()
             self.browser = await self.playwright.chromium.launch(
                 headless=self.headless, slow_mo=self.slow_mo
@@ -93,7 +93,7 @@ class AsyncHTMLEnvironment:
         observation = ""
         observation_VforD = ""
         try:
-            if self.mode in ["dom", "d_v"]:
+            if self.mode in ["dom", "d_v", "dom_v_desc"]:
                 print("async_env.py now in _get_obs method")
                 self.tree.fetch_html_content(self.html_content)
                 print(
@@ -102,7 +102,7 @@ class AsyncHTMLEnvironment:
                 dom_tree = self.tree.build_dom_tree()
                 observation = f"current web tab name is \'{tab_name}\'\n" + \
                               "current accessibility tree is below:\n" + dom_tree
-                if self.mode == "d_v":
+                if self.mode in ["d_v", "dom_v_desc"]:
                     observation_VforD = await self.capture()
             elif self.mode == "vision":
                 # 视觉模式下的处理逻辑
@@ -114,16 +114,16 @@ class AsyncHTMLEnvironment:
                     observation = await self.capture()
         except Exception as e:
             print(f"Error in _get_obs: {e}")
-        if self.mode == "d_v":
+        if self.mode in ["d_v", "dom_v_desc"]:
             # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
             is_valid, message = D_VObservationPromptConstructor.is_valid_base64(
                 observation_VforD)
             print("async_env.py _get_obs observation_VforD:", message)
-        return (observation, observation_VforD) if self.mode == "d_v" else observation
+        return (observation, observation_VforD) if self.mode in ["d_v", "dom_v_desc"] else observation
 
     async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
         await self.setup(start_url)
-        if self.mode == "d_v":
+        if self.mode in ["d_v", "dom_v_desc"]:
             observation, observation_VforD = await self._get_obs()
             return observation, observation_VforD
         else:
