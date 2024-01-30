@@ -16,7 +16,7 @@ import toml
 # 解析命令行参数
 parser = argparse.ArgumentParser(
     description="Run the agent in different modes.")
-parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="d_v",
+parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="dom",
                     help="Choose interaction mode: 'dom' for DOM-based interaction, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
@@ -204,7 +204,7 @@ async def main(num_steps=0, mode="dom"):
 
     # for task_index in range(raw_data_start_index, raw_data_end_index):
 
-    start_index = 22
+    start_index = 0
     for task_index in range(start_index, len(file)):
         task = file[task_index]
         task_name, reference_task_length, reference_evaluate_steps = task
@@ -269,7 +269,7 @@ async def main(num_steps=0, mode="dom"):
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
 
-        # task_name = "Add a blue iPad to your cart and select the option for free engraving with \"hello world\" with no other accessaries."
+        task_name = "Search for flights available from Calgary (CYYC) to New York (ZNY) in flightaware."
         last_action_description = ""
         dict_to_write = None
         for action_step in range(config['basic']['Max_Action_Step']):

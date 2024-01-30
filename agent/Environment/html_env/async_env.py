@@ -4,11 +4,13 @@ from playwright.async_api import async_playwright, Page
 from playwright.sync_api import ViewportSize
 from urllib.parse import urlparse, urljoin
 from beartype import beartype
+from difflib import SequenceMatcher
 
 from PIL import Image
 from io import BytesIO
 import asyncio
 import base64
+import re
 
 from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
@@ -16,9 +18,21 @@ import time
 
 from ...Prompt import D_VObservationPromptConstructor
 
+
 # Vimium 扩展的路径，需要自定义，相对路径会有点问题，导致路径切换为C:\\...\AppData\Local\ms-playwright\chromium-1055\chrome-win\\vimium-master
 # 只有vision mode需要Vimium 扩展，run in d_v mode不需要
 vimium_path = "D:\KYXK\imean-agents-dev\\vimium-master"
+
+
+async def select_option(page, selector, value):
+    best_option = [-1, "", -1]
+    for i in range(await page.locator(selector).count()):
+        option = await page.locator(selector).nth(i).inner_text()
+        similarity = SequenceMatcher(None, option, value).ratio()
+        if similarity > best_option[2]:
+            best_option = [i, option, similarity]
+    await page.select_option(index=best_option[0], timeout=10000)
+    return page
 
 
 class AsyncHTMLEnvironment:
@@ -239,6 +253,7 @@ class AsyncHTMLEnvironment:
                             self.html_content = await self.page.content()
                             return await self._get_obs()
                         except:
+                            print("sleep 2s")
                             self.last_page = self.page
                             fill_and_press_enter = '''() => {
                                         const element = document.querySelector('%s');
@@ -314,6 +329,34 @@ class AsyncHTMLEnvironment:
                         return await self._get_obs()
                     except Exception as e:
                         print("can't execute go back action")
+                        print(e)
+                case ActionTypes.SELECT_OPTION:
+                    try:
+                        label, element_idx = self.tree.get_tag_name(
+                            self.tree.elementNodes[action["element_id"]])
+                        action.update({"element_id": element_idx,
+                                       "element_name": label})
+                        selector, xpath = self.tree.get_selector_and_xpath(
+                            action["element_id"])
+                    except Exception as e:
+                        print(
+                            f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                    try:
+                        self.last_page = self.page
+                        try:
+                            await self.page.locator(selector).click()
+                        except:
+                            await self.page.evaluate('''() => {
+                                const element = document.querySelector('%s');
+                                if (element) {
+                                    element.click();
+                                }
+                            }''' % selector)
+                        self.page = await select_option(self.page, selector, action["fill_text"])
+                        await self.page.wait_for_load_state('load')
+                        self.html_content = await self.page.content()
+                        return await self._get_obs()
+                    except Exception as e:
                         print(e)
                 case ActionTypes.NONE:
                     try:
