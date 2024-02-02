@@ -12,5 +12,6 @@ tmp_test.py
 webarena_test.py
 test_action.py
 1.py
+2.py
 1.json
-output.json
+output*.json

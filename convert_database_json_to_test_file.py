@@ -2,9 +2,17 @@ import re
 from urllib.parse import unquote
 from urllib.parse import parse_qs, urlparse
 import json5
+import ujson as json
 
-f = open("1.json", "r", encoding="utf-8")
-json_file = json5.load(f)
+def is_url(string):
+    parsed = urlparse(string)
+    print(parsed)
+    return bool(parsed.scheme) and bool(parsed.netloc)
+
+f = open("output_group1_20240202.json", "r", encoding="utf-8")
+json_file = json.load(f)
+
+print("json load")
 
 output = []
 
@@ -17,12 +25,32 @@ for index, task in enumerate(json_file):
     print("reference_steps:", reference_steps)
     for step in steps:
         if "rewardFunction" in step.keys() and len(step["rewardFunction"]) > 0:
+
+            #! hack: 将description更新至href
+            if "description" in step.keys() and is_url(step["description"]):
+                    step["href"] = step["description"]
+
+            #! hack: 合并element value和element path
+            flag_value = False
+            flag_path = False
+            for func in step["rewardFunction"]:
+                if "element_value" in func["name"]:
+                    flag_value = True
+                if "element_path" in func["name"]:
+                    flag_path = True
+            if flag_value and flag_path:
+                for idx, func in enumerate(step["rewardFunction"]):
+                    if "element_value" in func["name"]:
+                        func["name"] = f'{func["name"]}_path'
+                    if "element_path" in func["name"]:
+                        del_idx = idx
+                del step["rewardFunction"][del_idx]
             for func in step["rewardFunction"]:
                 if len(func) == 0:
                     break
                 temp = {}
                 temp["match_function_name"] = func["name"]
-                print("function:", func)
+                # print("function:", func)
 
                 # *element match
                 if "element" in temp["match_function_name"]:
@@ -38,24 +66,39 @@ for index, task in enumerate(json_file):
                     if "element_path_exact" in temp["match_function_name"]:
                         temp["method"] = "selector"
                         temp["content"] = {
-                            "reference_answer": step["path"], "netloc": netloc}
+                            "reference_answer": step["selector"], "netloc": netloc}
 
                     # *element value match
                     elif "element_value_exact" in temp["match_function_name"]:
-                        temp["content"] = {
-                            "reference_answer": step["value"], "netloc": netloc}
+                        if "path" in temp["match_function_name"]:
+                            temp["match_function_name"] = temp["match_function_name"].replace("_path","")
+                            temp["content"] = {
+                                "reference_answer": step["value"], "netloc": netloc, "path": step["selector"]}
+                        else:
+                            temp["content"] = {
+                                "reference_answer": step["value"], "netloc": netloc}
                     elif "element_value_include" in temp["match_function_name"]:
-                        temp["content"] = {
-                            "reference_answer": func["required"], "netloc": netloc}
+                        if "path" in temp["match_function_name"]:
+                            temp["match_function_name"] = temp["match_function_name"].replace("_path","")
+                            temp["content"] = {
+                                "reference_answer": func["required"], "netloc": netloc, "path": step["selector"]}
+                        else:
+                            temp["content"] = {
+                                "reference_answer": func["required"], "netloc": netloc}
                     elif "element_value_semantic" in temp["match_function_name"]:
-                        temp["content"] = {
-                            "reference_answer": func["optional"], "netloc": netloc}
+                        if "path" in temp["match_function_name"]:
+                            temp["match_function_name"] = temp["match_function_name"].replace("_path","")
+                            temp["content"] = {
+                                "reference_answer": func["optional"], "netloc": netloc, "path": step["selector"]}
+                        else:
+                            temp["content"] = {
+                                "reference_answer": func["optional"], "netloc": netloc}
 
                 # *url match
                 elif "url_include" in temp["match_function_name"]:
                     key = func["key"] if "key" in func.keys() else ""
-                    temp["content"] = {"key": key,
-                                       "reference_answer": func["required"]}
+                    temp["content"] = {"key": unquote(key),
+                                       "reference_answer": unquote(func["required"])}
                 elif "url_exact" in temp["match_function_name"]:
                     key = func["key"] if "key" in func.keys() else ""
                     if "optional" in func.keys():
@@ -63,15 +106,16 @@ for index, task in enumerate(json_file):
                     elif len(key) > 0:
                         try:
                             parsed_url = urlparse(step["href"])
-                            print(key)
+                            # print(key)
                             url_params = parse_qs(parsed_url.query)
-                            print(url_params)
-                            reference_answer = url_params[key][0]
+                            # print(url_params)
+                            reference_answer = url_params[unquote(key)][0]
                         except:
                             print("Error in parsing URL!")
                     else:
                         reference_answer = step["href"]
-                        print(reference_answer)
+                        # print(reference_answer)
+                    key = unquote(key)
                     reference_answer = unquote(reference_answer)
 
                     # reference_answer = func["optional"] if "optional" in func.keys() else step["href"]
@@ -81,15 +125,16 @@ for index, task in enumerate(json_file):
                     key = func["key"] if "key" in func.keys() else ""
                     temp["content"] = {"key": key,
                                        "reference_answer": func["optional"]}
+                    key = unquote(key)
                 else:
                     print("*"*50, "\n", "other match function, coming soon!")
                 # print(temp)
                 evaluation.append(temp)
-    print(evaluation)
+    # print(evaluation)
     # input()
     output.append({"index": index, "task": task_name,
                   "reference_task_length": reference_steps, "evaluation": evaluation})
-print(output)
+# print(output)
 
 f_out = open("output.json", "w")
 json5.dump(output, fp=f_out, ensure_ascii=False, indent=4,

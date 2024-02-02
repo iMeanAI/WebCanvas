@@ -46,6 +46,8 @@ class URLEvaluator(StepEvaluator):
             try:
                 parsed_url = urlparse(input_url)
                 input_answer = parsed_url.netloc + parsed_url.path
+                if parsed_url.fragment is not None and (parsed_url.fragment):
+                    input_answer += "#" + parsed_url.fragment
             except:
                 input_answer = input_url 
         input_answer = unquote(input_answer)
