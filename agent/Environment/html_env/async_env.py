@@ -94,7 +94,7 @@ class AsyncHTMLEnvironment:
 
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
-            await self.page.goto(start_url)
+            await self.page.goto(start_url, timeout=6000)
             await self.page.wait_for_timeout(500)
             self.html_content = await self.page.content()
         else:
@@ -203,13 +203,16 @@ class AsyncHTMLEnvironment:
                         else:
                             try:
                                 self.last_page = self.page
-                                await self.page.evaluate('''() => {
-                                    const element = document.querySelector('%s');
-                                    if (element) {
-                                        element.click();
-                                    }
-                                }''' % selector)
-                                # await self.page.locator(selector).click()
+                                try:
+                                    await self.page.locator(selector).click()
+                                except:
+                                    await self.page.evaluate('''() => {
+                                        const element = document.querySelector('%s');
+                                        if (element) {
+                                            element.click();
+                                        }
+                                    }''' % selector)
+                                    # await self.page.locator(selector).click()
                                 await self.page.wait_for_load_state('load')
                                 self.html_content = await self.page.content()
                                 return await self._get_obs()
@@ -222,8 +225,8 @@ class AsyncHTMLEnvironment:
                     try:
                         self.last_page = self.page
                         self.page = await self.context.new_page()
-                        await self.page.goto(action["url"])
-                        await self.page.wait_for_load_state('load', timeout=3000)
+                        await self.page.goto(action["url"], wait_until="load")
+                        # await self.page.wait_for_load_state('load', timeout=3000)
                         self.html_content = await self.page.content()
                         return await self._get_obs()
                     except Exception as e:

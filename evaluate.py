@@ -12,6 +12,7 @@ import asyncio
 import argparse
 import toml
 
+from result import write_result_to_excel
 
 # 解析命令行参数
 parser = argparse.ArgumentParser(
@@ -24,7 +25,7 @@ interaction_mode = args.mode
 raw_data_index = args.index
 
 
-def read_file(path="./data/test.json"):
+def read_file(path="./data/group1.json"):
     '''读取标签数据'''
     return_list = []
     with open(path) as f:
@@ -269,10 +270,23 @@ async def main(num_steps=0, mode="dom"):
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
 
-        task_name = "Search for flights available from Calgary (CYYC) to New York (ZNY) in flightaware."
+        # task_name = "Search for flights available from Calgary (CYYC) to New York (ZNY) in flightaware."
         last_action_description = ""
         dict_to_write = None
+        step_index_list = []
+        score_list = []
+        step_reward_list = []
+        dict_result_list = []
+        url_list = []
+        current_trace_list = []
+        selector_list = []
+        action_list = []
+        previoust_trace_list = []
+        task_finished = False
+        step_error_count = 0
+        task_error = False
         for action_step in range(config['basic']['Max_Action_Step']):
+            step_index_list.append(action_step)
             total_step_score = 0
             # break
             print("planning前previous_trace：", previous_trace)
@@ -326,6 +340,7 @@ async def main(num_steps=0, mode="dom"):
                     elementid=element_id, action_type=action_type, action_input=acton_input)
                 return execute_action, current_trace, selector
             print("dict_to_write:", dict_to_write)
+            dict_result_list.append(str(dict_to_write))
 
             if mode == "dom" or mode == "d_v":
                 execute_action, current_trace, path = parse_current_trace(
@@ -333,15 +348,21 @@ async def main(num_steps=0, mode="dom"):
                 selector, xpath = (
                     path[0], path[1]) if path is not None else (None, None)
                 print("current trace:\n", current_trace)
+                current_trace_list.append(str(current_trace))
                 print("response:\n", execute_action)
+                action_list.append(str(execute_action))
                 print("selector:", selector)
-
+                selector_list.append(selector)
                 evaluate_steps = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
                 print("执行动作前的url", env.page.url)
                 for evaluate in evaluate_steps:
                     total_step_score += evaluate["score"]
                 print(total_step_score, "/", len(reference_evaluate_steps))
+                score_str = str(total_step_score) + " / " + \
+                    str(len(reference_evaluate_steps))
+                score_list.append(score_str)
                 if total_step_score == len(reference_evaluate_steps):
+                    task_finished = True
                     break
                 # input()
                 if mode == "d_v":
@@ -349,6 +370,7 @@ async def main(num_steps=0, mode="dom"):
                 else:
                     observation = await env.execute_action(execute_action)
                 print("执行动作后的url", env.page.url)
+                url_list.append(env.page.url)
 
             elif mode == "vision":
                 execute_action = dict_to_write["action"]
@@ -366,6 +388,8 @@ async def main(num_steps=0, mode="dom"):
                 # current_trace = [current_trace]
                 current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
                                                          current_trace=current_trace, observation=observation)
+                step_reward_str = current_reward if current_reward else "X"
+                step_reward_list.append(str(step_reward_str))
                 if current_reward and int(current_reward.get("score")) < config['basic']['Step_Score_Threshold']:
                     execute_action.update(
                         {"element_id": 0, "action_type": ActionTypes.GO_BACK})
@@ -377,15 +401,23 @@ async def main(num_steps=0, mode="dom"):
                 else:
                     last_action_description = ""
                     previous_trace.append(current_trace)
+                if current_reward and int(current_reward.get("score")) < 4:
+                    step_error_count += 1
+                else:
+                    step_error_count = 0
+
             elif mode == "vision":
                 previous_trace.append(current_trace)
                 if dict_to_write["description"].get('reward'):
                     if "loop" in dict_to_write["description"].get('reward').get("status"):
                         previous_trace = []
                         previous_trace.append(current_trace)
-
-            a = input("回车继续下一个Action，按q退出")
-            if a == "q":
+            previoust_trace_list.append(previous_trace)
+            # a = input("回车继续下一个Action，按q退出")
+            # if a == "q" or step_error_count > 3:
+            #     break
+            if step_error_count > 3:
+                task_error = True
                 break
         # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
         # print(json5.dumps(a, indent=4))
@@ -399,6 +431,22 @@ async def main(num_steps=0, mode="dom"):
                 total_step_score += evaluate["score"]
             print("\ntotal step score:", total_step_score,
                   "/", len(reference_evaluate_steps))
+
+            write_result_to_excel(
+                task_name=task_name,
+                task_id=task_index,
+                task_finished=task_finished,
+                error_occ=task_error,
+                step_index_list=step_index_list,
+                score_list=score_list,
+                step_reward_list=step_reward_list,
+                dict_result_list=dict_result_list,
+                url_list=url_list,
+                current_trace_list=current_trace_list,
+                previous_trace_list=previoust_trace_list,
+                selector_list=selector_list,
+                action_list=action_list,
+            )
 
             # length score
             task_evaluator = TaskLengthEvaluator()

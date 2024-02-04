@@ -142,13 +142,13 @@ class ElementEvaluator(StepEvaluator):
         return result_score
 
     @staticmethod
-    def element_value_semantic_match(input_answer, semantic_method, input_netloc, reference_netloc=0):
+    async def element_value_semantic_match(input_answer, semantic_method, input_netloc, reference_netloc=0):
         if reference_netloc != input_netloc:
             print("reference_netloc:", reference_netloc, "input_netloc:", input_netloc)
             return 0
         if len(input_answer) == 0:
             return 0
-        result_score = MatchFunction.semantic_match(input_answer, semantic_method)
+        result_score = await MatchFunction.semantic_match(input_answer, semantic_method)
         return result_score
 
 

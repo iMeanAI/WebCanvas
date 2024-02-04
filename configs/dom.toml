@@ -1,7 +1,7 @@
 [basic]
 Max_Action_Step = 10     
 Step_Score_Threshold = 7
-default = false              # dom-only or dom-vision with all module
-global_reward = false        # with global reward
+default = true              # dom-only or dom-vision with all module
+global_reward = true        # with global reward
 current_step_reward = true  # with current step reward
 previous_trace = true       # with previous trace
