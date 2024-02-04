@@ -25,10 +25,10 @@ interaction_mode = args.mode
 raw_data_index = args.index
 
 
-def read_file(path="./data/group1.json"):
+def read_file(file_path="./data/group1.json"):
     '''读取标签数据'''
     return_list = []
-    with open(path) as f:
+    with open(file_path) as f:
         test_data = json5.load(f)
     for task in test_data:
         task_name = task["task"]
@@ -51,8 +51,13 @@ def read_file(path="./data/group1.json"):
             elif "element_value" in match_function:
                 reference_answer = evaluation["content"]["reference_answer"]
                 netloc = evaluation["content"]["netloc"]
-                reference_evaluate_steps.append({"match_function": match_function,
-                                                "reference_answer": reference_answer, "netloc": netloc, "score": 0})
+                if "path" in evaluation["content"].keys():
+                    path = evaluation["content"]["path"]
+                    reference_evaluate_steps.append({"match_function": match_function,
+                                                    "reference_answer": reference_answer, "netloc": netloc, "path": path, "score": 0})
+                else:
+                    reference_evaluate_steps.append({"match_function": match_function,
+                                                     "reference_answer": reference_answer, "netloc": netloc, "score": 0})
         return_list.append(
             [task_name, reference_task_length, reference_evaluate_steps])
     # print(return_list)
@@ -89,7 +94,7 @@ async def get_element_content(page: Page, selector):
         return ""
 
 
-async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
+async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_value=None):
     '''评测步骤打分'''
     # reference_evaluate_steps, num_steps
     # num_steps += 1
@@ -119,49 +124,66 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None):
             elif match_function == "element_path_included_match":
                 pass
                 # * 暂时不做
-                # method = evaluate["method"]
-                # score = ElementEvaluator.path_included_match(
-                #     input_path, evaluate["reference_answer"], method, await page.content())
+
             elif match_function == "element_value_exactly_match":
-                if input_path is not None:
+                if input_path is not None and element_value is not None:
                     input_netloc = get_netloc(page.url)
-                    # page_content = await page.content()
-                    # soup = BeautifulSoup(page_content, 'html.parser')
-                    # element_value = soup.select_one(input_path)#.text.strip()
-                    # element_value = await page.input_value(input_path)
-                    element_value = await get_element_content(page, input_path)
+
                     print(element_value)
                     # print(await page.locator(input_path).input_value())
-                    score = ElementEvaluator.element_value_exact_match(
-                        element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
+                    if "path" in evaluate.keys():
+                        path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector", await page.content(), input_netloc, evaluate["netloc"])
+                        if path_score == 0:
+                            print("value评测中path不匹配")
+                            score = 0
+                        else:
+                            score = ElementEvaluator.element_value_exact_match(
+                                element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
+                    else:
+                        score = ElementEvaluator.element_value_exact_match(
+                            element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
                     print(score, "element_value_exactly_match",
                           element_value, "*", evaluate["reference_answer"])
+                else:
+                    score = 0
             elif match_function == "element_value_included_match":
-                if input_path is not None:
+                if input_path is not None and element_value is not None:
                     input_netloc = get_netloc(page.url)
-                    # page_content = await page.content()
-                    # soup = BeautifulSoup(page_content, 'html.parser')
-                    # element_value = soup.select_one(input_path).text.strip()
-                    # element_value = await page.input_value(input_path)
-                    element_value = await get_element_content(page, input_path)
-                    score = ElementEvaluator.element_value_include_match(
-                        element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
+                    if "path" in evaluate.keys():
+                        path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector", await page.content(), input_netloc, evaluate["netloc"])
+                        if path_score == 0:
+                            print("value评测中path不匹配")
+                            score = 0
+                        else:
+                            score = ElementEvaluator.element_value_include_match(
+                                element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
+                    else:
+                        score = ElementEvaluator.element_value_include_match(
+                            element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
                     print(score, "element_value_included_match",
                           element_value, "*", evaluate["reference_answer"])
-
+                else:
+                    score = 0
             elif match_function == "element_value_semantic_match":
-                if input_path is not None:
+                if input_path is not None and element_value is not None:
                     input_netloc = get_netloc(page.url)
-                    # page_content = await page.content()
-                    # soup = BeautifulSoup(page_content, 'html.parser')
-                    # element_value = soup.select_one(input_path).text.strip()
-                    # element_value = await page.input_value(input_path)
-                    element_value = await get_element_content(page, input_path)
+
                     if len(element_value) > 0:
-                        score = await ElementEvaluator.element_value_semantic_match(
-                            element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
+                        if "path" in evaluate.keys():
+                            path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector", await page.content(), input_netloc, evaluate["netloc"])
+                            if path_score == 0:
+                                print("value评测中path不匹配")
+                                score = 0
+                            else:
+                                score = await ElementEvaluator.element_value_semantic_match(
+                                    element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
+                        else:
+                            score = await ElementEvaluator.element_value_semantic_match(
+                                element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
                         print(score, "element_value_semantic_match",
                               element_value, "*", evaluate["reference_answer"])
+                else:
+                    score = 0
             elif match_function == "text_exact_match":
                 pass  # TODO
             elif match_function == "text_include_match":
@@ -205,7 +227,7 @@ async def main(num_steps=0, mode="dom"):
 
     # for task_index in range(raw_data_start_index, raw_data_end_index):
 
-    start_index = 0
+    start_index = 1
     for task_index in range(start_index, len(file)):
         task = file[task_index]
         task_name, reference_task_length, reference_evaluate_steps = task
@@ -222,16 +244,24 @@ async def main(num_steps=0, mode="dom"):
         #     browser = await playwright.chromium.launch(headless=False)
         #     context = await browser.new_context(locale="en-US")
         #     page = await context.new_page()
-        #     replay_codes = open("./data/playwright/google.txt", "r", encoding="utf-8")
+        #     replay_codes = open("./data/playwright/google_test.txt", "r", encoding="utf-8")
         #     for num_steps, line in enumerate(replay_codes):
         #         print("step:", num_steps, line)
         #         selector = None
+        #         input_value = None
         #         if "page.locator" in line:
-        #             selector = re.findall('page.locator\("(.*?)"\).*?\(.*?\)', line)[0]
+        #             # selector, action, action_value = re.findall('page.locator\("(.*?)"\).(*?)\((.*?)\)', line)
+        #             selector, action = re.findall('page.locator\("(.*?)"\).(.*?)\(.*?\)', line)[0]
         #             print("selector:", selector)
+        #             print("action:", action)
+        #             if action == "fill":
+        #                 input_value = re.findall('page.locator\(".*?"\).*?\("(.*?)"\)', line)[0]
+        #                 print("input_value", input_value)
+        #             else:
+        #                 input_value = await get_element_content(page, selector)
         #         line = "await "+line
         #         print(line)
-        #         evaluate_steps = await step_evaluate(page=page, evaluate_steps=evaluate_steps, input_path=selector)
+        #         evaluate_steps = await step_evaluate(page=page, evaluate_steps=evaluate_steps, input_path=selector, element_value=input_value)
         #         time.sleep(3)
         #         await aexec_playwright(line, page)
         #         time.sleep(2)
@@ -285,8 +315,8 @@ async def main(num_steps=0, mode="dom"):
         task_finished = False
         step_error_count = 0
         task_error = False
-        for action_step in range(config['basic']['Max_Action_Step']):
-            step_index_list.append(action_step)
+        for num_steps in range(config['basic']['Max_Action_Step']):
+            step_index_list.append(num_steps)
             total_step_score = 0
             # break
             print("planning前previous_trace：", previous_trace)
@@ -313,12 +343,13 @@ async def main(num_steps=0, mode="dom"):
                     traceback.print_exc()
                     continue
 
-            def parse_current_trace(response):
+            async def parse_current_trace(response):
                 thought = response["description"].get("thought")
                 action_type = response['action_type']
                 acton_input = response['value']
                 action = response["description"].get("action")
                 current_trace = {"thought": thought, "action": action}
+                element_value = None
                 try:
                     element_id = int(response['id'])
                 except:
@@ -328,6 +359,11 @@ async def main(num_steps=0, mode="dom"):
                     try:
                         selector = env.tree.get_selector_and_xpath(
                             env.tree.nodeDict[element_id])
+
+                        if action_type in ["fill_form", "fill_search"]:
+                            element_value = acton_input
+                        else:
+                            element_value = await get_element_content(env.page, selector)
                     except:
                         print("accessibility tree don't have this element_id")
                         selector = None
@@ -338,12 +374,12 @@ async def main(num_steps=0, mode="dom"):
                     element_id = 0
                 execute_action = create_action(
                     elementid=element_id, action_type=action_type, action_input=acton_input)
-                return execute_action, current_trace, selector
+                return execute_action, current_trace, selector, element_value
             print("dict_to_write:", dict_to_write)
             dict_result_list.append(str(dict_to_write))
 
             if mode == "dom" or mode == "d_v":
-                execute_action, current_trace, path = parse_current_trace(
+                execute_action, current_trace, path, element_value = await parse_current_trace(
                     dict_to_write)
                 selector, xpath = (
                     path[0], path[1]) if path is not None else (None, None)
