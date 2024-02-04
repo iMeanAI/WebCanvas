@@ -4,11 +4,13 @@ from playwright.async_api import async_playwright, Page
 from playwright.sync_api import ViewportSize
 from urllib.parse import urlparse, urljoin
 from beartype import beartype
+from difflib import SequenceMatcher
 
 from PIL import Image
 from io import BytesIO
 import asyncio
 import base64
+import re
 
 from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
@@ -16,9 +18,21 @@ import time
 
 from ...Prompt import D_VObservationPromptConstructor
 
+
 # Vimium 扩展的路径，需要自定义，相对路径会有点问题，导致路径切换为C:\\...\AppData\Local\ms-playwright\chromium-1055\chrome-win\\vimium-master
 # 只有vision mode需要Vimium 扩展，run in d_v mode不需要
 vimium_path = "D:\KYXK\imean-agents-dev\\vimium-master"
+
+
+async def select_option(page, selector, value):
+    best_option = [-1, "", -1]
+    for i in range(await page.locator(selector).count()):
+        option = await page.locator(selector).nth(i).inner_text()
+        similarity = SequenceMatcher(None, option, value).ratio()
+        if similarity > best_option[2]:
+            best_option = [i, option, similarity]
+    await page.select_option(index=best_option[0], timeout=10000)
+    return page
 
 
 class AsyncHTMLEnvironment:
@@ -77,10 +91,10 @@ class AsyncHTMLEnvironment:
                 ignore_https_errors=True,  # 忽略 HTTPS 错误
             )
         if start_url:
-            
+
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
-            await self.page.goto(start_url)
+            await self.page.goto(start_url, timeout=6000)
             await self.page.wait_for_timeout(500)
             self.html_content = await self.page.content()
         else:
@@ -167,7 +181,7 @@ class AsyncHTMLEnvironment:
                                     url = urljoin(base_url, url)
                                 self.last_page = self.page
                                 self.page = await self.context.new_page()
-                                await self.page.goto(url)
+                                await self.page.goto(url,timeout=10000)
                                 await self.page.wait_for_load_state('load')
                                 self.html_content = await self.page.content()
                                 return await self._get_obs()
@@ -189,13 +203,16 @@ class AsyncHTMLEnvironment:
                         else:
                             try:
                                 self.last_page = self.page
-                                await self.page.evaluate('''() => {
-                                    const element = document.querySelector('%s');
-                                    if (element) {
-                                        element.click();
-                                    }
-                                }''' % selector)
-                                # await self.page.locator(selector).click()
+                                try:
+                                    await self.page.locator(selector).click()
+                                except:
+                                    await self.page.evaluate('''() => {
+                                        const element = document.querySelector('%s');
+                                        if (element) {
+                                            element.click();
+                                        }
+                                    }''' % selector)
+                                    # await self.page.locator(selector).click()
                                 await self.page.wait_for_load_state('load')
                                 self.html_content = await self.page.content()
                                 return await self._get_obs()
@@ -208,8 +225,8 @@ class AsyncHTMLEnvironment:
                     try:
                         self.last_page = self.page
                         self.page = await self.context.new_page()
-                        await self.page.goto(action["url"])
-                        await self.page.wait_for_load_state('load', timeout=3000)
+                        await self.page.goto(action["url"],timeout=10000)
+                        await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
                         return await self._get_obs()
                     except Exception as e:
@@ -239,6 +256,7 @@ class AsyncHTMLEnvironment:
                             self.html_content = await self.page.content()
                             return await self._get_obs()
                         except:
+                            print("sleep 2s")
                             self.last_page = self.page
                             fill_and_press_enter = '''() => {
                                         const element = document.querySelector('%s');
@@ -314,6 +332,34 @@ class AsyncHTMLEnvironment:
                         return await self._get_obs()
                     except Exception as e:
                         print("can't execute go back action")
+                        print(e)
+                case ActionTypes.SELECT_OPTION:
+                    try:
+                        label, element_idx = self.tree.get_tag_name(
+                            self.tree.elementNodes[action["element_id"]])
+                        action.update({"element_id": element_idx,
+                                       "element_name": label})
+                        selector, xpath = self.tree.get_selector_and_xpath(
+                            action["element_id"])
+                    except Exception as e:
+                        print(
+                            f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                    try:
+                        self.last_page = self.page
+                        try:
+                            await self.page.locator(selector).click()
+                        except:
+                            await self.page.evaluate('''() => {
+                                const element = document.querySelector('%s');
+                                if (element) {
+                                    element.click();
+                                }
+                            }''' % selector)
+                        self.page = await select_option(self.page, selector, action["fill_text"])
+                        await self.page.wait_for_load_state('load')
+                        self.html_content = await self.page.content()
+                        return await self._get_obs()
+                    except Exception as e:
                         print(e)
                 case ActionTypes.NONE:
                     try:
@@ -420,7 +466,8 @@ class AsyncHTMLEnvironment:
         screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGB")
         encoded_screenshot = self.encode_and_resize(screenshot)
         # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
-        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(encoded_screenshot)
+        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(
+            encoded_screenshot)
         print("async_env.py encoded_screenshot:", message)
         return encoded_screenshot
 

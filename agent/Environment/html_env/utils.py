@@ -75,10 +75,20 @@ TypeList = [
 ]
 
 
+def stringfy_selector(string):
+    string = string.replace("\t", " ").replace("\n", " ").lstrip().rstrip()
+    string = ' '.join(string.split())
+    string = string.replace("(", "\(").replace(")", "\)").replace(
+        "[", "\[").replace("]", "\]")
+    string = '.'.join(string.split(' '))
+    return string
+
+
 __all__ = [
     "ElementNode",
     "TagNameList",
     "DelTagNameList",
     "ConditionTagNameList",
-    "TypeList"
+    "TypeList",
+    "stringfy_selector"
 ]

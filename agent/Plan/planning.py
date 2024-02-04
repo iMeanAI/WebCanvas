@@ -14,7 +14,7 @@ class Planning:
         pass
 
     @staticmethod
-    async def plan(uuid, user_request, previous_trace, observation, feedback, mode, observation_VforD):  # TODO
+    async def plan(uuid, user_request, previous_trace, observation, feedback, mode, observation_VforD,global_reward: bool = True):  # TODO
         start_time = time.time()
         # 创建GPT查询类
         GPT35 = GPTGenerator35()
@@ -38,16 +38,20 @@ class Planning:
 
         # 构建planning prompt及查询
         if mode == "dom":
-            status_description = status_and_description.get(
-                "description") if status_and_description and status_and_description.get("description") else ""
+            status_description = ""
+            if global_reward:
+                status_description = status_and_description.get(
+                    "description") if status_and_description and status_and_description.get("description") else ""
             planning_request = ObservationPromptConstructor().construct(
                 user_request, previous_trace, observation, feedback, status_description)
             print(f"\033[32m{planning_request}")  # 绿色
             print("\033[0m")
             planning_response, error_message = await GPT4.request(planning_request)
         elif mode == "d_v":
-            status_description = status_and_description.get(
-                "description") if status_and_description and status_and_description.get("description") else ""
+            status_description = ""
+            if global_reward:
+                status_description = status_and_description.get(
+                    "description") if status_and_description and status_and_description.get("description") else ""
             planning_request = D_VObservationPromptConstructor().construct(
                 user_request, previous_trace, observation, observation_VforD, feedback, status_description)
             # print(f"\033[32m{planning_request}")  # 绿色 涉及到图片
