@@ -16,7 +16,12 @@ import argparse
 parser = argparse.ArgumentParser(
     description="Run the agent in different modes.")
 parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"], default="vision_to_dom",
-                    help="Choose interaction mode: 'dom' for DOM-based interaction, 'dom_v_desc' for DOM-based interaction with vision description, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
+                    help="Choose interaction mode: "
+                         "'dom' for DOM-based interaction, "
+                         "'dom_v_desc' for DOM-based interaction with vision description,"
+                         "'vision_to_dom' for vision-to-dom interaction, "
+                         "'vision' for vision-based interaction, "
+                         "'d_v' for DOM-based and vision-based interaction.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
 interaction_mode = args.mode
