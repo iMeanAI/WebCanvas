@@ -24,9 +24,12 @@ class DomVisionPrompts:
         "fill_form: useful for when you need to fill out a form or input something from accessibility tree. Input should be a string\n"\
         "google_search: useful for when you need to use google to search something\n"\
         "switch_tab: useful for when you need to switch tab\n"\
-        "click: useful for when you need to click a button/link from accessibility tree\n"\
+        "click: useful for when you need to click a button/link from accessibility tree\n" \
+        "hover: useful when you need to hover over a specific element on the page to trigger hover effects\n" \
+        "scroll_down: useful for scrolling down the page to view more content. This can be used for reading long pages or accessing content at the bottom of the page\n" \
+        "scroll_up: useful for scrolling up the page to return to the top or to view content that has scrolled out of view\n" \
         "The way you use the tools is by specifying a json blob.\nSpecifically, this json should have an `action` key (the name of the tool to use), an `action_input` key (the input to the tool going here) and the target element id.\n\n"\
-        "The only values that should be in the \"action\" field are: goto, fill_form, google_search, switch_tab, click\n\n"\
+        "The only values that should be in the \"action\" field are: goto, fill_form, google_search, switch_tab, click, hover, scroll_down, scroll_up\n\n"\
         "A proper description contains:1. What website it is; 2. Which action do you choose; 3. Your next action plan to do.\nREMEMBER DO NOT LEAVE THE DESCRIPTION EMPTY!\n"\
         "Here is an example of a valid $JSON_BLOB:\n\n```\n{\n  \"action\": $TOOL_NAME,\n  \"action_input\": $INPUT,\n  \"element_id\": $TARGET_ELEMENT_ID,\n  \"description\": $ACTION_DESCRIPTION\n}\n```\n\n"\
         f"Example action output:{str(example_output)}\n"\

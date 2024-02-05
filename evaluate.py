@@ -15,7 +15,7 @@ import argparse
 # 解析命令行参数
 parser = argparse.ArgumentParser(
     description="Run the agent in different modes.")
-parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision", "d_v"], default="dom_v_desc",
+parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"], default="vision_to_dom",
                     help="Choose interaction mode: 'dom' for DOM-based interaction, 'dom_v_desc' for DOM-based interaction with vision description, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
@@ -249,7 +249,7 @@ async def main(num_steps=0, mode="dom"):
             use_vimium_effect=True
         )
         observation_VforD = None
-        if mode in ["d_v", "dom_v_desc"]:
+        if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
             observation, observation_VforD = await env.reset("about:blank")
         else:
             observation = await env.reset("about:blank")
@@ -266,7 +266,7 @@ async def main(num_steps=0, mode="dom"):
             print("planning前observation：", observation)
             for _ in range(3):
                 try:
-                    dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation, feedback=last_action_description, mode=mode, observation_VforD=observation_VforD)
+                    dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation, feedback=last_action_description, mode=mode, observation_VforD=observation_VforD, url=env.page.url)
                     if dict_to_write is not None:
                         break
                 except Exception as e:
@@ -301,7 +301,7 @@ async def main(num_steps=0, mode="dom"):
                 return execute_action, current_trace, selector
             print("dict_to_write:", dict_to_write)
 
-            if mode in ["dom", "d_v", "dom_v_desc"]:
+            if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
                 execute_action, current_trace, path = parse_current_trace(
                     dict_to_write)
                 selector, xpath = (
@@ -318,7 +318,7 @@ async def main(num_steps=0, mode="dom"):
                 if total_step_score == len(reference_evaluate_steps):
                     break
                 # input()
-                if mode in ["d_v", "dom_v_desc"]:
+                if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                     observation, observation_VforD = await env.execute_action(execute_action)
                 else:
                     observation = await env.execute_action(execute_action)
@@ -330,7 +330,7 @@ async def main(num_steps=0, mode="dom"):
                 if current_reward and int(current_reward.get("score")) < 7:
                     execute_action.update(
                         {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                    if mode in ["d_v", "dom_v_desc"]:
+                    if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                         observation, observation_VforD = await env.execute_action(execute_action)
                     else:
                         observation = await env.execute_action(execute_action)
@@ -365,7 +365,7 @@ async def main(num_steps=0, mode="dom"):
         # input()
 
         # ! 3.任务评测打分
-        if mode in ["dom", "d_v", "dom_v_desc"]:
+        if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
             # step score
             total_step_score = 0
             for evaluate in evaluate_steps:
