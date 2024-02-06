@@ -218,8 +218,9 @@ class ObservationVisionActPromptConstructor(BasePromptConstructor):
             prompt_elements.append({"type": "text", "text": f"The current webpage's URL is {url}"})
             prompt_elements.append(
                 {"type": "text", "text": "The current webpage's screenshot is:"})
-            prompt_elements.append(
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{observation_vision}"}})
+            if observation_vision:
+                prompt_elements.append(
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{observation_vision}"}})
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
         # print(prompt_elements)

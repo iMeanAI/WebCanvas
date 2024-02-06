@@ -515,11 +515,8 @@ class AsyncHTMLEnvironment:
         if not self.page:
             raise ValueError("Page not initialized or loaded.")
 
-        start_time = time.time()
         # 等待页面加载完成
-        await self.page.wait_for_load_state("load")
-        print("async_env.py capture wait_for_load_state finished time:", time.time() - start_time)
-
+        # await self.page.wait_for_load_state("load")
         # await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
         # 捕获屏幕截图
         for i in range(5):
