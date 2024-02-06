@@ -16,7 +16,7 @@ class Planning:
         pass
 
     @staticmethod
-    async def plan(uuid, user_request, previous_trace, observation, feedback, mode, observation_VforD, url):  # TODO
+    async def plan(uuid, user_request, previous_trace, observation, feedback, mode, observation_VforD,global_reward: bool = True):  # TODO
         start_time = time.time()
         # 创建GPT查询类
         GPT35 = GPTGenerator35()
@@ -67,16 +67,20 @@ class Planning:
 
         # 构建planning prompt及查询
         if mode == "dom":
-            status_description = status_and_description.get(
-                "description") if status_and_description and status_and_description.get("description") else ""
+            status_description = ""
+            if global_reward:
+                status_description = status_and_description.get(
+                    "description") if status_and_description and status_and_description.get("description") else ""
             planning_request = ObservationPromptConstructor().construct(
                 user_request, previous_trace, observation, feedback, status_description)
             print(f"\033[32m{planning_request}")  # 绿色
             print("\033[0m")
             planning_response, error_message = await GPT4.request(planning_request)
         elif mode == "dom_v_desc":
-            status_description = status_and_description.get(
-                "description") if status_and_description and status_and_description.get("description") else ""
+            status_description = ""
+            if global_reward:
+                status_description = status_and_description.get(
+                    "description") if status_and_description and status_and_description.get("description") else "
             if observation_VforD != "":
                 vision_desc_request = VisionDisc2PromptConstructor().construct(
                     user_request, observation_VforD)  # vision description request with user_request
@@ -92,10 +96,12 @@ class Planning:
             print("\033[0m")
             planning_response, error_message = await GPT4.request(planning_request)
         elif mode == "vision_to_dom":
-            status_description = status_and_description.get(
-                "description") if status_and_description and status_and_description.get("description") else ""
+            status_description = ""
+            if global_reward:
+                status_description = status_and_description.get(
+                    "description") if status_and_description and status_and_description.get("description") else ""
             vision_act_request = ObservationVisionActPromptConstructor().construct(
-                user_request, previous_trace, observation_VforD, feedback, status_description, url)
+                user_request, previous_trace, observation_VforD, feedback, status_description)
             max_retries = 3  # 设置最大重试次数为3
             for attempt in range(max_retries):
                 vision_act_response, error_message = await GPT4V.request(vision_act_request)
@@ -163,11 +169,12 @@ class Planning:
             if attempt == max_retries - 1:
                 print("Max retries of vision_act reached. Unable to proceed.")
         elif mode == "d_v":
-            status_description = status_and_description.get(
-                "description") if status_and_description and status_and_description.get("description") else ""
+            status_description = ""
+            if global_reward:
+                status_description = status_and_description.get(
+                    "description") if status_and_description and status_and_description.get("description") else ""
             planning_request = D_VObservationPromptConstructor().construct(
                 user_request, previous_trace, observation, observation_VforD, feedback, status_description)
-
             # print(f"\033[32m{planning_request}")  # 绿色 涉及到图片
             # display_string = planning_request[:100] # 截取字符串的前 max_length 个字符
             # print(f"\033[32m{display_string}")

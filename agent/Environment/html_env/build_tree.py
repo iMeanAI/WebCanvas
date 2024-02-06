@@ -2,7 +2,7 @@ from collections import deque
 from lxml.html import etree
 from io import StringIO
 
-from .utils import ElementNode, TagNameList, MapTagNameList
+from .utils import ElementNode, TagNameList, MapTagNameList, stringfy_selector
 from .active_elements import ActiveElements
 
 
@@ -145,7 +145,8 @@ class HTMLTree:
             tag_name = current_node["tagName"]
             siblingId = str(current_node["siblingId"])
             if current_node["attributes"].get('id'):
-                current_node["attributes"].get('id').replace("[", "\\[").replace("]", "\\]")
+                current_node["attributes"].get('id').replace(
+                    "[", "\\[").replace("]", "\\]")
                 return "#" + current_node["attributes"].get('id') + selector_str
             if len(self.elementNodes[current_node["parentId"]]["childIds"]) > 1:
                 uu_twin_node = True
@@ -160,7 +161,9 @@ class HTMLTree:
                     selector_str = " > " + tag_name + selector_str
                 elif current_node["attributes"].get('class') and uu_twin_node is True:
                     # fix div.IbBox.Whs\(n\)
-                    selector_str = " > " + tag_name + "." + ".".join(current_node["attributes"].get('class').replace("\t"," ").replace("\n", " ").lstrip().rstrip().replace("(","\(").replace(")","\)").split(" ")) + selector_str
+                    selector_str = " > " + tag_name + "." + \
+                        stringfy_selector(
+                            current_node["attributes"].get('class')) + selector_str
                 else:
                     selector_str = " > " + tag_name + \
                         ":nth-child(" + siblingId + ")" + selector_str
@@ -247,7 +250,14 @@ class HTMLTree:
             tag_idx = element["nodeId"]
             # TODO 添加更多映射关系
             if tag_name in MapTagNameList:
-                parent_element = self.elementNodes[element["parentId"]]
+                # 从兄弟节点获得可交互元素且优先级高于父节点
+                parent_element = self.pruningTreeNode[element["parentId"]]
+                for broId in parent_element["childIds"]:
+                    if broId != tag_idx:
+                        bro_element = self.pruningTreeNode[broId]
+                        bro_element_tag_name = ActiveElements.get_element_tagName(bro_element)
+                        if bro_element_tag_name != "unknown":
+                            return (bro_element_tag_name,broId)
                 return self.get_tag_name(parent_element)
             else:
                 return ("statictext", tag_idx)
@@ -317,7 +327,7 @@ class HTMLTree:
     def get_elements_distance(self, idx1: int, idx2: int) -> int:
         element1, element2 = self.elementNodes[idx1], self.elementNodes[idx2]
         if element1["depth"] < element2["depth"]:
-            return self.get_distance(idx2, idx1)
+            return self.get_elements_distance(idx2, idx1)
         higher_element, lower_element = element1, element2
         while higher_element["depth"] - lower_element["depth"] > 0:
             higher_element = self.elementNodes[higher_element["parentId"]]

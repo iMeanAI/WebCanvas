@@ -200,8 +200,7 @@ class ObservationVisionActPromptConstructor(BasePromptConstructor):
             previous_trace: str,
             observation_vision: str,
             feedback: str = "",
-            status_description: str = "",
-            url: str = ""
+            status_description: str = ""
     ) -> list:
         rendered_prompt = Template(self.prompt_user).render(
             user_request=user_request)
@@ -215,7 +214,7 @@ class ObservationVisionActPromptConstructor(BasePromptConstructor):
             if feedback != "":
                 prompt_elements.append(
                     {"type": "text", "text": f"An invalid action description is below:\n {feedback}\n"})
-            prompt_elements.append({"type": "text", "text": f"The current webpage's URL is {url}"})
+            # prompt_elements.append({"type": "text", "text": f"The current webpage's URL is {url}"})
             prompt_elements.append(
                 {"type": "text", "text": "The current webpage's screenshot is:"})
             if observation_vision:
