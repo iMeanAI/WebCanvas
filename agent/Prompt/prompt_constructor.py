@@ -173,7 +173,8 @@ class ObservationVisionDiscPromptConstructor(BasePromptConstructor):
             if feedback != "":
                 self.prompt_user += f"An invalid action description is below:\n {feedback}\n"
             self.prompt_user += "\n" + observation
-            self.prompt_user += "\n\nHere is a visual analysis of the webpage's screenshot:\n" + vision_disc_response
+            if vision_disc_response:
+                self.prompt_user += "\n\nHere is a visual analysis of the webpage's screenshot:\n" + vision_disc_response
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": self.prompt_user}]
         return messages
@@ -215,9 +216,9 @@ class ObservationVisionActPromptConstructor(BasePromptConstructor):
                 prompt_elements.append(
                     {"type": "text", "text": f"An invalid action description is below:\n {feedback}\n"})
             # prompt_elements.append({"type": "text", "text": f"The current webpage's URL is {url}"})
-            prompt_elements.append(
-                {"type": "text", "text": "The current webpage's screenshot is:"})
             if observation_vision:
+                prompt_elements.append(
+                    {"type": "text", "text": "The current webpage's screenshot is:"})
                 prompt_elements.append(
                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{observation_vision}"}})
         messages = [{"role": "system", "content": self.prompt_system},
