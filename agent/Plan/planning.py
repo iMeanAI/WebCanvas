@@ -16,7 +16,7 @@ class Planning:
         pass
 
     @staticmethod
-    async def plan(uuid, user_request, previous_trace, observation, feedback, mode, observation_VforD,global_reward: bool = True):  # TODO
+    async def plan(uuid, user_request, previous_trace, observation, feedback, mode, observation_VforD, global_reward: bool = True):  # TODO
         start_time = time.time()
         # 创建GPT查询类
         GPT35 = GPTGenerator35()
