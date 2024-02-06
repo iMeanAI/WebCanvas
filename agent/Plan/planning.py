@@ -30,6 +30,7 @@ class Planning:
                 user_request, stringfy_thought_and_action_output)
             print(f"\033[32mGlobal_reward_Request{reward_request}")  # 绿色
             print("\033[0m")
+            reward_response = ""
             for i in range(3):
                 try:
                     reward_response, error_message = await GPT4.request(reward_request)
@@ -37,9 +38,9 @@ class Planning:
                         reward_response)
                     break
                 except Exception as e:
-                    print(f"planning reward_response error for {i+1} times")
+                    traceback.print_exc()
+                    print(f"planning reward_response or status_and_description error for {i+1} times")
                     # logger.error(f"Error in reward_response: {e}")
-                    reward_response = ""
                     continue
             print(f"\033[34mGlobal_Reward_Response:\n{reward_response}")  # 蓝色
             print("\033[0m")

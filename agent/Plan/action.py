@@ -34,11 +34,12 @@ class ActionParser():
     def parse_action(self, message):
         message_substring = extract_longest_substring(message)
         decoded_result = {}
-        try:
-            decoded_result = json5.loads(message_substring)
-        except Exception as e:
-            # logger.info(f"Error parsing:\n{result_action_substring}\n")
-            traceback.print_exc()
+        # 这里的try-except的逻辑在planning里面已经实现了，这里写了那里就没办法retry
+        # try:
+        decoded_result = json5.loads(message_substring)
+        # except Exception as e:
+        #     # logger.info(f"Error parsing:\n{result_action_substring}\n")
+        #     traceback.print_exc()
 
         return decoded_result
 
