@@ -80,7 +80,7 @@ class Planning:
             status_description = ""
             if global_reward:
                 status_description = status_and_description.get(
-                    "description") if status_and_description and status_and_description.get("description") else "
+                    "description") if status_and_description and status_and_description.get("description") else ""
             if observation_VforD != "":
                 vision_desc_request = VisionDisc2PromptConstructor().construct(
                     user_request, observation_VforD)  # vision description request with user_request
