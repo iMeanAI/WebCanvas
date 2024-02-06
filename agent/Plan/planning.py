@@ -3,18 +3,13 @@ from agent.LLM import *
 from .action import *
 import time
 
-from agent.Prompt import *
-from agent.LLM import *
-from .action import *
-import time
-
 
 class Planning:
     def __init__(self):
         pass
 
     @staticmethod
-    async def plan(uuid, user_request, previous_trace, observation, feedback, mode, observation_VforD,global_reward: bool = True):  # TODO
+    async def plan(uuid, user_request, previous_trace, observation, feedback, mode, observation_VforD, global_reward: bool = True):  # TODO
         start_time = time.time()
         # 创建GPT查询类
         GPT35 = GPTGenerator35()
@@ -57,6 +52,7 @@ class Planning:
             # print(f"\033[32m{planning_request}")  # 绿色 涉及到图片
             # display_string = planning_request[:100] # 截取字符串的前 max_length 个字符
             # print(f"\033[32m{display_string}")
+
             def print_limited_json(obj, limit=100):
                 if isinstance(obj, dict):
                     return {k: print_limited_json(v, limit) for k, v in obj.items()}
@@ -65,7 +61,8 @@ class Planning:
                 else:
                     return str(obj)[:limit]
 
-            print(f"\033[32m{print_limited_json(planning_request, limit=1000)}")
+            print(
+                f"\033[32m{print_limited_json(planning_request, limit=1000)}")
             print("\033[0m")
             planning_response, error_message = await GPT4V.request(planning_request)
         elif mode == "vision":
@@ -122,28 +119,6 @@ class Planning:
         dict_to_write['openai_response'] = planning_response
 
         return dict_to_write
-
-    # @staticmethod
-    # async def evaluate(user_request, previous_trace, current_trace, observation):  # TODO
-    #     GPT4 = GPTGenerator4()
-    #     current_trace = [current_trace]
-    #     if len(previous_trace) > 0:
-    #         stringfy_previous_trace_output = ObservationPromptConstructor(
-    #         ).stringfy_thought_and_action(previous_trace)
-    #         stringfy_current_trace_output = ObservationPromptConstructor(
-    #         ).stringfy_thought_and_action(current_trace)
-    #         current_reward_response = CurrentRewardPromptConstructor().construct(
-    #             user_request, stringfy_previous_trace_output, stringfy_current_trace_output, observation)
-    #         print(f"\033[32m{current_reward_response}")  # 绿色
-    #         print("\033[0m")
-    #         evaluate_response, error_message = await GPT4.request(current_reward_response)
-    #         score_description = ActionParser().extract_score_and_description(
-    #             evaluate_response)
-    #         # 蓝色
-    #         print(f"\033[34mOpenai_evaluate_Response:\n{score_description}")
-    #         print("\033[0m")
-    #         return score_description
-    #     return ""
 
     @staticmethod
     async def evaluate(user_request, previous_trace, current_trace, observation, observation_VforD=""):  # TODO
