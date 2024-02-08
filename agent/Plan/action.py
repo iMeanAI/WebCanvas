@@ -1,5 +1,6 @@
 import re
 import json5
+import json
 
 import traceback
 from agent.Prompt import *
@@ -33,11 +34,12 @@ class ActionParser():
     def parse_action(self, message):
         message_substring = extract_longest_substring(message)
         decoded_result = {}
-        try:
-            decoded_result = json5.loads(message_substring)
-        except Exception as e:
-            # logger.info(f"Error parsing:\n{result_action_substring}\n")
-            traceback.print_exc()
+        # 这里的try-except的逻辑在planning里面已经实现了，这里写了那里就没办法retry
+        # try:
+        decoded_result = json5.loads(message_substring)
+        # except Exception as e:
+        #     # logger.info(f"Error parsing:\n{result_action_substring}\n")
+        #     traceback.print_exc()
 
         return decoded_result
 
@@ -75,3 +77,25 @@ class ActionParser():
             description = message.split("description:")[-1].strip()
         score_description = self.parse_action(description)
         return score_description
+
+    @staticmethod
+    def get_element_id(input_str) -> str:
+        # First, try to parse with json.loads()
+
+        # If JSON parsing fails, try to extract with a regular expression
+        pattern = r'["\']element_id["\']:\s*["\']?(\d+)["\']?,\s*["\']'
+        match = re.search(pattern, input_str)
+        if match:
+            return match.group(1)
+        else:
+            return '-1'
+
+    # @staticmethod
+    # def parse_json_output(json_str):
+    #     try:
+    #         # 尝试解析字符串
+    #         return json.loads(json_str)
+    #     except json.JSONDecodeError:
+    #         # 如果解析失败，尝试替换单引号为双引号后再解析
+    #         json_str = json_str.replace("'", '"')
+    #         return json.loads(json_str)

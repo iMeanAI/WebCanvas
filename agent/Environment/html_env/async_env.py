@@ -65,7 +65,7 @@ class AsyncHTMLEnvironment:
         self.browser = None
 
     async def setup(self, start_url: str) -> None:
-        if self.mode == "dom" or self.mode == "d_v":
+        if self.mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
             self.playwright = await async_playwright().start()
             self.browser = await self.playwright.chromium.launch(
                 headless=self.headless, slow_mo=self.slow_mo
@@ -107,7 +107,7 @@ class AsyncHTMLEnvironment:
         observation = ""
         observation_VforD = ""
         try:
-            if self.mode in ["dom", "d_v"]:
+            if self.mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
                 print("async_env.py now in _get_obs method")
                 self.tree.fetch_html_content(self.html_content)
                 print(
@@ -116,7 +116,7 @@ class AsyncHTMLEnvironment:
                 dom_tree = self.tree.build_dom_tree()
                 observation = f"current web tab name is \'{tab_name}\'\n" + \
                               "current accessibility tree is below:\n" + dom_tree
-                if self.mode == "d_v":
+                if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                     observation_VforD = await self.capture()
             elif self.mode == "vision":
                 # 视觉模式下的处理逻辑
@@ -128,16 +128,16 @@ class AsyncHTMLEnvironment:
                     observation = await self.capture()
         except Exception as e:
             print(f"Error in _get_obs: {e}")
-        if self.mode == "d_v":
+        if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
             # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
             is_valid, message = D_VObservationPromptConstructor.is_valid_base64(
                 observation_VforD)
             print("async_env.py _get_obs observation_VforD:", message)
-        return (observation, observation_VforD) if self.mode == "d_v" else observation
+        return (observation, observation_VforD) if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"] else observation
 
     async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
         await self.setup(start_url)
-        if self.mode == "d_v":
+        if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
             observation, observation_VforD = await self._get_obs()
             return observation, observation_VforD
         else:
@@ -361,10 +361,115 @@ class AsyncHTMLEnvironment:
                         return await self._get_obs()
                     except Exception as e:
                         print(e)
+                case ActionTypes.HOVER:
+                    try:
+                        try:
+                            self.last_page = self.page
+                            label, element_idx = self.tree.get_tag_name(
+                                self.tree.elementNodes[action["element_id"]])
+                            action.update({"element_id": element_idx,
+                                           "element_name": label})
+                            selector, xpath = self.tree.get_selector_and_xpath(
+                                action["element_id"])
+                        except Exception as e:
+                            print(
+                                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                        try:
+                            self.last_page = self.page
+                            await self.page.hover(selector)
+                            # await self.page.wait_for_load_state('load')
+                            self.html_content = await self.page.content()
+                            return await self._get_obs()
+                        except:
+                            self.last_page = self.page
+                            hover = '''() => {
+                                        const element = document.querySelector('%s');
+                                        if (element) {
+                                            element.dispatchEvent(new Event('mouseover', { bubbles: true }));
+                                        }
+                                    }
+                                ''' % selector
+                            await self.page.evaluate(hover)
+                            # await self.page.wait_for_timeout(1000)
+                            self.html_content = await self.page.content()
+                            return await self._get_obs()
+                    except Exception as e:
+                        print("can't execute hover action")
+                        print(e)
+                        return await self._get_obs()
+                case ActionTypes.SCROLL_DOWN:
+                    try:
+                        try:
+                            self.last_page = self.page
+                            # 获取页面的总高度
+                            total_height = await self.page.evaluate("document.body.scrollHeight")
+                            # 获取视窗的高度 720
+                            viewport_height = await self.page.evaluate("window.innerHeight")
+                            # self.viewport_size['height']
+                            # viewport_height = self.page.viewport_size['height']
+                            print("total_height:", total_height)
+                            print("viewport_height:", viewport_height)
+                            if total_height < viewport_height:
+                                await self.page.evaluate("window.scrollBy(0, 500)")
+                                print("scroll_down: scrollBy(0, 500)")
+                                self.html_content = await self.page.content()
+                                return await self._get_obs()
+                            # 获取当前滚动位置
+                            current_scroll = await self.page.evaluate("window.pageYOffset")
+                            # 计算剩余高度
+                            remaining_height = total_height - current_scroll - viewport_height
+                            # 如果剩余高度小于或等于视窗高度，则滚动到页面底部
+                            if remaining_height <= viewport_height:
+                                await self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                                print(f"scroll_down: scrollTo(0, {total_height})")
+                            else:
+                                # 否则，根据需要滚动一定量，比如视窗高度的一半
+                                scroll_amount = current_scroll + viewport_height * 0.75
+                                await self.page.evaluate(f"window.scrollTo(0, {scroll_amount})")
+                                print(f"scroll_down: scrollTo(0, {scroll_amount})")
+                            self.html_content = await self.page.content()
+                            return await self._get_obs()
+                        except:
+                            self.last_page = self.page
+                            await self.page.mouse.wheel(0, 100)
+                            print("scroll_down: mouse.wheel(0, 100)")
+                            self.html_content = await self.page.content()
+                            return await self._get_obs()
+                    except Exception as e:
+                        print("can't execute scroll down action")
+                        print(e)
+                        return await self._get_obs()
+                case ActionTypes.SCROLL_UP:
+                    try:
+                        try:
+                            self.last_page = self.page
+                            # 获取视窗的高度
+                            viewport_height = await self.page.evaluate("window.innerHeight")
+                            # 获取当前滚动位置
+                            current_scroll = await self.page.evaluate("window.pageYOffset")
+                            # 如果当前滚动位置大于0，则向上滚动一定量
+                            if current_scroll > 0:
+                                if current_scroll < viewport_height:
+                                    scroll_amount = 0
+                                else:
+                                    scroll_amount = current_scroll - viewport_height / 2
+                                await self.page.evaluate(f"window.scrollTo(0, {scroll_amount})")
+                            self.html_content = await self.page.content()
+                            return await self._get_obs()
+                        except:
+                            self.last_page = self.page
+                            #
+                            await self.page.mouse.wheel(0, -100)
+                            self.html_content = await self.page.content()
+                            return await self._get_obs()
+                    except Exception as e:
+                        print("can't execute scroll up action")
+                        print(e)
+                        return await self._get_obs()
                 case ActionTypes.NONE:
                     try:
                         return await self._get_obs()
-                    except:
+                    except Exception as e:
                         print("can't execute none action")
                         print(e)
                 case _:
@@ -456,9 +561,18 @@ class AsyncHTMLEnvironment:
         if not self.page:
             raise ValueError("Page not initialized or loaded.")
 
-        await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
+        # await self.page.wait_for_load_state("load")
+        # await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
         # 捕获屏幕截图
-        screenshot_bytes = await self.page.screenshot()
+        screenshot_bytes = ""
+        for i in range(5):
+            try:
+                screenshot_bytes = await self.page.screenshot()
+                break
+            except:
+                print("async_env.py capture screenshot_bytes failed for", i+1, "times")
+                await asyncio.sleep(1)
+
         print("async_env.py screenshot_bytes finished!")
         # 使用 PIL 库将截图转换为 RGB 格式的图像:
         # 使用 Python 的 BytesIO 类来处理截图的二进制数据，并使用 PIL（Python Imaging Library）库的 Image.open() 方法将其转换成一个图像对象。

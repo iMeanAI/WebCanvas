@@ -63,7 +63,7 @@ class GPTGenerator35(GPTGenerator):
 
 class GPTGenerator4(GPTGenerator):
     def __init__(self):
-        self.model = "gpt-4-1106-preview"
+        self.model = "gpt-4-turbo-preview"
 
 
 class GPTGenerator4V(GPTGenerator):
