@@ -94,7 +94,7 @@ class AsyncHTMLEnvironment:
 
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
-            await self.page.goto(start_url, timeout=6000)
+            await self.page.goto(start_url, timeout=10000)
             await self.page.wait_for_timeout(500)
             self.html_content = await self.page.content()
         else:
@@ -296,7 +296,7 @@ class AsyncHTMLEnvironment:
                             return await self._get_obs()
                         except:
                             self.last_page = self.page
-                            fill_and_press_enter = '''() => {
+                            fill = '''() => {
                                         const element = document.querySelector('%s');
                                         if (element) {
                                             element.value = '%s';
@@ -304,7 +304,7 @@ class AsyncHTMLEnvironment:
                                         }
                                     }
                                 ''' % (selector, action['fill_text'])
-                            await self.page.evaluate(fill_and_press_enter)
+                            await self.page.evaluate(fill)
                             await self.page.wait_for_load_state('load')
                             self.html_content = await self.page.content()
                             return await self._get_obs()
