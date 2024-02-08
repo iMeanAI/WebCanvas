@@ -17,8 +17,13 @@ from result import write_result_to_excel
 # 解析命令行参数
 parser = argparse.ArgumentParser(
     description="Run the agent in different modes.")
-parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="dom",
-                    help="Choose interaction mode: 'dom' for DOM-based interaction, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
+parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"], default="vision_to_dom",
+                    help="Choose interaction mode: "
+                         "'dom' for DOM-based interaction, "
+                         "'dom_v_desc' for DOM-based interaction with vision description,"
+                         "'vision_to_dom' for vision-to-dom interaction, "
+                         "'vision' for vision-based interaction, "
+                         "'d_v' for DOM-based and vision-based interaction.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
 interaction_mode = args.mode
@@ -292,7 +297,7 @@ async def main(num_steps=0, mode="dom"):
         PT = config['basic']['previous_trace']
 
         observation_VforD = None
-        if mode == "d_v":
+        if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
             observation, observation_VforD = await env.reset("about:blank")
         else:
             observation = await env.reset("about:blank")
@@ -378,7 +383,7 @@ async def main(num_steps=0, mode="dom"):
             print("dict_to_write:", dict_to_write)
             dict_result_list.append(str(dict_to_write))
 
-            if mode == "dom" or mode == "d_v":
+            if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
                 execute_action, current_trace, path, element_value = await parse_current_trace(
                     dict_to_write)
                 selector, xpath = (
@@ -401,26 +406,13 @@ async def main(num_steps=0, mode="dom"):
                     task_finished = True
                     break
                 # input()
-                if mode == "d_v":
+                if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                     observation, observation_VforD = await env.execute_action(execute_action)
                 else:
                     observation = await env.execute_action(execute_action)
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
 
-            elif mode == "vision":
-                execute_action = dict_to_write["action"]
-                thought = dict_to_write["description"].get("thought")
-                action = dict_to_write["description"].get("action")
-                current_trace = {"thought": thought, "action": action}
-                print("执行动作前的url", env.page.url)
-                if await env.vision_execute_action(execute_action):
-                    break
-                print("vision_execute_action finished!")
-                observation = await env._get_obs()
-                print("执行动作后的url", env.page.url)
-
-            if mode == "dom" or mode == "d_v":
                 # current_trace = [current_trace]
                 current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
                                                          current_trace=current_trace, observation=observation)
@@ -429,7 +421,7 @@ async def main(num_steps=0, mode="dom"):
                 if current_reward and int(current_reward.get("score")) < config['basic']['Step_Score_Threshold']:
                     execute_action.update(
                         {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                    if mode == "d_v":
+                    if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                         observation, observation_VforD = await env.execute_action(execute_action)
                     else:
                         observation = await env.execute_action(execute_action)
@@ -443,6 +435,17 @@ async def main(num_steps=0, mode="dom"):
                     step_error_count = 0
 
             elif mode == "vision":
+                execute_action = dict_to_write["action"]
+                thought = dict_to_write["description"].get("thought")
+                action = dict_to_write["description"].get("action")
+                current_trace = {"thought": thought, "action": action}
+                print("执行动作前的url", env.page.url)
+                if await env.vision_execute_action(execute_action):
+                    break
+                print("vision_execute_action finished!")
+                observation = await env._get_obs()
+                print("执行动作后的url", env.page.url)
+
                 previous_trace.append(current_trace)
                 if dict_to_write["description"].get('reward'):
                     if "loop" in dict_to_write["description"].get('reward').get("status"):
@@ -460,7 +463,7 @@ async def main(num_steps=0, mode="dom"):
         # input()
 
         # ! 3.任务评测打分
-        if mode == "dom" or mode == "d_v":
+        if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
             # step score
             total_step_score = 0
             for evaluate in evaluate_steps:
