@@ -239,28 +239,6 @@ class Planning:
 
         return dict_to_write
 
-    # @staticmethod
-    # async def evaluate(user_request, previous_trace, current_trace, observation):  # TODO
-    #     GPT4 = GPTGenerator4()
-    #     current_trace = [current_trace]
-    #     if len(previous_trace) > 0:
-    #         stringfy_previous_trace_output = ObservationPromptConstructor(
-    #         ).stringfy_thought_and_action(previous_trace)
-    #         stringfy_current_trace_output = ObservationPromptConstructor(
-    #         ).stringfy_thought_and_action(current_trace)
-    #         current_reward_response = CurrentRewardPromptConstructor().construct(
-    #             user_request, stringfy_previous_trace_output, stringfy_current_trace_output, observation)
-    #         print(f"\033[32m{current_reward_response}")  # 绿色
-    #         print("\033[0m")
-    #         evaluate_response, error_message = await GPT4.request(current_reward_response)
-    #         score_description = ActionParser().extract_score_and_description(
-    #             evaluate_response)
-    #         # 蓝色
-    #         print(f"\033[34mOpenai_evaluate_Response:\n{score_description}")
-    #         print("\033[0m")
-    #         return score_description
-    #     return ""
-
     @staticmethod
     async def evaluate(user_request, previous_trace, current_trace, observation, observation_VforD=""):  # TODO
         GPT4 = GPTGenerator4()

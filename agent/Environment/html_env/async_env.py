@@ -181,7 +181,7 @@ class AsyncHTMLEnvironment:
                                     url = urljoin(base_url, url)
                                 self.last_page = self.page
                                 self.page = await self.context.new_page()
-                                await self.page.goto(url,timeout=10000)
+                                await self.page.goto(url, timeout=10000)
                                 await self.page.wait_for_load_state('load')
                                 self.html_content = await self.page.content()
                                 return await self._get_obs()
@@ -225,7 +225,7 @@ class AsyncHTMLEnvironment:
                     try:
                         self.last_page = self.page
                         self.page = await self.context.new_page()
-                        await self.page.goto(action["url"],timeout=10000)
+                        await self.page.goto(action["url"], timeout=10000)
                         await self.page.wait_for_load_state('load')
                         self.html_content = await self.page.content()
                         return await self._get_obs()
