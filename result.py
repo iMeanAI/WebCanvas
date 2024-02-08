@@ -19,7 +19,7 @@ def write_result_to_excel(
     previous_trace_list,
     selector_list,
     action_list,
-    file_path="./results/group1/DOM-Based",
+    file_path="./csv_results/group1/DOM-Based",
 ):
 
     if not os.path.exists(file_path):
@@ -71,5 +71,3 @@ def write_result_to_excel(
     })
 
     df.to_csv(csv_path)
-
-
