@@ -1,5 +1,4 @@
-import base64
-
+from ..Utils.utils import is_valid_base64
 import json5
 
 from .vision_to_dom_prompts import VisionToDomPrompts
@@ -256,34 +255,6 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
         self.prompt_system = DomVisionPrompts.d_v_planning_prompt_system
         self.prompt_user = DomVisionPrompts.d_v_planning_prompt_user
 
-    @staticmethod
-    def is_valid_base64(s):
-        """
-        Validate if a given string is a valid Base64 encoded string.
-
-        :param s: String to be checked.
-        :return: A tuple (bool, str) where the first element is True if the string is a valid Base64 encoded string,
-                 and the second element is a message indicating the result or the type of error.
-
-        byCarl: 本方法仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
-        """
-        if s is None:
-            return False, "The string is None."
-
-        if not isinstance(s, str):
-            return False, "The input is not a string."
-
-        if len(s) == 0:
-            return False, "The string is empty."
-
-        try:
-            # 尝试对字符串进行 Base64 解码
-            base64.b64decode(s, validate=True)
-            return True, "The string is a valid Base64 encoded string."
-        except ValueError:
-            # 如果解码抛出 ValueError 异常，则字符串不是有效的 Base64 编码
-            return False, "The string is NOT a valid Base64 encoded string."
-
     def construct(
             self,
             user_request: str,
@@ -293,7 +264,7 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
             feedback: str = "",
             status_description: str = ""
     ) -> list:
-        is_valid, message = D_VObservationPromptConstructor.is_valid_base64(
+        is_valid, message = is_valid_base64(
             observation_VforD)
         print("prompt_constructor.py D_VObservationPromptConstructor:", message, "\n")
         rendered_prompt = Template(self.prompt_user).render(
@@ -426,7 +397,7 @@ class VisionRewardPromptConstructor(BasePromptConstructor):
             observation: str,
             observation_VforD: str
     ) -> list:
-        if not D_VObservationPromptConstructor.is_valid_base64(observation_VforD):
+        if not is_valid_base64(observation_VforD):
             print("提供的observation_VforD不是有效的Base64编码")
 
         self.prompt_user = Template(self.prompt_user).render(
