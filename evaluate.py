@@ -2,6 +2,7 @@ import time
 import json5
 import requests
 from agent.Environment.html_env.async_env import AsyncHTMLEnvironment
+from agent.Environment.html_env.vision_async_env import VisionAsyncHTMLEnvironment
 from evaluate import *
 from agent.Plan import *
 from playwright.async_api import Playwright, async_playwright, expect, Page
@@ -46,23 +47,25 @@ def read_file(file_path="./data/group1.json"):
                 key = evaluation["content"]["key"]
                 reference_answer = evaluation["content"]["reference_answer"]
                 reference_evaluate_steps.append({"match_function": match_function,
-                                                "key": key, "reference_answer": reference_answer, "score": 0})
+                                                 "key": key, "reference_answer": reference_answer, "score": 0})
             elif "element_path" in match_function:  # TODO
                 reference_answer = evaluation["content"]["reference_answer"]
                 method = evaluation["method"]
                 netloc = evaluation["content"]["netloc"]
                 reference_evaluate_steps.append({"match_function": match_function, "method": method,
-                                                "reference_answer": reference_answer, "netloc": netloc, "score": 0})
+                                                 "reference_answer": reference_answer, "netloc": netloc, "score": 0})
             elif "element_value" in match_function:
                 reference_answer = evaluation["content"]["reference_answer"]
                 netloc = evaluation["content"]["netloc"]
                 if "path" in evaluation["content"].keys():
                     path = evaluation["content"]["path"]
                     reference_evaluate_steps.append({"match_function": match_function,
-                                                    "reference_answer": reference_answer, "netloc": netloc, "path": path, "score": 0})
+                                                     "reference_answer": reference_answer, "netloc": netloc,
+                                                     "path": path, "score": 0})
                 else:
                     reference_evaluate_steps.append({"match_function": match_function,
-                                                     "reference_answer": reference_answer, "netloc": netloc, "score": 0})
+                                                     "reference_answer": reference_answer, "netloc": netloc,
+                                                     "score": 0})
         return_list.append(
             [task_name, reference_task_length, reference_evaluate_steps])
     # print(return_list)
@@ -123,7 +126,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                 input_netloc = get_netloc(page.url)
                 method = evaluate["method"]
                 score = ElementEvaluator.path_exact_match(
-                    input_path, evaluate["reference_answer"], method, await page.content(), input_netloc, evaluate["netloc"])
+                    input_path, evaluate["reference_answer"], method, await page.content(), input_netloc,
+                    evaluate["netloc"])
                 print(score, "path_exact_match:", input_path,
                       "***", evaluate["reference_answer"])
             elif match_function == "element_path_included_match":
@@ -137,7 +141,9 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                     print(element_value)
                     # print(await page.locator(input_path).input_value())
                     if "path" in evaluate.keys():
-                        path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector", await page.content(), input_netloc, evaluate["netloc"])
+                        path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
+                                                                       await page.content(), input_netloc,
+                                                                       evaluate["netloc"])
                         if path_score == 0:
                             print("value评测中path不匹配")
                             score = 0
@@ -155,7 +161,9 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                 if input_path is not None and element_value is not None:
                     input_netloc = get_netloc(page.url)
                     if "path" in evaluate.keys():
-                        path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector", await page.content(), input_netloc, evaluate["netloc"])
+                        path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
+                                                                       await page.content(), input_netloc,
+                                                                       evaluate["netloc"])
                         if path_score == 0:
                             print("value评测中path不匹配")
                             score = 0
@@ -175,7 +183,9 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
 
                     if len(element_value) > 0:
                         if "path" in evaluate.keys():
-                            path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector", await page.content(), input_netloc, evaluate["netloc"])
+                            path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
+                                                                           await page.content(), input_netloc,
+                                                                           evaluate["netloc"])
                             if path_score == 0:
                                 print("value评测中path不匹配")
                                 score = 0
@@ -259,7 +269,6 @@ async def get_observation(mode: str, env: AsyncHTMLEnvironment, action: Action):
 
 
 async def main(num_steps=0, mode="dom"):
-
     file = read_file()
 
     with open('./configs/dom.toml', 'r') as f:
@@ -323,19 +332,35 @@ async def main(num_steps=0, mode="dom"):
         #     num_steps, evaluate_steps = await run(playwright)
 
         # ! # 2. planning
-        env = AsyncHTMLEnvironment(
-            mode=mode,
-            max_page_length=8192,
-            headless=False,
-            slow_mo=1000,
-            current_viewport_only=False,
-            viewport_size={"width": 1920, "height": 1280} if mode == "dom" else {
-                "width": 1080, "height": 720},
-            save_trace_enabled=False,
-            sleep_after_execution=0.0,
-            locale="en-US",
-            use_vimium_effect=True
-        )
+        if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
+            env = AsyncHTMLEnvironment(
+                mode=mode,
+                max_page_length=8192,
+                headless=False,
+                slow_mo=1000,
+                current_viewport_only=False,
+                viewport_size={"width": 1920, "height": 1280} if mode == "dom" else {
+                    "width": 1080, "height": 720},
+                # "width": 1080, "height": 720
+                save_trace_enabled=False,
+                sleep_after_execution=0.0,
+                locale="en-US",
+                use_vimium_effect=True
+            )
+        elif mode == "vision":
+            env = VisionAsyncHTMLEnvironment(
+                # mode=mode,
+                max_page_length=8192,
+                headless=False,
+                slow_mo=1000,
+                current_viewport_only=False,
+                viewport_size={"width": 1920, "height": 1280},
+                save_trace_enabled=False,
+                sleep_after_execution=0.0,
+                locale="en-US",
+                use_vimium_effect=True
+            )
+
         DF = config['basic']['default']
         GR = config['basic']['global_reward']
         CR = config['basic']['current_step_reward']
@@ -370,19 +395,29 @@ async def main(num_steps=0, mode="dom"):
             for _ in range(3):
                 try:
                     if DF:
-                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation, feedback=last_action_description, mode=mode, observation_VforD=observation_VforD)
+                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
+                                                            previous_trace=previous_trace, observation=observation,
+                                                            feedback=last_action_description, mode=mode,
+                                                            observation_VforD=observation_VforD)
                         if dict_to_write is not None:
                             break
                     elif GR == False:
-                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation, feedback=last_action_description, mode=mode, observation_VforD=observation_VforD, global_reward=False)
+                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
+                                                            previous_trace=previous_trace, observation=observation,
+                                                            feedback=last_action_description, mode=mode,
+                                                            observation_VforD=observation_VforD, global_reward=False)
                         if dict_to_write is not None:
                             break
                     elif CR == False:
-                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation, feedback="", mode=mode, observation_VforD=observation_VforD)
+                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
+                                                            previous_trace=previous_trace, observation=observation,
+                                                            feedback="", mode=mode, observation_VforD=observation_VforD)
                         if dict_to_write is not None:
                             break
                     elif PT == False:
-                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name, observation=observation, feedback=last_action_description, mode=mode, observation_VforD=observation_VforD)
+                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name, observation=observation,
+                                                            feedback=last_action_description, mode=mode,
+                                                            observation_VforD=observation_VforD)
                         if dict_to_write is not None:
                             break
                 except Exception as e:

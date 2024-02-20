@@ -16,12 +16,7 @@ from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
 import time
 
-from ...Prompt import D_VObservationPromptConstructor
-
-
-# Vimium 扩展的路径，需要自定义，相对路径会有点问题，导致路径切换为C:\\...\AppData\Local\ms-playwright\chromium-1055\chrome-win\\vimium-master
-# 只有vision mode需要Vimium 扩展，run in d_v mode不需要
-vimium_path = "D:\KYXK\imean-agents-dev\\vimium-master"
+from ...Utils.utils import is_valid_base64
 
 
 async def select_option(page, selector, value):
@@ -65,7 +60,7 @@ class AsyncHTMLEnvironment:
         self.browser = None
 
     async def setup(self, start_url: str) -> None:
-        if self.mode == "dom" or self.mode == "d_v":
+        if self.mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
             self.playwright = await async_playwright().start()
             self.browser = await self.playwright.chromium.launch(
                 headless=self.headless, slow_mo=self.slow_mo
@@ -74,20 +69,6 @@ class AsyncHTMLEnvironment:
                 viewport=self.viewport_size,
                 device_scale_factor=1,
                 locale=self.locale
-            )
-        if self.mode == "vision":
-            self.playwright = await async_playwright().start()
-            self.context = await self.playwright.chromium.launch_persistent_context(
-                "",
-                headless=False,  # 设置是否为无头模式
-                slow_mo=self.slow_mo,
-                device_scale_factor=1,
-                locale=self.locale,
-                args=[
-                    f"--disable-extensions-except={vimium_path}",
-                    f"--load-extension={vimium_path}",  # 加载 Vimium 扩展
-                ],
-                ignore_https_errors=True,  # 忽略 HTTPS 错误
             )
         if start_url:
             self.page = await self.context.new_page()
@@ -105,32 +86,25 @@ class AsyncHTMLEnvironment:
         observation = ""
         observation_VforD = ""
         try:
-            if self.mode in ["dom", "d_v"]:
-                print("async_env.py now in get_obs method")
-                self.tree.fetch_html_content(self.html_content)
-                print("async_env.py get_obs fetch_html_content(self.html_content) finished!")
-                tab_name = await self.page.title()
-                dom_tree = self.tree.build_dom_tree()
-                observation = f"current web tab name is \'{tab_name}\'\n" + \
-                              "current accessibility tree is below:\n" + dom_tree
-                if self.mode == "d_v":
-                    observation_VforD = await self.capture()
-            elif self.mode == "vision":
-                # 视觉模式下的处理逻辑
-                if self.use_vimium_effect:
-                    # 获取带有 Vimium 效果的屏幕截图
-                    observation = await self.capture_with_vim_effect()
-                else:
-                    # 获取普通屏幕截图
-                    observation = await self.capture()
+            # if self.mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
+            print("async_env.py now in _get_obs method")
+            self.tree.fetch_html_content(self.html_content)
+            print(
+                "async_env.py _get_obs fetch_html_content(self.html_content) finished!")
+            tab_name = await self.page.title()
+            dom_tree = self.tree.build_dom_tree()
+            observation = f"current web tab name is \'{tab_name}\'\n" + \
+                          "current accessibility tree is below:\n" + dom_tree
+            if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
+                observation_VforD = await self.capture()
         except Exception as e:
             print(f"Error in get_obs: {e}")
-        if self.mode == "d_v":
+        if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
             # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
-            is_valid, message = D_VObservationPromptConstructor.is_valid_base64(
+            is_valid, message = is_valid_base64(
                 observation_VforD)
-            print("async_env.py get_obs observation_VforD:", message)
-        return (observation, observation_VforD) if self.mode == "d_v" else observation
+            print("async_env.py _get_obs observation_VforD:", message)
+        return (observation, observation_VforD) if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"] else observation
 
     async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
         await self.setup(start_url)
@@ -309,13 +283,13 @@ class AsyncHTMLEnvironment:
         except Exception as e:
             print(e)
 
-    async def hover(self,action):
+    async def hover(self, action):
         try:
             self.last_page = self.page
             label, element_idx = self.tree.get_tag_name(
                 self.tree.elementNodes[action["element_id"]])
             action.update({"element_id": element_idx,
-                            "element_name": label})
+                           "element_name": label})
             selector, xpath = self.tree.get_selector_and_xpath(
                 action["element_id"])
         except Exception as e:
@@ -338,7 +312,7 @@ class AsyncHTMLEnvironment:
                 ''' % selector
             await self.page.evaluate(hover)
             self.html_content = await self.page.content()
-        
+
     async def scroll_down(self):
         try:
             self.last_page = self.page
@@ -375,7 +349,7 @@ class AsyncHTMLEnvironment:
             await self.page.mouse.wheel(0, 100)
             print("scroll_down: mouse.wheel(0, 100)")
             self.html_content = await self.page.content()
-     
+
     async def scroll_up(self):
         try:
             self.last_page = self.page
@@ -436,7 +410,7 @@ class AsyncHTMLEnvironment:
                         await self.search(action)
                     except Exception as e:
                         print("can't execute google search action")
-                        print(e )
+                        print(e)
                 case ActionTypes.GO_BACK:
                     try:
                         await self.go_back_last_page(action)
@@ -493,6 +467,46 @@ class AsyncHTMLEnvironment:
         await self.context.close()
         await self.browser.close()
         await self.playwright.stop()
+
+    @staticmethod
+    def encode_and_resize(image):
+        img_res = 1080
+        w, h = image.size
+        img_res_h = int(img_res * h / w)
+        image = image.resize((img_res, img_res_h))
+        buffer = BytesIO()
+        image.save(buffer, format="PNG")
+        encoded_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        return encoded_image
+
+    async def capture(self) -> Image:
+        # 确保页面已经加载
+        if not self.page:
+            raise ValueError("Page not initialized or loaded.")
+
+        # await self.page.wait_for_load_state("load")
+        await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
+        # 捕获屏幕截图
+        screenshot_bytes = ""
+        for i in range(5):
+            try:
+                screenshot_bytes = await self.page.screenshot()
+                break
+            except:
+                print("async_env.py capture screenshot_bytes failed for", i+1, "times")
+                await asyncio.sleep(1)
+
+        print("async_env.py screenshot_bytes finished!")
+        # 使用 PIL 库将截图转换为 RGB 格式的图像:
+        # 使用 Python 的 BytesIO 类来处理截图的二进制数据，并使用 PIL（Python Imaging Library）库的 Image.open() 方法将其转换成一个图像对象。
+        # 接着，使用 convert("RGB") 方法将图像转换为 RGB 格式。
+        screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGB")
+        encoded_screenshot = self.encode_and_resize(screenshot)
+        # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+        is_valid, message = is_valid_base64(
+            encoded_screenshot)
+        print("async_env.py encoded_screenshot:", message)
+        return encoded_screenshot
 
     @staticmethod
     async def is_valid_element(page: Page, selector: str):
