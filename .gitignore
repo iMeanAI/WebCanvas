@@ -16,3 +16,6 @@ test_action.py
 1.json
 output*.json
 csv_results
+test_score_dif_1.py
+async_env2.py
+planning1.py
