@@ -365,11 +365,15 @@ async def main(num_steps=0, mode="dom"):
         GR = config['basic']['global_reward']
         CR = config['basic']['current_step_reward']
         PT = config['basic']['previous_trace']
-        observation_VforD = None
-        if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-            observation, observation_VforD = await env.reset("about:blank")
-        else:
-            observation = await env.reset("about:blank")
+
+        observation = ""
+        observation_VforD = ""
+        await env.reset("about:blank")
+        # if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
+        #     observation, observation_VforD = await env.reset("about:blank")
+        #     await env.reset("about:blank")
+        # else:
+        #     observation = await env.reset("about:blank")
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
         last_action_description = ""

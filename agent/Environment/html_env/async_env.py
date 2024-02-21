@@ -106,14 +106,14 @@ class AsyncHTMLEnvironment:
             print("async_env.py _get_obs observation_VforD:", message)
         return (observation, observation_VforD) if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"] else observation
 
-    async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
+    async def reset(self, start_url: str = ""):
         await self.setup(start_url)
-        if self.mode == "d_v":
-            observation, observation_VforD = await self.get_obs()
-            return observation, observation_VforD
-        else:
-            observation = await self.get_obs()
-            return observation
+        # if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
+        #     observation, observation_VforD = await self.get_obs()
+        #     return observation, observation_VforD
+        # else:
+        #     observation = await self.get_obs()
+        #     return observation
 
     async def click(self, action):
         try:
