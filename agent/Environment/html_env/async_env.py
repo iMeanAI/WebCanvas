@@ -65,7 +65,6 @@ class AsyncHTMLEnvironment:
             self.browser = await self.playwright.chromium.launch(
                 headless=self.headless, slow_mo=self.slow_mo
             )
-            start_url = start_url
             self.context = await self.browser.new_context(
                 viewport=self.viewport_size,
                 device_scale_factor=1,
@@ -74,7 +73,7 @@ class AsyncHTMLEnvironment:
         if start_url:
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
-            await self.page.goto(start_url, timeout=6000)
+            await self.page.goto(start_url, timeout=10000)
             await self.page.wait_for_timeout(500)
             self.html_content = await self.page.content()
         else:
@@ -83,7 +82,7 @@ class AsyncHTMLEnvironment:
             self.html_content = await self.page.content()
         self.last_page = self.page
 
-    async def _get_obs(self) -> Union[str, Tuple[str, str]]:
+    async def get_obs(self) -> Union[str, Tuple[str, str]]:
         observation = ""
         observation_VforD = ""
         try:
@@ -99,7 +98,7 @@ class AsyncHTMLEnvironment:
             if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                 observation_VforD = await self.capture()
         except Exception as e:
-            print(f"Error in _get_obs: {e}")
+            print(f"Error in get_obs: {e}")
         if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
             # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
             is_valid, message = is_valid_base64(
@@ -109,21 +108,271 @@ class AsyncHTMLEnvironment:
 
     async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
         await self.setup(start_url)
-        if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-            observation, observation_VforD = await self._get_obs()
+        if self.mode == "d_v":
+            observation, observation_VforD = await self.get_obs()
             return observation, observation_VforD
         else:
-            observation = await self._get_obs()
+            observation = await self.get_obs()
             return observation
+
+    async def click(self, action):
+        try:
+            label, element_idx = self.tree.get_tag_name(
+                self.tree.elementNodes[action["element_id"]])
+            action.update({"element_id": element_idx,
+                           "element_name": label})
+            selector, xpath = self.tree.get_selector_and_xpath(
+                action["element_id"])
+        except Exception as e:
+            print(
+                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+        if label == "link":
+            try:
+                element = self.tree.elementNodes[element_idx]
+                url = element["attributes"].get("href")
+                if bool(urlparse(url).netloc) is False:
+                    base_url = self.page.url()
+                    url = urljoin(base_url, url)
+                self.last_page = self.page
+                self.page = await self.context.new_page()
+                await self.page.goto(url, timeout=10000)
+                await self.page.wait_for_load_state('load')
+                self.html_content = await self.page.content()
+            except:
+                try:
+                    self.last_page = self.page
+                    await self.page.evaluate('''() => {
+                        const element = document.querySelector('%s');
+                        if (element) {
+                            element.click();
+                        }
+                    }''' % selector)
+                    # await self.page.locator(selector).click()
+                    await self.page.wait_for_load_state('load')
+                    self.html_content = await self.page.content()
+                except Exception as e:
+                    print(e)
+        else:
+            try:
+                self.last_page = self.page
+                try:
+                    await self.page.locator(selector).click()
+                except:
+                    await self.page.evaluate('''() => {
+                        const element = document.querySelector('%s');
+                        if (element) {
+                            element.click();
+                        }
+                    }''' % selector)
+                    # await self.page.locator(selector).click()
+                await self.page.wait_for_load_state('load')
+                self.html_content = await self.page.content()
+            except Exception as e:
+                print(e)
+
+    async def goto(self, action):
+        self.last_page = self.page
+        self.page = await self.context.new_page()
+        await self.page.goto(action["url"], timeout=10000)
+        await self.page.wait_for_load_state('load')
+        self.html_content = await self.page.content()
+
+    async def fill_search(self, action):
+        try:
+            self.last_page = self.page
+            label, element_idx = self.tree.get_tag_name(
+                self.tree.elementNodes[action["element_id"]])
+            action.update({"element_id": element_idx,
+                           "element_name": label})
+            selector, xpath = self.tree.get_selector_and_xpath(
+                action["element_id"])
+        except Exception as e:
+            print(
+                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+        try:
+            self.last_page = self.page
+            await self.page.locator(selector).fill(action["fill_text"])
+            time.sleep(1)
+            await self.page.locator(selector).press("Enter")
+            await self.page.wait_for_load_state('load')
+            self.html_content = await self.page.content()
+        except:
+            self.last_page = self.page
+            fill_and_press_enter = '''() => {
+                        const element = document.querySelector('%s');
+                        if (element) {
+                            element.value = '%s';
+                            element.dispatchEvent(new Event('input', { bubbles: true }));
+                            element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+                        }
+                    }
+                ''' % (selector, action['fill_text'])
+            await self.page.evaluate(fill_and_press_enter)
+            await self.page.wait_for_load_state('load')
+            self.html_content = await self.page.content()
+
+    async def fill_form(self, action):
+        try:
+            self.last_page = self.page
+            label, element_idx = self.tree.get_tag_name(
+                self.tree.elementNodes[action["element_id"]])
+            action.update({"element_id": element_idx,
+                           "element_name": label})
+            selector, xpath = self.tree.get_selector_and_xpath(
+                action["element_id"])
+        except Exception as e:
+            print(
+                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+        try:
+            self.last_page = self.page
+            await self.page.locator(selector).fill(action["fill_text"])
+            await self.page.wait_for_load_state('load')
+            self.html_content = await self.page.content()
+        except:
+            self.last_page = self.page
+            fill = '''() => {
+                        const element = document.querySelector('%s');
+                        if (element) {
+                            element.value = '%s';
+                            element.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    }
+                ''' % (selector, action['fill_text'])
+            await self.page.evaluate(fill)
+            await self.page.wait_for_load_state('load')
+            self.html_content = await self.page.content()
+
+    async def search(self, action):
+        self.last_page = self.page
+        self.page = await self.context.new_page()
+        await self.page.goto("https://www.google.com/search?q="+action["fill_text"])
+        await self.page.wait_for_load_state('load')
+        self.html_content = await self.page.content()
+
+    async def go_back_last_page(self, action):
+        self.page = self.last_page
+        self.last_page = self.page
+        await self.page.wait_for_load_state('load')
+        self.html_content = await self.page.content()
+
+    async def select_option(self, action):
+        try:
+            label, element_idx = self.tree.get_tag_name(
+                self.tree.elementNodes[action["element_id"]])
+            action.update({"element_id": element_idx,
+                           "element_name": label})
+            selector, xpath = self.tree.get_selector_and_xpath(
+                action["element_id"])
+        except Exception as e:
+            print(
+                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+        try:
+            self.last_page = self.page
+            try:
+                await self.page.locator(selector).click()
+            except:
+                await self.page.evaluate('''() => {
+                    const element = document.querySelector('%s');
+                    if (element) {
+                        element.click();
+                    }
+                }''' % selector)
+            self.page = await select_option(self.page, selector, action["fill_text"])
+            await self.page.wait_for_load_state('load')
+            self.html_content = await self.page.content()
+        except Exception as e:
+            print(e)
+
+    async def hover(self, action):
+        try:
+            self.last_page = self.page
+            label, element_idx = self.tree.get_tag_name(
+                self.tree.elementNodes[action["element_id"]])
+            action.update({"element_id": element_idx,
+                           "element_name": label})
+            selector, xpath = self.tree.get_selector_and_xpath(
+                action["element_id"])
+        except Exception as e:
+            print(
+                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+        try:
+            self.last_page = self.page
+            await self.page.hover(selector)
+            # await self.page.wait_for_load_state('load')
+            self.html_content = await self.page.content()
+            return await self._get_obs()
+        except:
+            self.last_page = self.page
+            hover = '''() => {
+                        const element = document.querySelector('%s');
+                        if (element) {
+                            element.dispatchEvent(new Event('mouseover', { bubbles: true }));
+                        }
+                    }
+                ''' % selector
+            await self.page.evaluate(hover)
+            self.html_content = await self.page.content()
+
+    async def scroll_down(self):
+        try:
+            self.last_page = self.page
+            # 获取页面的总高度
+            total_height = await self.page.evaluate("document.body.scrollHeight")
+            # 获取视窗的高度 720
+            viewport_height = await self.page.evaluate("window.innerHeight")
+            # self.viewport_size['height']
+            # viewport_height = self.page.viewport_size['height']
+            print("total_height:", total_height)
+            print("viewport_height:", viewport_height)
+            if total_height < viewport_height:
+                await self.page.evaluate("window.scrollBy(0, 500)")
+                print("scroll_down: By(0, 500)")
+                self.html_content = await self.page.content()
+                return await self._get_obs()
+            # 获取当前滚动位置
+            current_scroll = await self.page.evaluate("window.pageYOffset")
+            # 计算剩余高度
+            remaining_height = total_height - current_scroll - viewport_height
+            # 如果剩余高度小于或等于视窗高度，则滚动到页面底部
+            if remaining_height <= viewport_height:
+                await self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                print(f"scroll_down: scrollTo(0, {total_height})")
+            else:
+                # 否则，根据需要滚动一定量，比如视窗高度的一半
+                scroll_amount = current_scroll + viewport_height * 0.75
+                await self.page.evaluate(f"window.scrollTo(0, {scroll_amount})")
+                print(f"scroll_down: scrollTo(0, {scroll_amount})")
+            self.html_content = await self.page.content()
+            return await self._get_obs()
+        except:
+            self.last_page = self.page
+            await self.page.mouse.wheel(0, 100)
+            print("scroll_down: mouse.wheel(0, 100)")
+            self.html_content = await self.page.content()
+
+    async def scroll_up(self):
+        try:
+            self.last_page = self.page
+            # 获取视窗的高度
+            viewport_height = await self.page.evaluate("window.innerHeight")
+            # 获取当前滚动位置
+            current_scroll = await self.page.evaluate("window.pageYOffset")
+            # 如果当前滚动位置大于0，则向上滚动一定量
+            if current_scroll > 0:
+                if current_scroll < viewport_height:
+                    scroll_amount = 0
+                else:
+                    scroll_amount = current_scroll - viewport_height / 2
+                await self.page.evaluate(f"window.scrollTo(0, {scroll_amount})")
+            self.html_content = await self.page.content()
+            return await self._get_obs()
+        except:
+            self.last_page = self.page
+            await self.page.mouse.wheel(0, -100)
+            self.html_content = await self.page.content()
 
     async def execute_action(self, action: Action) -> Union[str, Tuple[str, str]]:
         """
-        找到可交互元素并执行相应的动作得到新的observation \n
-        注意：本方法mode为d_v时，返回的分别observation和observation_VforD，在调用时需要分别接收 \n
-        if mode == "d_v":
-            observation, observation_VforD = await env.execute_action( )
-        else:
-            observation = await env.execute_action( )
         """
         if "element_id" in action and action["element_id"] != 0:
             print('action["element_id"]:', action["element_id"])
@@ -134,314 +383,69 @@ class AsyncHTMLEnvironment:
             match action["action_type"]:
                 case ActionTypes.CLICK:
                     try:
-                        try:
-                            label, element_idx = self.tree.get_tag_name(
-                                self.tree.elementNodes[action["element_id"]])
-                            action.update({"element_id": element_idx,
-                                           "element_name": label})
-                            selector, xpath = self.tree.get_selector_and_xpath(
-                                action["element_id"])
-                        except Exception as e:
-                            print(
-                                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
-                        if label == "link":
-                            try:
-                                element = self.tree.elementNodes[element_idx]
-                                url = element["attributes"].get("href")
-                                if bool(urlparse(url).netloc) is False:
-                                    base_url = self.page.url()
-                                    url = urljoin(base_url, url)
-                                self.last_page = self.page
-                                self.page = await self.context.new_page()
-                                await self.page.goto(url, timeout=10000)
-                                await self.page.wait_for_load_state('load')
-                                self.html_content = await self.page.content()
-                                return await self._get_obs()
-                            except:
-                                try:
-                                    self.last_page = self.page
-                                    await self.page.evaluate('''() => {
-                                        const element = document.querySelector('%s');
-                                        if (element) {
-                                            element.click();
-                                        }
-                                    }''' % selector)
-                                    # await self.page.locator(selector).click()
-                                    await self.page.wait_for_load_state('load')
-                                    self.html_content = await self.page.content()
-                                    return await self._get_obs()
-                                except Exception as e:
-                                    print(e)
-                        else:
-                            try:
-                                self.last_page = self.page
-                                try:
-                                    await self.page.locator(selector).click()
-                                except:
-                                    await self.page.evaluate('''() => {
-                                        const element = document.querySelector('%s');
-                                        if (element) {
-                                            element.click();
-                                        }
-                                    }''' % selector)
-                                    # await self.page.locator(selector).click()
-                                await self.page.wait_for_load_state('load')
-                                self.html_content = await self.page.content()
-                                return await self._get_obs()
-                            except Exception as e:
-                                print(e)
+                        await self.click(action)
                     except Exception as e:
                         print("can't execute click action")
-                        return await self._get_obs()
+                        print(e)
                 case ActionTypes.GOTO:
                     try:
-                        self.last_page = self.page
-                        self.page = await self.context.new_page()
-                        await self.page.goto(action["url"], timeout=10000)
-                        await self.page.wait_for_load_state('load')
-                        self.html_content = await self.page.content()
-                        return await self._get_obs()
+                        await self.goto(action)
                     except Exception as e:
                         print("can't execute goto action")
                         print(e)
-                        return await self._get_obs()
                 case ActionTypes.FILL_SEARCH:
                     try:
-                        try:
-                            self.last_page = self.page
-                            label, element_idx = self.tree.get_tag_name(
-                                self.tree.elementNodes[action["element_id"]])
-                            action.update({"element_id": element_idx,
-                                           "element_name": label})
-                            selector, xpath = self.tree.get_selector_and_xpath(
-                                action["element_id"])
-                        except Exception as e:
-                            print(
-                                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
-                        try:
-                            self.last_page = self.page
-                            await self.page.locator(selector).fill(action["fill_text"])
-                            time.sleep(1)
-                            print("sleep 1s")
-                            await self.page.locator(selector).press("Enter")
-                            await self.page.wait_for_load_state('load')
-                            self.html_content = await self.page.content()
-                            return await self._get_obs()
-                        except:
-                            print("sleep 2s")
-                            self.last_page = self.page
-                            fill_and_press_enter = '''() => {
-                                        const element = document.querySelector('%s');
-                                        if (element) {
-                                            element.value = '%s';
-                                            element.dispatchEvent(new Event('input', { bubbles: true }));
-                                            element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-                                        }
-                                    }
-                                ''' % (selector, action['fill_text'])
-                            await self.page.evaluate(fill_and_press_enter)
-                            await self.page.wait_for_load_state('load')
-                            self.html_content = await self.page.content()
-                            return await self._get_obs()
+                        await self.fill_search(action)
                     except Exception as e:
                         print("can't execute fill search action")
                         print(e)
-                        return await self._get_obs()
                 case ActionTypes.FILL_FORM:
                     try:
-                        try:
-                            self.last_page = self.page
-                            label, element_idx = self.tree.get_tag_name(
-                                self.tree.elementNodes[action["element_id"]])
-                            action.update({"element_id": element_idx,
-                                           "element_name": label})
-                            selector, xpath = self.tree.get_selector_and_xpath(
-                                action["element_id"])
-                        except Exception as e:
-                            print(
-                                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
-                        try:
-                            self.last_page = self.page
-                            await self.page.locator(selector).fill(action["fill_text"])
-                            await self.page.wait_for_load_state('load')
-                            self.html_content = await self.page.content()
-                            return await self._get_obs()
-                        except:
-                            self.last_page = self.page
-                            fill_and_press_enter = '''() => {
-                                        const element = document.querySelector('%s');
-                                        if (element) {
-                                            element.value = '%s';
-                                            element.dispatchEvent(new Event('input', { bubbles: true }));
-                                        }
-                                    }
-                                ''' % (selector, action['fill_text'])
-                            await self.page.evaluate(fill_and_press_enter)
-                            await self.page.wait_for_load_state('load')
-                            self.html_content = await self.page.content()
-                            return await self._get_obs()
+                        await self.fill_search(action)
                     except Exception as e:
                         print("can't execute fill form action")
                         print(e)
-                        return await self._get_obs()
                 case ActionTypes.GOOGLE_SEARCH:
                     try:
-                        self.last_page = self.page
-                        self.page = await self.context.new_page()
-                        await self.page.goto("https://www.google.com/search?q="+action["fill_text"])
-                        await self.page.wait_for_load_state('load')
-                        self.html_content = await self.page.content()
-                        return await self._get_obs()
+                        await self.search(action)
                     except Exception as e:
                         print("can't execute google search action")
                         print(e)
                 case ActionTypes.GO_BACK:
                     try:
-                        self.page = self.last_page
-                        self.last_page = self.page
-                        await self.page.wait_for_load_state('load')
-                        self.html_content = await self.page.content()
-                        return await self._get_obs()
+                        await self.go_back_last_page(action)
                     except Exception as e:
                         print("can't execute go back action")
                         print(e)
                 case ActionTypes.SELECT_OPTION:
                     try:
-                        label, element_idx = self.tree.get_tag_name(
-                            self.tree.elementNodes[action["element_id"]])
-                        action.update({"element_id": element_idx,
-                                       "element_name": label})
-                        selector, xpath = self.tree.get_selector_and_xpath(
-                            action["element_id"])
+                        await self.select_option(action)
                     except Exception as e:
-                        print(
-                            f"selector:{selector},label_name:{label},element_idx: {element_idx}")
-                    try:
-                        self.last_page = self.page
-                        try:
-                            await self.page.locator(selector).click()
-                        except:
-                            await self.page.evaluate('''() => {
-                                const element = document.querySelector('%s');
-                                if (element) {
-                                    element.click();
-                                }
-                            }''' % selector)
-                        self.page = await select_option(self.page, selector, action["fill_text"])
-                        await self.page.wait_for_load_state('load')
-                        self.html_content = await self.page.content()
-                        return await self._get_obs()
-                    except Exception as e:
+                        print("can't execute select option action")
                         print(e)
                 case ActionTypes.HOVER:
                     try:
-                        try:
-                            self.last_page = self.page
-                            label, element_idx = self.tree.get_tag_name(
-                                self.tree.elementNodes[action["element_id"]])
-                            action.update({"element_id": element_idx,
-                                           "element_name": label})
-                            selector, xpath = self.tree.get_selector_and_xpath(
-                                action["element_id"])
-                        except Exception as e:
-                            print(
-                                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
-                        try:
-                            self.last_page = self.page
-                            await self.page.hover(selector)
-                            # await self.page.wait_for_load_state('load')
-                            self.html_content = await self.page.content()
-                            return await self._get_obs()
-                        except:
-                            self.last_page = self.page
-                            hover = '''() => {
-                                        const element = document.querySelector('%s');
-                                        if (element) {
-                                            element.dispatchEvent(new Event('mouseover', { bubbles: true }));
-                                        }
-                                    }
-                                ''' % selector
-                            await self.page.evaluate(hover)
-                            # await self.page.wait_for_timeout(1000)
-                            self.html_content = await self.page.content()
-                            return await self._get_obs()
+                        await self.hover(action)
                     except Exception as e:
                         print("can't execute hover action")
                         print(e)
-                        return await self._get_obs()
                 case ActionTypes.SCROLL_DOWN:
                     try:
-                        try:
-                            self.last_page = self.page
-                            # 获取页面的总高度
-                            total_height = await self.page.evaluate("document.body.scrollHeight")
-                            # 获取视窗的高度 720
-                            viewport_height = await self.page.evaluate("window.innerHeight")
-                            # self.viewport_size['height']
-                            # viewport_height = self.page.viewport_size['height']
-                            print("total_height:", total_height)
-                            print("viewport_height:", viewport_height)
-                            if total_height < viewport_height:
-                                await self.page.evaluate("window.scrollBy(0, 500)")
-                                print("scroll_down: scrollBy(0, 500)")
-                                self.html_content = await self.page.content()
-                                return await self._get_obs()
-                            # 获取当前滚动位置
-                            current_scroll = await self.page.evaluate("window.pageYOffset")
-                            # 计算剩余高度
-                            remaining_height = total_height - current_scroll - viewport_height
-                            # 如果剩余高度小于或等于视窗高度，则滚动到页面底部
-                            if remaining_height <= viewport_height:
-                                await self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-                                print(f"scroll_down: scrollTo(0, {total_height})")
-                            else:
-                                # 否则，根据需要滚动一定量，比如视窗高度的一半
-                                scroll_amount = current_scroll + viewport_height * 0.75
-                                await self.page.evaluate(f"window.scrollTo(0, {scroll_amount})")
-                                print(f"scroll_down: scrollTo(0, {scroll_amount})")
-                            self.html_content = await self.page.content()
-                            return await self._get_obs()
-                        except:
-                            self.last_page = self.page
-                            await self.page.mouse.wheel(0, 100)
-                            print("scroll_down: mouse.wheel(0, 100)")
-                            self.html_content = await self.page.content()
-                            return await self._get_obs()
+                        await self.scroll_down()
                     except Exception as e:
                         print("can't execute scroll down action")
                         print(e)
-                        return await self._get_obs()
                 case ActionTypes.SCROLL_UP:
                     try:
-                        try:
-                            self.last_page = self.page
-                            # 获取视窗的高度
-                            viewport_height = await self.page.evaluate("window.innerHeight")
-                            # 获取当前滚动位置
-                            current_scroll = await self.page.evaluate("window.pageYOffset")
-                            # 如果当前滚动位置大于0，则向上滚动一定量
-                            if current_scroll > 0:
-                                if current_scroll < viewport_height:
-                                    scroll_amount = 0
-                                else:
-                                    scroll_amount = current_scroll - viewport_height / 2
-                                await self.page.evaluate(f"window.scrollTo(0, {scroll_amount})")
-                            self.html_content = await self.page.content()
-                            return await self._get_obs()
-                        except:
-                            self.last_page = self.page
-                            #
-                            await self.page.mouse.wheel(0, -100)
-                            self.html_content = await self.page.content()
-                            return await self._get_obs()
+                        await self.scroll_up()
                     except Exception as e:
                         print("can't execute scroll up action")
                         print(e)
-                        return await self._get_obs()
                 case ActionTypes.NONE:
                     try:
-                        return await self._get_obs()
-                    except Exception as e:
+                        await self.page.wait_for_load_state('load')
+                        self.html_content = await self.page.content()
+                    except:
                         print("can't execute none action")
                         print(e)
                 case _:
@@ -449,11 +453,10 @@ class AsyncHTMLEnvironment:
                         f"Unknown action type {action['action_type']}"
                     )
         except Exception as e:
-            print("execute error")
+            print("execute action error")
             print(e)
-        return await self._get_obs()
 
-    async def get_page(self, element_id: int) -> (Page, str):
+    async def get_page(self, element_id: int) -> Tuple[Page, str]:
         try:
             selector = self.tree.get_selector(element_id)
         except:
@@ -464,7 +467,6 @@ class AsyncHTMLEnvironment:
         await self.context.close()
         await self.browser.close()
         await self.playwright.stop()
-
 
     @staticmethod
     def encode_and_resize(image):

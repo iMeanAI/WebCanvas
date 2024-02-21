@@ -18,7 +18,7 @@ from result import write_result_to_excel
 # 解析命令行参数
 parser = argparse.ArgumentParser(
     description="Run the agent in different modes.")
-parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"], default="vision_to_dom",
+parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"], default="dom",
                     help="Choose interaction mode: "
                          "'dom' for DOM-based interaction, "
                          "'dom_v_desc' for DOM-based interaction with vision description,"
@@ -223,6 +223,51 @@ async def aexec_playwright(code, page):
     return await locals()['__ex'](page)
 
 
+async def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
+    thought = response["description"].get("thought")
+    action_type = response['action_type']
+    acton_input = response['value']
+    action = response["description"].get("action")
+    current_trace = {"thought": thought, "action": action}
+    element_value = None
+    try:
+        element_id = int(response['id'])
+    except:
+        element_id = 0
+    #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
+    if action_type in ["fill_form", "fill_search", "click"]:
+        try:
+            selector = env.tree.get_selector_and_xpath(
+                env.tree.nodeDict[element_id])
+
+            if action_type in ["fill_form", "fill_search"]:
+                element_value = acton_input
+            else:
+                element_value = await get_element_content(env.page, selector)
+        except:
+            print("accessibility tree don't have this element_id")
+            selector = None
+            element_id = 0
+            action_type = "None"
+    else:
+        selector = None
+        element_id = 0
+    execute_action = create_action(
+        elementid=element_id, action_type=action_type, action_input=acton_input)
+    return execute_action, current_trace, selector, element_value
+
+
+async def get_observation(mode: str, env: AsyncHTMLEnvironment, action: Action):
+    if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
+        await env.execute_action(action)
+        observation, observation_VforD = await env.get_obs()
+        return observation, observation_VforD
+    else:
+        await env.execute_action(action)
+        observation = await env.get_obs()
+        return observation
+
+
 async def main(num_steps=0, mode="dom"):
     file = read_file()
 
@@ -242,7 +287,10 @@ async def main(num_steps=0, mode="dom"):
     # for task_index in range(raw_data_start_index, raw_data_end_index):
 
     start_index = 1
-    for task_index in range(start_index, len(file)):
+    score_dif = [2, 3, 10, 15, 22, 32, 40, 47, 51,
+                 54, 55, 63, 72, 75, 79, 87, 89, 101, 103, 105]
+    # for task_index in range(start_index, len(file)):
+    for task_index in score_dif:
         task = file[task_index]
         task_name, reference_task_length, reference_evaluate_steps = task
         print("task index:", task_index)
@@ -251,7 +299,6 @@ async def main(num_steps=0, mode="dom"):
         print("raw data:\n", reference_evaluate_steps)
         # #! # 1. playwright
         # # 用playwright运行浏览器
-
         # async def run(playwright: Playwright) -> None:
         #     '''用playwright运行浏览器'''
         #     evaluate_steps = reference_evaluate_steps
@@ -318,17 +365,13 @@ async def main(num_steps=0, mode="dom"):
         GR = config['basic']['global_reward']
         CR = config['basic']['current_step_reward']
         PT = config['basic']['previous_trace']
-
         observation_VforD = None
         if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
             observation, observation_VforD = await env.reset("about:blank")
         else:
             observation = await env.reset("about:blank")
-
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
-
-        # task_name = "Search for flights available from Calgary (CYYC) to New York (ZNY) in flightaware."
         last_action_description = ""
         dict_to_write = None
         step_index_list = []
@@ -381,45 +424,11 @@ async def main(num_steps=0, mode="dom"):
                     traceback.print_exc()
                     continue
 
-            async def parse_current_trace(response):
-                thought = response["description"].get("thought")
-                action_type = response['action_type']
-                acton_input = response['value']
-                action = response["description"].get("action")
-                current_trace = {"thought": thought, "action": action}
-                element_value = None
-                try:
-                    element_id = int(response['id'])
-                except:
-                    element_id = 0
-                #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
-                if action_type in ["fill_form", "fill_search", "click"]:
-                    try:
-                        selector = env.tree.get_selector_and_xpath(
-                            env.tree.nodeDict[element_id])
-
-                        if action_type in ["fill_form", "fill_search"]:
-                            element_value = acton_input
-                        else:
-                            element_value = await get_element_content(env.page, selector)
-                    except:
-                        print("accessibility tree don't have this element_id")
-                        selector = None
-                        element_id = 0
-                        action_type = "None"
-                else:
-                    selector = None
-                    element_id = 0
-                execute_action = create_action(
-                    elementid=element_id, action_type=action_type, action_input=acton_input)
-                return execute_action, current_trace, selector, element_value
-
             print("dict_to_write:", dict_to_write)
             dict_result_list.append(str(dict_to_write))
-
             if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
                 execute_action, current_trace, path, element_value = await parse_current_trace(
-                    dict_to_write)
+                    dict_to_write, env)
                 selector, xpath = (
                     path[0], path[1]) if path is not None else (None, None)
                 print("current trace:\n", current_trace)
@@ -441,9 +450,12 @@ async def main(num_steps=0, mode="dom"):
                     break
                 # input()
                 if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-                    observation, observation_VforD = await env.execute_action(execute_action)
+                    await env.execute_action(execute_action)
+                    observation, observation_VforD = await env.get_obs()
                 else:
-                    observation = await env.execute_action(execute_action)
+                    await env.execute_action(execute_action)
+                    observation = await env.get_obs()
+
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
 
@@ -456,9 +468,11 @@ async def main(num_steps=0, mode="dom"):
                     execute_action.update(
                         {"element_id": 0, "action_type": ActionTypes.GO_BACK})
                     if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-                        observation, observation_VforD = await env.execute_action(execute_action)
+                        await env.execute_action(execute_action)
+                        observation, observation_VforD = await env.get_obs()
                     else:
-                        observation = await env.execute_action(execute_action)
+                        await env.execute_action(execute_action)
+                        observation = await env.get_obs()
                     last_action_description = current_reward.get("description")
                 else:
                     last_action_description = ""
@@ -477,7 +491,7 @@ async def main(num_steps=0, mode="dom"):
                 if await env.vision_execute_action(execute_action):
                     break
                 print("vision_execute_action finished!")
-                observation = await env._get_obs()
+                observation = await env.get_obs()
                 print("执行动作后的url", env.page.url)
 
                 previous_trace.append(current_trace)
