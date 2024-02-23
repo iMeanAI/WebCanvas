@@ -14,7 +14,7 @@ from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
 import time
 
-from ...Prompt import D_VObservationPromptConstructor
+from agent.Prompt import *
 
 # Vimium 扩展的路径，需要自定义，相对路径会有点问题，导致路径切换为C:\\...\AppData\Local\ms-playwright\chromium-1055\chrome-win\\vimium-master
 # 只有vision mode需要Vimium 扩展，run in d_v mode不需要
