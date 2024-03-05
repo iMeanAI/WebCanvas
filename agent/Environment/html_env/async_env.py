@@ -100,7 +100,7 @@ class AsyncHTMLEnvironment:
         except Exception as e:
             print(f"Error in get_obs: {e}")
         if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-            # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+            # byCarl: 仅用于判断图片是否是base64编码
             is_valid, message = is_valid_base64(
                 observation_VforD)
             print("async_env.py _get_obs observation_VforD:", message)
@@ -485,10 +485,10 @@ class AsyncHTMLEnvironment:
             raise ValueError("Page not initialized or loaded.")
 
         # await self.page.wait_for_load_state("load")
-        await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
+        # await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
         # 捕获屏幕截图
         screenshot_bytes = ""
-        for i in range(5):
+        for i in range(6):
             try:
                 screenshot_bytes = await self.page.screenshot()
                 break
