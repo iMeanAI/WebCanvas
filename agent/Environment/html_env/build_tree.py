@@ -308,7 +308,7 @@ class HTMLTree:
         parentid_str += "-1"
         return parentid_str, parent_tag_str, twinId_str
 
-    def get_selector_and_xpath(self, idx: int) -> (str, str):
+    def get_selector_and_xpath(self, idx: int) -> (str, str): # type: ignore
         try:
             selector = self.get_selector(idx)
             xpath = self.get_xpath(idx)
