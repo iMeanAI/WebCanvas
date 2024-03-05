@@ -19,6 +19,7 @@ def write_result_to_excel(
     previous_trace_list,
     selector_list,
     action_list,
+    match_func_result_list,
     file_path="./csv_results/group1/DOM-Based",
 ):
 
@@ -67,7 +68,8 @@ def write_result_to_excel(
         "trace": current_trace_list,
         "previous_trace": previous_trace_list,
         "selector": selector_list,
-        "action": action_list
+        "action": action_list,
+        "match_result":match_func_result_list
     })
 
     df.to_csv(csv_path)

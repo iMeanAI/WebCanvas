@@ -19,17 +19,6 @@ import time
 from ...Utils.utils import is_valid_base64
 
 
-async def select_option(page, selector, value):
-    best_option = [-1, "", -1]
-    for i in range(await page.locator(selector).count()):
-        option = await page.locator(selector).nth(i).inner_text()
-        similarity = SequenceMatcher(None, option, value).ratio()
-        if similarity > best_option[2]:
-            best_option = [i, option, similarity]
-    await page.select_option(index=best_option[0], timeout=10000)
-    return page
-
-
 class AsyncHTMLEnvironment:
     @beartype
     def __init__(
@@ -117,18 +106,18 @@ class AsyncHTMLEnvironment:
 
     async def click(self, action):
         try:
-            label, element_idx = self.tree.get_tag_name(
+            label, element_id = self.tree.get_tag_name(
                 self.tree.elementNodes[action["element_id"]])
-            action.update({"element_id": element_idx,
+            action.update({"element_id": element_id,
                            "element_name": label})
             selector, xpath = self.tree.get_selector_and_xpath(
                 action["element_id"])
         except Exception as e:
             print(
-                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                f"selector:{selector},label_name:{label},element_id: {element_id}")
         if label == "link":
             try:
-                element = self.tree.elementNodes[element_idx]
+                element = self.tree.elementNodes[element_id]
                 url = element["attributes"].get("href")
                 if bool(urlparse(url).netloc) is False:
                     base_url = self.page.url()
@@ -142,7 +131,7 @@ class AsyncHTMLEnvironment:
                 try:
                     self.last_page = self.page
                     await self.page.evaluate('''() => {
-                        const element = document.querySelector('%s');
+                        var element = document.querySelector('%s');
                         if (element) {
                             element.click();
                         }
@@ -159,7 +148,7 @@ class AsyncHTMLEnvironment:
                     await self.page.locator(selector).click()
                 except:
                     await self.page.evaluate('''() => {
-                        const element = document.querySelector('%s');
+                        var element = document.querySelector('%s');
                         if (element) {
                             element.click();
                         }
@@ -174,21 +163,22 @@ class AsyncHTMLEnvironment:
         self.last_page = self.page
         self.page = await self.context.new_page()
         await self.page.goto(action["url"], timeout=10000)
+        await self.page.wait_for_timeout(3000)
         await self.page.wait_for_load_state('load')
         self.html_content = await self.page.content()
 
     async def fill_search(self, action):
         try:
             self.last_page = self.page
-            label, element_idx = self.tree.get_tag_name(
+            label, element_id = self.tree.get_tag_name(
                 self.tree.elementNodes[action["element_id"]])
-            action.update({"element_id": element_idx,
+            action.update({"element_id": element_id,
                            "element_name": label})
             selector, xpath = self.tree.get_selector_and_xpath(
                 action["element_id"])
         except Exception as e:
             print(
-                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                f"selector:{selector},label_name:{label},element_id: {element_id}")
         try:
             self.last_page = self.page
             await self.page.locator(selector).fill(action["fill_text"])
@@ -199,7 +189,7 @@ class AsyncHTMLEnvironment:
         except:
             self.last_page = self.page
             fill_and_press_enter = '''() => {
-                        const element = document.querySelector('%s');
+                        var element = document.querySelector('%s');
                         if (element) {
                             element.value = '%s';
                             element.dispatchEvent(new Event('input', { bubbles: true }));
@@ -214,15 +204,15 @@ class AsyncHTMLEnvironment:
     async def fill_form(self, action):
         try:
             self.last_page = self.page
-            label, element_idx = self.tree.get_tag_name(
+            label, element_id = self.tree.get_tag_name(
                 self.tree.elementNodes[action["element_id"]])
-            action.update({"element_id": element_idx,
+            action.update({"element_id": element_id,
                            "element_name": label})
             selector, xpath = self.tree.get_selector_and_xpath(
                 action["element_id"])
         except Exception as e:
             print(
-                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                f"selector:{selector},label_name:{label},element_id: {element_id}")
         try:
             self.last_page = self.page
             await self.page.locator(selector).fill(action["fill_text"])
@@ -231,7 +221,7 @@ class AsyncHTMLEnvironment:
         except:
             self.last_page = self.page
             fill = '''() => {
-                        const element = document.querySelector('%s');
+                        var element = document.querySelector('%s');
                         if (element) {
                             element.value = '%s';
                             element.dispatchEvent(new Event('input', { bubbles: true }));
@@ -257,28 +247,44 @@ class AsyncHTMLEnvironment:
 
     async def select_option(self, action):
         try:
-            label, element_idx = self.tree.get_tag_name(
+            self.last_page = self.page
+            label, element_id = self.tree.get_tag_name(
                 self.tree.elementNodes[action["element_id"]])
-            action.update({"element_id": element_idx,
+            action.update({"element_id": element_id,
                            "element_name": label})
             selector, xpath = self.tree.get_selector_and_xpath(
                 action["element_id"])
+            print("selector:\n:", selector)
         except Exception as e:
             print(
-                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                f"selector:{selector},label_name:{label},element_id: {element_id}")
         try:
-            self.last_page = self.page
-            try:
-                await self.page.locator(selector).click()
-            except:
-                await self.page.evaluate('''() => {
-                    const element = document.querySelector('%s');
-                    if (element) {
-                        element.click();
-                    }
-                }''' % selector)
-            self.page = await select_option(self.page, selector, action["fill_text"])
-            await self.page.wait_for_load_state('load')
+
+            select_str = '''() => {
+                var selectElement = document.querySelector('%s');
+                var options = selectElement.querySelectorAll('option');
+                var values = [];
+                for (var option of options) {
+                    values.push(option.innerText);
+                }
+                return values;
+            }''' % (selector)
+
+            options = await self.page.evaluate(select_str)
+            print("Options values:", options)
+            best_option = [-1, "", -1]
+            for i, option in enumerate(options):
+                similarity = SequenceMatcher(
+                    None, option, action['fill_text']).ratio()
+                if similarity > best_option[2]:
+                    best_option = [i, option, similarity]
+            # print("best_option:\n", best_option)
+            await self.page.evaluate(f'''() => {{
+                var selectElement = document.querySelector('{selector}');
+                selectElement.value = '{best_option[1]}';
+                selectElement.dispatchEvent(new Event('change'));
+            }}''')
+            await self.page.wait_for_timeout(2000)
             self.html_content = await self.page.content()
         except Exception as e:
             print(e)
@@ -286,15 +292,15 @@ class AsyncHTMLEnvironment:
     async def hover(self, action):
         try:
             self.last_page = self.page
-            label, element_idx = self.tree.get_tag_name(
+            label, element_id = self.tree.get_tag_name(
                 self.tree.elementNodes[action["element_id"]])
-            action.update({"element_id": element_idx,
+            action.update({"element_id": element_id,
                            "element_name": label})
             selector, xpath = self.tree.get_selector_and_xpath(
                 action["element_id"])
         except Exception as e:
             print(
-                f"selector:{selector},label_name:{label},element_idx: {element_idx}")
+                f"selector:{selector},label_name:{label},element_id: {element_id}")
         try:
             self.last_page = self.page
             await self.page.hover(selector)
@@ -304,7 +310,7 @@ class AsyncHTMLEnvironment:
         except:
             self.last_page = self.page
             hover = '''() => {
-                        const element = document.querySelector('%s');
+                        var element = document.querySelector('%s');
                         if (element) {
                             element.dispatchEvent(new Event('mouseover', { bubbles: true }));
                         }
@@ -519,3 +525,67 @@ class AsyncHTMLEnvironment:
         else:
             return False
         return True
+
+    async def test_select_option_action(self, selector, value):
+        select_str = '''() => {
+            var selectElement = document.querySelector('%s');
+            var options = selectElement.querySelectorAll('option');
+            var values = [];
+            for (var option of options) {
+                values.push(option.innerText);
+            }
+            return values;
+        }''' % (selector)
+        options = await self.page.evaluate(select_str)
+        print("Options values:", options)
+        best_option = [-1, "", -1]
+        for i, option in enumerate(options):
+            similarity = SequenceMatcher(None, option, value).ratio()
+            if similarity > best_option[2]:
+                best_option = [i, option, similarity]
+        print("best_option:\n", best_option)
+        await self.page.evaluate(f'''() => {{
+            var selectElement = document.querySelector('{selector}');
+            selectElement.value = '{best_option[1]}';
+            selectElement.dispatchEvent(new Event('change'));
+        }}''')
+        await self.page.wait_for_timeout(2000)
+
+    async def test_click_action(self, selector):
+
+        # 检查元素是否可点击
+        # await self.page.wait_for_selector(selector)
+        # is_clickable = await self.page.is_enabled(selector)
+        # if is_clickable:
+        #     print("元素可点击")
+        # else:
+        #     print("元素不可点击")
+        # await self.page.evaluate('''() => {
+        #     // 找到指定的元素
+        #     var element = document.querySelector('#refine-search-toggle');
+        #     // 模拟点击操作
+        #     if (element) {
+        #         element.click();
+        #     }
+        # }''')
+        # await self.page.wait_for_timeout(5000)
+        # 检查元素是否可点击
+        await self.page.wait_for_selector(selector)
+        is_clickable = await self.page.is_enabled(selector)
+        if is_clickable:
+            print("元素可点击")
+        else:
+            print("元素不可点击")
+        try:
+            await self.page.evaluate('''() => {
+                var element = document.querySelector('#__next > div > div.sc-bSGrXo.dTxTTa > div.sc-hELUyY.iZglKt > div.sc-fSCnZK.qErth > div > div > div > button:nth-child(4)');
+                if (element) {
+                    element.click();   
+                } 
+            }''')
+            print("点击成功")
+        except Exception as e:
+            print("点击失败:", e)
+
+    
+        await self.page.wait_for_timeout(20000)

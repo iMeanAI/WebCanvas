@@ -90,7 +90,7 @@ class ObservationPromptConstructor(BasePromptConstructor):
                 self.prompt_user += \
                     f"Task completion description is {status_description}"
             if feedback != "":
-                self.prompt_user += f"An invalid action description is below:\n {feedback}\n"
+                self.prompt_user += f"Here are some other things you need to know:\n {feedback}\n"
             self.prompt_user += observation
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
@@ -377,7 +377,7 @@ class CurrentRewardPromptConstructor(BasePromptConstructor):
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request, stringfy_previous_trace_output=stringfy_previous_trace_output,
             stringfy_current_trace_output=stringfy_current_trace_output)
-        self.prompt_user += f"current observation or accessibility tree is {observation}"
+        self.prompt_user += f"current accessibility tree is {observation}"
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages

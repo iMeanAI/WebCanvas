@@ -6,6 +6,7 @@ import requests
 from lxml import html
 from agent.LLM import *
 from agent.Prompt import *
+from agent.Environment.html_env.utils import MapTagNameList
 
 
 class StepEvaluator():
@@ -92,10 +93,14 @@ class ElementEvaluator(StepEvaluator):
             if (input_elements is not None) and (reference_elements is not None):
                 score = input_elements[0] is reference_elements[0]
                 try:
-                    if reference_elements[0].tag == "span":
-                        parent_element = reference_elements[0].getparent()
-                        score_parent = input_elements[0] is parent_element
-                        score = max(score, score_parent)
+                    if reference_elements[0].tag in MapTagNameList:
+                        trace_up_count = 0
+                        current_element = reference_elements[0]
+                        while trace_up_count < 3 and score == 0:
+                            trace_up_count += 1
+                            current_element = current_element.getparent()
+                            score_parent = input_elements[0] is current_element
+                            score = max(score, score_parent)     
                 except:
                     pass
             else:
@@ -113,10 +118,17 @@ class ElementEvaluator(StepEvaluator):
                     score = input_element is reference_element
 
                     try:
-                        if reference_element.name == "span":
-                            parent_elements = reference_element.parent
-                            score_parent = input_element is parent_elements
-                            score = max(score, score_parent)
+                        if reference_element.name in MapTagNameList:
+                            # parent_elements = reference_element.parent
+                            # score_parent = input_element is parent_elements
+                            # score = max(score, score_parent)
+                            trace_up_count = 0
+                            current_element = reference_element
+                            while trace_up_count < 3 and score == 0:
+                                trace_up_count += 1
+                                current_element = current_element.parent
+                                score_parent = input_element is current_element
+                                score = max(score, score_parent) 
                     except:
                         pass
             except:

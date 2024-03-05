@@ -23,7 +23,8 @@ class InteractionMode:
                 user_request, stringfy_thought_and_action_output)
             # print(f"\033[32mGlobal_reward_Request{reward_request}")  # 绿色
             # print("\033[0m")
-            print_info(f"Global_Reward_Request:\n{reward_request}", "\033[32m")  # 绿色
+            print_info(
+                f"Global_Reward_Request:\n{reward_request}", "\033[32m")  # 绿色
             reward_response = ""
             for i in range(3):
                 try:
@@ -33,7 +34,8 @@ class InteractionMode:
                     break
                 except Exception as e:
                     traceback.print_exc()
-                    print(f"planning reward_response or status_and_description error for {i+1} times")
+                    print(
+                        f"planning reward_response or status_and_description error for {i+1} times")
                     # logger.error(f"Error in reward_response: {e}")
                     continue
             print(f"\033[34mGlobal_Reward_Response:\n{reward_response}")  # 蓝色
@@ -73,7 +75,9 @@ class DomVDescMode(InteractionMode):
         planning_request = ObservationVisionDiscPromptConstructor().construct(
             user_request, previous_trace, observation, feedback, status_description, vision_desc_response)
         # print(f"\033[32m{planning_request}")
-        print(f"\033[35mplanning_request:\n{print_limited_json(planning_request, limit=10000)}")  # 紫色
+        # 紫色
+        print(
+            f"\033[35mplanning_request:\n{print_limited_json(planning_request, limit=10000)}")
         print("\033[0m")
         planning_response, error_message = await self.model2.request(planning_request)
         return planning_response, error_message, None, None
@@ -90,7 +94,8 @@ class VisionToDomMode(InteractionMode):
         max_retries = 3  # 设置最大重试次数为3
         for attempt in range(max_retries):
             vision_act_response, error_message = await self.model.request(vision_act_request)
-            print(f"\033[36mvision_act_response:\n{vision_act_response}")  # 蓝色输出
+            # 蓝色输出
+            print(f"\033[36mvision_act_response:\n{vision_act_response}")
             print("\033[0m")  # 重置颜色
             planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(
                 vision_act_response)
@@ -132,7 +137,8 @@ class VisionToDomMode(InteractionMode):
 
                 # 发送请求并等待响应
                 planning_response, error_message = await self.model2.request(planning_request)
-                print(f"\033[34mVisionToDomplanning_response:\n{planning_response}")
+                print(
+                    f"\033[34mVisionToDomplanning_response:\n{planning_response}")
                 print("\033[0m")
                 # 解析元素ID
                 element_id = ActionParser().get_element_id(planning_response)
@@ -170,7 +176,8 @@ class DVMode(InteractionMode):
         # display_string = planning_request[:100] # 截取字符串的前 max_length 个字符
         # print(f"\033[32m{display_string}")
 
-        print(f"\033[32mplanning_request:\n{print_limited_json(planning_request, limit=1000)}")
+        print(
+            f"\033[32mplanning_request:\n{print_limited_json(planning_request, limit=1000)}")
         print("\033[0m")
         planning_response, error_message = await self.model.request(planning_request)
         return planning_response, error_message, None, None
@@ -182,7 +189,8 @@ class VisionMode(InteractionMode):
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         # vision模式的代码
-        planning_request = VisionObservationPromptConstructor().construct(user_request, previous_trace, observation)
+        planning_request = VisionObservationPromptConstructor(
+        ).construct(user_request, previous_trace, observation)
         print(f"\033[32m{planning_request}")  # 绿色
         print("\033[0m")
         planning_response, error_message = await self.model.request(planning_request)
@@ -201,7 +209,7 @@ class Planning:
 
         # get global reward
         reward_response, status_and_description = await InteractionMode(gpt4).get_global_reward(
-                user_request=user_request, previous_trace=previous_trace)
+            user_request=user_request, previous_trace=previous_trace)
 
         # 构建planning prompt及查询
         status_description = ""
@@ -294,8 +302,7 @@ class Planning:
                 score_description = ActionParser().extract_score_and_description(
                     evaluate_response)
                 # 蓝色
-                print(
-                    f"\033[34mCurrent_reward_Response:\n{score_description}")
+                print(f"\033[34mCurrent_reward_Response:\n{score_description}")
                 print("\033[0m")
                 return score_description
             else:
@@ -309,8 +316,7 @@ class Planning:
                 score_description = ActionParser().extract_score_and_description(
                     evaluate_response)
                 # 蓝色
-                print(
-                    f"\033[34mVision_reward_Response:\n{score_description}")
+                print(f"\033[34mVision_reward_Response:\n{score_description}")
                 print("\033[0m")
                 return score_description
         return ""

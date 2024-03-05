@@ -48,14 +48,16 @@ class ActiveElements:
                 return 'input'
         elif tag_name == 'select':
             return 'select'
+        elif tag_name == 'optgroup':
+            return 'select'
         elif tag_name == 'textarea':
             return 'textarea'
         elif tag_name == 'option':
             return 'option'
         elif tag_name == 'datalist':
             return 'datalist'
-        elif tag_name == 'label':
-            return 'label'
+        # elif tag_name == 'label':
+        #     return 'label'
         elif tag_name == 'button':
             return 'button'
         elif tag_name == 'a':
