@@ -37,7 +37,9 @@ TagNameList = [
     "h3",
     "h4",
     "h5",
-    "h6"
+    "h6",
+    "filter-chip"
+
 ]
 
 MapTagNameList = [
@@ -48,7 +50,9 @@ MapTagNameList = [
     "h4",
     "h5",
     "h6",
-    "div"
+    "div",
+    "li",
+    "ul"
 ]
 
 DelTagNameList = [
@@ -66,7 +70,9 @@ ConditionTagNameList = [
     'th',
     'tr',
     'li',
-    'div'
+    'div',
+    'label',
+    'filter-chip'
 ]
 
 

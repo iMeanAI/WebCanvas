@@ -109,6 +109,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
     # page_url = html_env.page.url
     # page_url = page.url
     step_score = 0
+    match_result = []
     for evaluate in evaluate_steps:
         if evaluate["score"] != 1:
             match_function = evaluate["match_function"]
@@ -207,9 +208,13 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                 pass
 
             evaluate["score"] = max(evaluate["score"], score)
+        if evaluate["score"] >= 1:
+            match_result.append(
+                {evaluate["match_function"]: evaluate["reference_answer"]})
         step_score += evaluate["score"]
     print("current step score:", step_score, "/", len(evaluate_steps))
-    return evaluate_steps
+    print("current step match result:", match_result)
+    return evaluate_steps, match_result
     # print(evaluate_steps)
 
 
@@ -389,10 +394,11 @@ async def main(num_steps=0, mode="dom"):
         selector_list = []
         action_list = []
         previoust_trace_list = []
+        match_func_result_list = []
         task_finished = False
         step_error_count = 0
         task_error = False
-        for num_steps in range(config['basic']['Max_Action_Step']):
+        for num_steps in range(max(config['basic']['Max_Action_Step'],1.5*reference_task_length)):
             step_index_list.append(num_steps)
             total_step_score = 0
             # break
@@ -443,13 +449,14 @@ async def main(num_steps=0, mode="dom"):
                 action_list.append(str(execute_action))
                 print("selector:", selector)
                 selector_list.append(selector)
-                evaluate_steps = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
+                evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
                 print("执行动作前的url", env.page.url)
                 for evaluate in evaluate_steps:
                     total_step_score += evaluate["score"]
                 print(total_step_score, "/", len(reference_evaluate_steps))
                 score_str = str(total_step_score) + " / " + \
                     str(len(reference_evaluate_steps))
+                match_func_result_list.append(str(match_result))
                 score_list.append(score_str)
                 if total_step_score == len(reference_evaluate_steps):
                     task_finished = True
@@ -509,12 +516,12 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace = []
                         previous_trace.append(current_trace)
             previoust_trace_list.append(previous_trace)
-            # a = input("回车继续下一个Action，按q退出")
-            # if a == "q" or step_error_count > 3:
-            #     break
-            if step_error_count > 3:
-                task_error = True
+            a = input("回车继续下一个Action，按q退出")
+            if a == "q" or step_error_count > 3:
                 break
+            # if step_error_count > 3:
+            #     task_error = True
+            #     break
         # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
         # print(json5.dumps(a, indent=4))
         # input()
@@ -528,21 +535,22 @@ async def main(num_steps=0, mode="dom"):
             print("\ntotal step score:", total_step_score,
                   "/", len(reference_evaluate_steps))
 
-            write_result_to_excel(
-                task_name=task_name,
-                task_id=task_index,
-                task_finished=task_finished,
-                error_occ=task_error,
-                step_index_list=step_index_list,
-                score_list=score_list,
-                step_reward_list=step_reward_list,
-                dict_result_list=dict_result_list,
-                url_list=url_list,
-                current_trace_list=current_trace_list,
-                previous_trace_list=previoust_trace_list,
-                selector_list=selector_list,
-                action_list=action_list,
-            )
+            # write_result_to_excel(
+            #     task_name=task_name,
+            #     task_id=task_index,
+            #     task_finished=task_finished,
+            #     error_occ=task_error,
+            #     step_index_list=step_index_list,
+            #     score_list=score_list,
+            #     step_reward_list=step_reward_list,
+            #     dict_result_list=dict_result_list,
+            #     url_list=url_list,
+            #     current_trace_list=current_trace_list,
+            #     previous_trace_list=previoust_trace_list,
+            #     selector_list=selector_list,
+            #     action_list=action_list,
+            #     match_func_result_list=match_func_result_list
+            # )
 
             # length score
             task_evaluator = TaskLengthEvaluator()

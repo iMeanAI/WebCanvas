@@ -242,7 +242,7 @@ class HTMLTree:
         html_content = node["htmlContents"]
         return html_content
 
-    def get_tag_name(self, element: ElementNode) -> (str, int):
+    def get_tag_name(self, element: ElementNode) -> (str, int):  # type: ignore
         tag_name = ActiveElements.get_element_tagName(element)
         tag_idx = element["nodeId"]
         if tag_name == "unknown":
@@ -252,12 +252,12 @@ class HTMLTree:
             if tag_name in MapTagNameList:
                 # 从兄弟节点获得可交互元素且优先级高于父节点
                 parent_element = self.pruningTreeNode[element["parentId"]]
-                for broId in parent_element["childIds"]:
-                    if broId != tag_idx:
-                        bro_element = self.pruningTreeNode[broId]
-                        bro_element_tag_name = ActiveElements.get_element_tagName(bro_element)
-                        if bro_element_tag_name != "unknown":
-                            return (bro_element_tag_name,broId)
+                # for broId in parent_element["childIds"]:
+                #     if broId != tag_idx:
+                #         bro_element = self.pruningTreeNode[broId]
+                #         bro_element_tag_name = ActiveElements.get_element_tagName(bro_element)
+                #         if bro_element_tag_name != "unknown":
+                #             return (bro_element_tag_name,broId)
                 return self.get_tag_name(parent_element)
             else:
                 return ("statictext", tag_idx)
@@ -287,7 +287,7 @@ class HTMLTree:
             stack.extend(reversed(children))
         return contents
 
-    def get_parents_id(self, idx: int) -> (str, str, str):
+    def get_parents_id(self, idx: int) -> (str, str, str):  # type: ignore
         parentid_str = ""
         parent_tag_str = ""
         current_node = self.elementNodes[idx]
@@ -308,7 +308,7 @@ class HTMLTree:
         parentid_str += "-1"
         return parentid_str, parent_tag_str, twinId_str
 
-    def get_selector_and_xpath(self, idx: int) -> (str, str):
+    def get_selector_and_xpath(self, idx: int) -> (str, str): # type: ignore
         try:
             selector = self.get_selector(idx)
             xpath = self.get_xpath(idx)
