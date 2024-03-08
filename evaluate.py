@@ -2,6 +2,7 @@ import time
 import json5
 import requests
 from agent.Environment.html_env.async_env import AsyncHTMLEnvironment
+from agent.Environment.html_env.vision_async_env import VisionAsyncHTMLEnvironment
 from evaluate import *
 from agent.Plan import *
 from playwright.async_api import Playwright, async_playwright, expect, Page
@@ -10,20 +11,27 @@ from agent.Environment.html_env.actions import create_action, Action, ActionType
 import re
 import asyncio
 import argparse
+import toml
 
+from result import write_result_to_excel
 
 # 解析命令行参数
 parser = argparse.ArgumentParser(
     description="Run the agent in different modes.")
-parser.add_argument("--mode", choices=["dom", "vision", "d_v"], default="d_v",
-                    help="Choose interaction mode: 'dom' for DOM-based interaction, 'vision' for vision-based interaction, 'd_v' for DOM-based and vision-based interaction.")
+parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"], default="dom",
+                    help="Choose interaction mode: "
+                         "'dom' for DOM-based interaction, "
+                         "'dom_v_desc' for DOM-based interaction with vision description,"
+                         "'vision_to_dom' for vision-to-dom interaction, "
+                         "'vision' for vision-based interaction, "
+                         "'d_v' for DOM-based and vision-based interaction.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
 interaction_mode = args.mode
 raw_data_index = args.index
 
 
-def read_file(file_path="./data/test.json"):
+def read_file(file_path="./data/group1.json"):
     '''读取标签数据'''
     return_list = []
     with open(file_path) as f:
@@ -39,23 +47,25 @@ def read_file(file_path="./data/test.json"):
                 key = evaluation["content"]["key"]
                 reference_answer = evaluation["content"]["reference_answer"]
                 reference_evaluate_steps.append({"match_function": match_function,
-                                                "key": key, "reference_answer": reference_answer, "score": 0})
+                                                 "key": key, "reference_answer": reference_answer, "score": 0})
             elif "element_path" in match_function:  # TODO
                 reference_answer = evaluation["content"]["reference_answer"]
                 method = evaluation["method"]
                 netloc = evaluation["content"]["netloc"]
                 reference_evaluate_steps.append({"match_function": match_function, "method": method,
-                                                "reference_answer": reference_answer, "netloc": netloc, "score": 0})
+                                                 "reference_answer": reference_answer, "netloc": netloc, "score": 0})
             elif "element_value" in match_function:
                 reference_answer = evaluation["content"]["reference_answer"]
                 netloc = evaluation["content"]["netloc"]
                 if "path" in evaluation["content"].keys():
                     path = evaluation["content"]["path"]
                     reference_evaluate_steps.append({"match_function": match_function,
-                                                    "reference_answer": reference_answer, "netloc": netloc, "path": path, "score": 0})
+                                                     "reference_answer": reference_answer, "netloc": netloc,
+                                                     "path": path, "score": 0})
                 else:
                     reference_evaluate_steps.append({"match_function": match_function,
-                                                     "reference_answer": reference_answer, "netloc": netloc, "score": 0})
+                                                     "reference_answer": reference_answer, "netloc": netloc,
+                                                     "score": 0})
         return_list.append(
             [task_name, reference_task_length, reference_evaluate_steps])
     # print(return_list)
@@ -74,6 +84,7 @@ def get_netloc(url: str) -> str:
     except:
         netloc = ""
     return netloc
+
 
 async def get_element_content(page: Page, selector):
     '''获取元素内容'''
@@ -115,7 +126,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                 input_netloc = get_netloc(page.url)
                 method = evaluate["method"]
                 score = ElementEvaluator.path_exact_match(
-                    input_path, evaluate["reference_answer"], method, await page.content(), input_netloc, evaluate["netloc"])
+                    input_path, evaluate["reference_answer"], method, await page.content(), input_netloc,
+                    evaluate["netloc"])
                 print(score, "path_exact_match:", input_path,
                       "***", evaluate["reference_answer"])
             elif match_function == "element_path_included_match":
@@ -129,7 +141,9 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                     print(element_value)
                     # print(await page.locator(input_path).input_value())
                     if "path" in evaluate.keys():
-                        path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector", await page.content(), input_netloc, evaluate["netloc"])
+                        path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
+                                                                       await page.content(), input_netloc,
+                                                                       evaluate["netloc"])
                         if path_score == 0:
                             print("value评测中path不匹配")
                             score = 0
@@ -147,7 +161,9 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                 if input_path is not None and element_value is not None:
                     input_netloc = get_netloc(page.url)
                     if "path" in evaluate.keys():
-                        path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector", await page.content(), input_netloc, evaluate["netloc"])
+                        path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
+                                                                       await page.content(), input_netloc,
+                                                                       evaluate["netloc"])
                         if path_score == 0:
                             print("value评测中path不匹配")
                             score = 0
@@ -167,7 +183,9 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
 
                     if len(element_value) > 0:
                         if "path" in evaluate.keys():
-                            path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector", await page.content(), input_netloc, evaluate["netloc"])
+                            path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
+                                                                           await page.content(), input_netloc,
+                                                                           evaluate["netloc"])
                             if path_score == 0:
                                 print("value评测中path不匹配")
                                 score = 0
@@ -205,9 +223,57 @@ async def aexec_playwright(code, page):
     return await locals()['__ex'](page)
 
 
-async def main(num_steps=0, mode="dom"):
+async def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
+    thought = response["description"].get("thought")
+    action_type = response['action_type']
+    acton_input = response['value']
+    action = response["description"].get("action")
+    current_trace = {"thought": thought, "action": action}
+    element_value = None
+    try:
+        element_id = int(response['id'])
+    except:
+        element_id = 0
+    #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
+    if action_type in ["fill_form", "fill_search", "click"]:
+        try:
+            selector = env.tree.get_selector_and_xpath(
+                env.tree.nodeDict[element_id])
 
+            if action_type in ["fill_form", "fill_search"]:
+                element_value = acton_input
+            else:
+                element_value = await get_element_content(env.page, selector)
+        except:
+            print("accessibility tree don't have this element_id")
+            selector = None
+            element_id = 0
+            action_type = "None"
+    else:
+        selector = None
+        element_id = 0
+    execute_action = create_action(
+        elementid=element_id, action_type=action_type, action_input=acton_input)
+    return execute_action, current_trace, selector, element_value
+
+
+async def get_observation(mode: str, env: AsyncHTMLEnvironment, action: Action):
+    if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
+        await env.execute_action(action)
+        observation, observation_VforD = await env.get_obs()
+        return observation, observation_VforD
+    else:
+        await env.execute_action(action)
+        observation = await env.get_obs()
+        return observation
+
+
+async def main(num_steps=0, mode="dom"):
+    record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
     file = read_file()
+
+    with open('./configs/dom.toml', 'r') as f:
+        config = toml.load(f)
 
     # 评测输入范围内的任务
     if raw_data_index != -1:
@@ -219,7 +285,14 @@ async def main(num_steps=0, mode="dom"):
         raw_data_end_index = len(file)
     print(raw_data_start_index, raw_data_end_index)
 
-    for task_index in range(raw_data_start_index, raw_data_end_index):
+    # for task_index in range(raw_data_start_index, raw_data_end_index):
+
+    # # start_index = 1
+    score_dif = [2, 3, 10, 15, 22, 32, 40, 47, 51,
+                 54, 55, 63, 72, 75, 79, 87, 89, 101, 103, 105]
+    # # for task_index in range(start_index, len(file)):
+    # for task_index in [1]:
+    for task_index in score_dif:
         task = file[task_index]
         task_name, reference_task_length, reference_evaluate_steps = task
         print("task index:", task_index)
@@ -228,7 +301,6 @@ async def main(num_steps=0, mode="dom"):
         print("raw data:\n", reference_evaluate_steps)
         # #! # 1. playwright
         # # 用playwright运行浏览器
-
         # async def run(playwright: Playwright) -> None:
         #     '''用playwright运行浏览器'''
         #     evaluate_steps = reference_evaluate_steps
@@ -262,101 +334,162 @@ async def main(num_steps=0, mode="dom"):
         #     num_steps, evaluate_steps = await run(playwright)
 
         # ! # 2. planning
-        env = AsyncHTMLEnvironment(
-            mode=mode,
-            max_page_length=8192,
-            headless=False,
-            slow_mo=1000,
-            current_viewport_only=False,
-            viewport_size={"width": 1920, "height": 1280} if mode == "dom" else {
-                "width": 1080, "height": 720},
-            # "width": 1080, "height": 720
-            save_trace_enabled=False,
-            sleep_after_execution=0.0,
-            locale="en-US",
-            use_vimium_effect=True
-        )
-        observation_VforD = None
-        if mode == "d_v":
-            observation, observation_VforD = await env.reset("about:blank")
-        else:
-            observation = await env.reset("about:blank")
+        if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
+            env = AsyncHTMLEnvironment(
+                mode=mode,
+                max_page_length=8192,
+                headless=False,
+                slow_mo=1000,
+                current_viewport_only=False,
+                viewport_size={"width": 1920, "height": 1280} if mode == "dom" else {
+                    "width": 1080, "height": 720},
+                # "width": 1080, "height": 720
+                save_trace_enabled=False,
+                sleep_after_execution=0.0,
+                locale="en-US",
+                use_vimium_effect=True
+            )
+        elif mode == "vision":
+            env = VisionAsyncHTMLEnvironment(
+                # mode=mode,
+                max_page_length=8192,
+                headless=False,
+                slow_mo=1000,
+                current_viewport_only=False,
+                viewport_size={"width": 1920, "height": 1280},
+                save_trace_enabled=False,
+                sleep_after_execution=0.0,
+                locale="en-US",
+                use_vimium_effect=True
+            )
 
+        DF = config['basic']['default']
+        GR = config['basic']['global_reward']
+        CR = config['basic']['current_step_reward']
+        PT = config['basic']['previous_trace']
+
+        observation = ""
+        observation_VforD = ""
+        await env.reset("about:blank")
+        # if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
+        #     observation, observation_VforD = await env.reset("about:blank")
+        #     await env.reset("about:blank")
+        # else:
+        #     observation = await env.reset("about:blank")
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
-
-        # task_name = "Search for flights available from Calgary (CYYC) to New York (ZNY) in flightaware"
         last_action_description = ""
-        for num_steps in range(1, 10):
+        dict_to_write = None
+        step_index_list = []
+        score_list = []
+        step_reward_list = []
+        dict_result_list = []
+        url_list = []
+        current_trace_list = []
+        selector_list = []
+        action_list = []
+        previoust_trace_list = []
+        task_finished = False
+        step_error_count = 0
+        task_error = False
+        for num_steps in range(config['basic']['Max_Action_Step']):
+            step_index_list.append(num_steps)
             total_step_score = 0
             # break
             print("planning前previous_trace：", previous_trace)
             print("planning前observation：", observation)
             for _ in range(3):
                 try:
-                    dict_to_write = await Planning.plan(uuid=1, user_request=task_name, previous_trace=previous_trace, observation=observation, feedback=last_action_description, mode=mode, observation_VforD=observation_VforD)
-                    if dict_to_write is not None:
-                        break
+                    if DF:
+                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
+                                                            previous_trace=previous_trace, observation=observation,
+                                                            feedback=last_action_description, mode=mode,
+                                                            observation_VforD=observation_VforD)
+                        if dict_to_write is not None:
+                            break
+                    elif GR == False:
+                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
+                                                            previous_trace=previous_trace, observation=observation,
+                                                            feedback=last_action_description, mode=mode,
+                                                            observation_VforD=observation_VforD, global_reward=False)
+                        if dict_to_write is not None:
+                            break
+                    elif CR == False:
+                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
+                                                            previous_trace=previous_trace, observation=observation,
+                                                            feedback="", mode=mode, observation_VforD=observation_VforD)
+                        if dict_to_write is not None:
+                            break
+                    elif PT == False:
+                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name, observation=observation,
+                                                            feedback=last_action_description, mode=mode,
+                                                            observation_VforD=observation_VforD)
+                        if dict_to_write is not None:
+                            break
                 except Exception as e:
                     traceback.print_exc()
                     continue
 
-            async def parse_current_trace(response):
-                thought = response["description"].get("thought")
-                action_type = response['action_type']
-                acton_input = response['value']
-                action = response["description"].get("action")
-                current_trace = {"thought": thought, "action": action}
-                element_value = None
-                try:
-                    element_id = int(response['id'])
-                except:
-                    element_id = 0
-                #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
-                if action_type in ["fill_form", "fill_search", "click"]:
-                    try:
-                        selector = env.tree.get_selector_and_xpath(
-                            env.tree.nodeDict[element_id])
-                        
-                        if action_type in ["fill_form", "fill_search"]:
-                            element_value = acton_input
-                        else:
-                            element_value = await get_element_content(env.page, selector)
-                    except:
-                        print("accessibility tree don't have this element_id")
-                        selector = None
-                        element_id = 0
-                        action_type = "None"
-                else:
-                    selector = None
-                    element_id = 0
-                execute_action = create_action(
-                    elementid=element_id, action_type=action_type, action_input=acton_input)
-                return execute_action, current_trace, selector, element_value
             print("dict_to_write:", dict_to_write)
-
-            if mode == "dom" or mode == "d_v":
+            dict_result_list.append(str(dict_to_write))
+            if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
                 execute_action, current_trace, path, element_value = await parse_current_trace(
-                    dict_to_write)
+                    dict_to_write, env)
                 selector, xpath = (
                     path[0], path[1]) if path is not None else (None, None)
                 print("current trace:\n", current_trace)
+                current_trace_list.append(str(current_trace))
                 print("response:\n", execute_action)
+                action_list.append(str(execute_action))
                 print("selector:", selector)
-                
-                evaluate_steps = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector, element_value=element_value)
+                selector_list.append(selector)
+                evaluate_steps = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
                 print("执行动作前的url", env.page.url)
                 for evaluate in evaluate_steps:
                     total_step_score += evaluate["score"]
                 print(total_step_score, "/", len(reference_evaluate_steps))
+                score_str = str(total_step_score) + " / " + \
+                    str(len(reference_evaluate_steps))
+                score_list.append(score_str)
                 if total_step_score == len(reference_evaluate_steps):
+                    task_finished = True
                     break
                 # input()
-                if mode == "d_v":
-                    observation, observation_VforD = await env.execute_action(execute_action)
+                if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
+                    await env.execute_action(execute_action)
+                    observation, observation_VforD = await env.get_obs()
+                    save_screenshot(mode=mode, record_time=record_time, task_name=task_name, step_number=num_steps, description="obs", screenshot_base64=observation_VforD)
                 else:
-                    observation = await env.execute_action(execute_action)
+                    await env.execute_action(execute_action)
+                    observation = await env.get_obs()
+
                 print("执行动作后的url", env.page.url)
+                url_list.append(env.page.url)
+
+                # current_trace = [current_trace]
+                current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
+                                                         current_trace=current_trace, observation=observation)
+                step_reward_str = current_reward if current_reward else "X"
+                step_reward_list.append(str(step_reward_str))
+                if current_reward and int(current_reward.get("score")) < config['basic']['Step_Score_Threshold']:
+                    execute_action.update(
+                        {"element_id": 0, "action_type": ActionTypes.GO_BACK})
+                    if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
+                        await env.execute_action(execute_action)
+                        observation, observation_VforD = await env.get_obs()
+                        save_screenshot(mode=mode, record_time=record_time, task_name=task_name, step_number=num_steps, description="new-obs",
+                                        screenshot_base64=observation_VforD)
+                    else:
+                        await env.execute_action(execute_action)
+                        observation = await env.get_obs()
+                    last_action_description = current_reward.get("description")
+                else:
+                    last_action_description = ""
+                    previous_trace.append(current_trace)
+                if current_reward and int(current_reward.get("score")) < 4:
+                    step_error_count += 1
+                else:
+                    step_error_count = 0
 
             elif mode == "vision":
                 execute_action = dict_to_write["action"]
@@ -367,46 +500,49 @@ async def main(num_steps=0, mode="dom"):
                 if await env.vision_execute_action(execute_action):
                     break
                 print("vision_execute_action finished!")
-                observation = await env._get_obs()
+                observation = await env.get_obs()
                 print("执行动作后的url", env.page.url)
 
-            if mode == "dom" or mode == "d_v":
-                # current_trace = [current_trace]
-                current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
-                                                         current_trace=current_trace, observation=observation)
-                if current_reward and int(current_reward.get("score")) < 7:
-                    execute_action.update(
-                        {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                    if mode == "d_v":
-                        observation, observation_VforD = await env.execute_action(execute_action)
-                    else:
-                        observation = await env.execute_action(execute_action)
-                    last_action_description = current_reward.get("description")
-                else:
-                    last_action_description = ""
-                    previous_trace.append(current_trace)
-            elif mode == "vision":
                 previous_trace.append(current_trace)
                 if dict_to_write["description"].get('reward'):
                     if "loop" in dict_to_write["description"].get('reward').get("status"):
                         previous_trace = []
                         previous_trace.append(current_trace)
-
-            a = input("回车继续下一个Action，按q退出")
-            if a == "q":
+            previoust_trace_list.append(previous_trace)
+            # a = input("回车继续下一个Action，按q退出")
+            # if a == "q" or step_error_count > 3:
+            #     break
+            if step_error_count > 3:
+                task_error = True
                 break
         # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
         # print(json5.dumps(a, indent=4))
         # input()
 
         # ! 3.任务评测打分
-        if mode == "dom" or mode == "d_v":
+        if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
             # step score
             total_step_score = 0
             for evaluate in evaluate_steps:
                 total_step_score += evaluate["score"]
             print("\ntotal step score:", total_step_score,
                   "/", len(reference_evaluate_steps))
+
+            write_result_to_excel(
+                task_name=task_name,
+                task_id=task_index,
+                task_finished=task_finished,
+                error_occ=task_error,
+                step_index_list=step_index_list,
+                score_list=score_list,
+                step_reward_list=step_reward_list,
+                dict_result_list=dict_result_list,
+                url_list=url_list,
+                current_trace_list=current_trace_list,
+                previous_trace_list=previoust_trace_list,
+                selector_list=selector_list,
+                action_list=action_list,
+            )
 
             # length score
             task_evaluator = TaskLengthEvaluator()

@@ -20,6 +20,10 @@ class ActionTypes(IntEnum):
     SWITCH_TAB = 5
     GO_BACK = 6
     FILL_SEARCH = 7
+    SELECT_OPTION = 8
+    HOVER = 9
+    SCROLL_DOWN = 10
+    SCROLL_UP = 11
 
 
 @beartype
@@ -83,7 +87,8 @@ def create_search_action(elementid: int, text: str) -> Action:
         "action_type": ActionTypes.GOOGLE_SEARCH,
         "element_id": elementid,
         "url": "https://www.google.com",
-        "fill_text": text
+        "fill_text": text,
+        "element_name": ""
     }
 
 
@@ -99,6 +104,46 @@ def create_go_back_action(elementid: int) -> Action:
 
 
 @beartype
+def create_select_option_action(elementid: int, target_value: str) -> Action:
+    return {
+        "action_type": ActionTypes.SELECT_OPTION,
+        "element_id": elementid,
+        "url": "",
+        "fill_text": target_value,
+        "element_name": ""
+    }
+
+@beartype
+def create_hover_action(elementid: int) -> Action:
+    return {
+        "action_type": ActionTypes.HOVER,
+        "element_id": elementid,
+        "url": "",
+        "fill_text": "",
+        "element_name": ""
+    }
+
+@beartype
+def create_scroll_down_action(elementid: int) -> Action:
+    return {
+        "action_type": ActionTypes.SCROLL_DOWN,
+        "element_id": elementid,
+        "url": "",
+        "fill_text": "",
+        "element_name": ""
+    }
+
+@beartype
+def create_scroll_up_action(elementid: int) -> Action:
+    return {
+        "action_type": ActionTypes.SCROLL_UP,
+        "element_id": elementid,
+        "url": "",
+        "fill_text": "",
+        "element_name": ""
+    }
+
+@beartype
 def create_action(elementid: int, action_type: str, action_input: str) -> Action:
     if action_type == "click":
         return create_click_action(elementid=elementid)
@@ -112,6 +157,14 @@ def create_action(elementid: int, action_type: str, action_input: str) -> Action
         return create_search_action(elementid=elementid, text=action_input)
     elif action_type == "go_back":
         return create_go_back_action(elementid=elementid)
+    elif action_type == "select_option":
+        return create_select_option_action(elementid=elementid, target_value=action_input)
+    elif action_type == "hover":
+        return create_hover_action(elementid=elementid)
+    elif action_type == "scroll_down":
+        return create_scroll_down_action(elementid=elementid)
+    elif action_type == "scroll_up":
+        return create_scroll_up_action(elementid=elementid)
     else:
         return create_none_action(elementid=elementid)
 
@@ -126,5 +179,9 @@ __all__ = [
     "create_search_action",
     "create_go_back_action",
     "create_fill_search_action",
+    "create_select_option_action",
+    "create_hover_action",
+    "create_scroll_down_action",
+    "create_scroll_up_action",
     "create_action"
 ]
