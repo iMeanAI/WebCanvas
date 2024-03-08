@@ -7,9 +7,9 @@ import json5
 
 
 class InteractionMode:
-    def __init__(self, model, model2=None):
-        self.model = model
-        self.model2 = model2
+    def __init__(self, text_model=None, visual_model=None):
+        self.text_model = text_model
+        self.visual_model = visual_model
 
     def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         pass
@@ -28,7 +28,7 @@ class InteractionMode:
             reward_response = ""
             for i in range(3):
                 try:
-                    reward_response, error_message = await self.model.request(reward_request)
+                    reward_response, error_message = await self.text_model.request(reward_request)
                     status_and_description = ActionParser().extract_status_and_description(
                         reward_response)
                     break
@@ -46,21 +46,21 @@ class InteractionMode:
 
 
 class DomMode(InteractionMode):
-    def __init__(self, model, model2=None):
-        super().__init__(model, model2)
+    def __init__(self, text_model=None, visual_model=None):
+        super().__init__(text_model, visual_model)
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         planning_request = ObservationPromptConstructor().construct(
             user_request, previous_trace, observation, feedback, status_description)
         print(f"\033[32m{planning_request}")  # 绿色
         print("\033[0m")
-        planning_response, error_message = await self.model.request(planning_request)
+        planning_response, error_message = await self.text_model.request(planning_request)
         return planning_response, error_message, None, None
 
 
 class DomVDescMode(InteractionMode):
-    def __init__(self, model, model2=None):
-        super().__init__(model, model2)
+    def __init__(self, text_model=None, visual_model=None):
+        super().__init__(text_model, visual_model)
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         # dom_v_desc模式的代码
@@ -68,7 +68,7 @@ class DomVDescMode(InteractionMode):
             vision_desc_request = VisionDisc2PromptConstructor().construct(
                 user_request, observation_VforD)  # vision description request with user_request
             # vision_desc_request = VisionDisc1PromptConstructor().construct(observation_VforD)
-            vision_desc_response, error_message = await self.model.request(vision_desc_request)
+            vision_desc_response, error_message = await self.visual_model.request(vision_desc_request)
         else:
             vision_desc_response = ""
         print(f"\033[36mvision_disc_response:\n{vision_desc_response}")  # 蓝色
@@ -79,13 +79,13 @@ class DomVDescMode(InteractionMode):
         print(
             f"\033[35mplanning_request:\n{print_limited_json(planning_request, limit=10000)}")
         print("\033[0m")
-        planning_response, error_message = await self.model2.request(planning_request)
+        planning_response, error_message = await self.text_model.request(planning_request)
         return planning_response, error_message, None, None
 
 
 class VisionToDomMode(InteractionMode):
-    def __init__(self, model, model2=None):
-        super().__init__(model, model2)
+    def __init__(self, text_model=None, visual_model=None):
+        super().__init__(text_model, visual_model)
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         # vision_to_dom模式的代码
@@ -93,9 +93,8 @@ class VisionToDomMode(InteractionMode):
             user_request, previous_trace, observation_VforD, feedback, status_description)
         max_retries = 3  # 设置最大重试次数为3
         for attempt in range(max_retries):
-            vision_act_response, error_message = await self.model.request(vision_act_request)
-            # 蓝色输出
-            print(f"\033[36mvision_act_response:\n{vision_act_response}")
+            vision_act_response, error_message = await self.visual_model.request(vision_act_request)
+            print(f"\033[36mvision_act_response:\n{vision_act_response}")  # 蓝色输出
             print("\033[0m")  # 重置颜色
             planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(
                 vision_act_response)
@@ -136,9 +135,8 @@ class VisionToDomMode(InteractionMode):
                 print("\033[0m")
 
                 # 发送请求并等待响应
-                planning_response, error_message = await self.model2.request(planning_request)
-                print(
-                    f"\033[34mVisionToDomplanning_response:\n{planning_response}")
+                planning_response, error_message = await self.text_model.request(planning_request)
+                print(f"\033[34mVisionToDomplanning_response:\n{planning_response}")
                 print("\033[0m")
                 # 解析元素ID
                 element_id = ActionParser().get_element_id(planning_response)
@@ -165,8 +163,8 @@ class VisionToDomMode(InteractionMode):
 
 
 class DVMode(InteractionMode):
-    def __init__(self, model, model2=None):
-        super().__init__(model, model2)
+    def __init__(self, text_model=None, visual_model=None):
+        super().__init__(text_model, visual_model)
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         # d_v模式的代码
@@ -179,13 +177,13 @@ class DVMode(InteractionMode):
         print(
             f"\033[32mplanning_request:\n{print_limited_json(planning_request, limit=1000)}")
         print("\033[0m")
-        planning_response, error_message = await self.model.request(planning_request)
+        planning_response, error_message = await self.visual_model.request(planning_request)
         return planning_response, error_message, None, None
 
 
 class VisionMode(InteractionMode):
-    def __init__(self, model, model2=None):
-        super().__init__(model, model2)
+    def __init__(self, text_model=None, visual_model=None):
+        super().__init__(text_model, visual_model)
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         # vision模式的代码
@@ -193,7 +191,7 @@ class VisionMode(InteractionMode):
         ).construct(user_request, previous_trace, observation)
         print(f"\033[32m{planning_request}")  # 绿色
         print("\033[0m")
-        planning_response, error_message = await self.model.request(planning_request)
+        planning_response, error_message = await self.visual_model.request(planning_request)
         return planning_response, error_message, None, None
 
 
@@ -208,8 +206,8 @@ class Planning:
         gpt4v = GPTGenerator4V()
 
         # get global reward
-        reward_response, status_and_description = await InteractionMode(gpt4).get_global_reward(
-            user_request=user_request, previous_trace=previous_trace)
+        reward_response, status_and_description = await InteractionMode(text_model=gpt4).get_global_reward(
+                user_request=user_request, previous_trace=previous_trace)
 
         # 构建planning prompt及查询
         status_description = ""
@@ -218,11 +216,11 @@ class Planning:
                 "description") if status_and_description and status_and_description.get("description") else ""
 
         modes = {
-            "dom": DomMode(gpt4),
-            "dom_v_desc": DomVDescMode(gpt4v, gpt4),
-            "vision_to_dom": VisionToDomMode(gpt4v, gpt4),
-            "d_v": DVMode(gpt4v),
-            "vision": VisionMode(gpt4v)
+            "dom": DomMode(text_model=gpt4),
+            "dom_v_desc": DomVDescMode(visual_model=gpt4v, text_model=gpt4),
+            "vision_to_dom": VisionToDomMode(visual_model=gpt4v, text_model=gpt4),
+            "d_v": DVMode(visual_model=gpt4v),
+            "vision": VisionMode(visual_model=gpt4v)
         }
 
         # planning_response_thought, planning_response_action 仅在vision_to_dom模式下有用

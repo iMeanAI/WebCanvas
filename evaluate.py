@@ -274,6 +274,7 @@ async def get_observation(mode: str, env: AsyncHTMLEnvironment, action: Action):
 
 
 async def main(num_steps=0, mode="dom"):
+    record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
     file = read_file()
 
     with open('./configs/dom.toml', 'r') as f:
@@ -291,10 +292,11 @@ async def main(num_steps=0, mode="dom"):
 
     # for task_index in range(raw_data_start_index, raw_data_end_index):
 
-    start_index = 1
-    score_dif = [4, 11, 17, 20, 29, 30, 31, 36, 39, 45,
-                 50, 52, 62, 65, 68, 71, 73, 80, 83, 86, 88, 92, 99]
-    # for task_index in range(start_index, len(file)):
+    # # start_index = 1
+    score_dif = [2, 3, 10, 15, 22, 32, 40, 47, 51,
+                 54, 55, 63, 72, 75, 79, 87, 89, 101, 103, 105]
+    # # for task_index in range(start_index, len(file)):
+    # for task_index in [1]:
     for task_index in score_dif:
         task = file[task_index]
         task_name, reference_task_length, reference_evaluate_steps = task
@@ -370,11 +372,15 @@ async def main(num_steps=0, mode="dom"):
         GR = config['basic']['global_reward']
         CR = config['basic']['current_step_reward']
         PT = config['basic']['previous_trace']
-        observation_VforD = None
-        if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-            observation, observation_VforD = await env.reset("about:blank")
-        else:
-            observation = await env.reset("about:blank")
+
+        observation = ""
+        observation_VforD = ""
+        await env.reset("about:blank")
+        # if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
+        #     observation, observation_VforD = await env.reset("about:blank")
+        #     await env.reset("about:blank")
+        # else:
+        #     observation = await env.reset("about:blank")
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
         last_action_description = ""
@@ -459,6 +465,7 @@ async def main(num_steps=0, mode="dom"):
                 if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                     await env.execute_action(execute_action)
                     observation, observation_VforD = await env.get_obs()
+                    save_screenshot(mode=mode, record_time=record_time, task_name=task_name, step_number=num_steps, description="obs", screenshot_base64=observation_VforD)
                 else:
                     await env.execute_action(execute_action)
                     observation = await env.get_obs()
@@ -477,6 +484,8 @@ async def main(num_steps=0, mode="dom"):
                     if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                         await env.execute_action(execute_action)
                         observation, observation_VforD = await env.get_obs()
+                        save_screenshot(mode=mode, record_time=record_time, task_name=task_name, step_number=num_steps, description="new-obs",
+                                        screenshot_base64=observation_VforD)
                     else:
                         await env.execute_action(execute_action)
                         observation = await env.get_obs()

@@ -81,7 +81,7 @@ class VisionAsyncHTMLEnvironment:
             self.html_content = await self.page.content()
         self.last_page = self.page
 
-    async def _get_obs(self) -> Union[str, Tuple[str, str]]:
+    async def get_obs(self) -> Union[str, Tuple[str, str]]:
         observation = ""
         observation_VforD = ""
         try:
@@ -99,8 +99,6 @@ class VisionAsyncHTMLEnvironment:
 
     async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
         await self.setup(start_url)
-        observation = await self._get_obs()
-        return observation
 
     async def close(self):
         await self.context.close()
