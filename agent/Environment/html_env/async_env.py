@@ -16,7 +16,7 @@ from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
 import time
 
-from ...Utils.utils import is_valid_base64
+from agent.Prompt import *
 
 
 async def select_option(page, selector, value):
