@@ -408,7 +408,7 @@ async def main(num_steps=0, mode="dom"):
 
         # for num_steps in range(max(config['basic']['Max_Action_Step'], 1.5*reference_task_length)):
         num_steps = 0
-        max_steps = max(config['basic']['Max_Action_Step'], 1.5*reference_task_length)
+        max_steps = int(max(config['basic']['Max_Action_Step'], 1.5*reference_task_length))
         additional_steps = 0
         while num_steps < max_steps + additional_steps:
             step_index_list.append(num_steps)
