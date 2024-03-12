@@ -13,6 +13,9 @@ import asyncio
 import argparse
 import toml
 
+# evaluate tools
+from evaluate_utils import *
+
 from result import write_result_to_excel
 
 # 解析命令行参数
@@ -398,7 +401,16 @@ async def main(num_steps=0, mode="dom"):
         task_finished = False
         step_error_count = 0
         task_error = False
-        for num_steps in range(max(config['basic']['Max_Action_Step'],1.5*reference_task_length)):
+        # 控制步骤长度相关配置
+        conditions = config["conditions"]
+        increase_step = config["basic"]["Condition_Step_Increase"]
+        encountered_errors = set()
+
+        # for num_steps in range(max(config['basic']['Max_Action_Step'], 1.5*reference_task_length)):
+        num_steps = 0
+        max_steps = max(config['basic']['Max_Action_Step'], 1.5*reference_task_length)
+        additional_steps = 0
+        while num_steps < max_steps + additional_steps:
             step_index_list.append(num_steps)
             total_step_score = 0
             # break
@@ -516,6 +528,16 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace = []
                         previous_trace.append(current_trace)
             previoust_trace_list.append(previous_trace)
+
+            print(f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
+            current_info = {"URL": env.page.url}
+            step_increase, encountered_errors = await adjust_max_action_step(
+                conditions, current_info, encountered_errors, increase_step)
+            additional_steps += step_increase
+            num_steps += 1
+            if num_steps >= 25:  # 防止无限循环
+                break
+
             a = input("回车继续下一个Action，按q退出")
             if a == "q" or step_error_count > 3:
                 break
@@ -535,22 +557,23 @@ async def main(num_steps=0, mode="dom"):
             print("\ntotal step score:", total_step_score,
                   "/", len(reference_evaluate_steps))
 
-            # write_result_to_excel(
-            #     task_name=task_name,
-            #     task_id=task_index,
-            #     task_finished=task_finished,
-            #     error_occ=task_error,
-            #     step_index_list=step_index_list,
-            #     score_list=score_list,
-            #     step_reward_list=step_reward_list,
-            #     dict_result_list=dict_result_list,
-            #     url_list=url_list,
-            #     current_trace_list=current_trace_list,
-            #     previous_trace_list=previoust_trace_list,
-            #     selector_list=selector_list,
-            #     action_list=action_list,
-            #     match_func_result_list=match_func_result_list
-            # )
+            write_result_to_excel(
+                task_name=task_name,
+                task_id=task_index,
+                task_finished=task_finished,
+                error_occ=task_error,
+                step_index_list=step_index_list,
+                score_list=score_list,
+                step_reward_list=step_reward_list,
+                dict_result_list=dict_result_list,
+                url_list=url_list,
+                current_trace_list=current_trace_list,
+                previous_trace_list=previoust_trace_list,
+                selector_list=selector_list,
+                action_list=action_list,
+                match_func_result_list=match_func_result_list,
+                file_path=f"./csv_results/group1_{record_time}/{mode}_{record_time}"
+            )
 
             # length score
             task_evaluator = TaskLengthEvaluator()

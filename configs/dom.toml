@@ -1,7 +1,11 @@
 [basic]
-Max_Action_Step = 10     
+Max_Action_Step = 10
+Condition_Step_Increase = 5
 Step_Score_Threshold = 6
 default = true              # dom-only or dom-vision with all module
 global_reward = true        # with global reward
 current_step_reward = true  # with current step reward
 previous_trace = true       # with previous trace
+
+[conditions]
+URL = ["error"]
