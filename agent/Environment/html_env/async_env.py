@@ -182,7 +182,6 @@ class AsyncHTMLEnvironment:
         try:
             self.last_page = self.page
             await self.page.locator(selector).fill(action["fill_text"])
-            time.sleep(1)
             await self.page.locator(selector).press("Enter")
             await self.page.wait_for_load_state('load')
             self.html_content = await self.page.content()
@@ -235,7 +234,7 @@ class AsyncHTMLEnvironment:
     async def search(self, action):
         self.last_page = self.page
         self.page = await self.context.new_page()
-        await self.page.goto("https://www.google.com/search?q="+action["fill_text"])
+        await self.page.goto("https://www.google.com/search?q="+action["fill_text"],timeout=10000)
         await self.page.wait_for_load_state('load')
         self.html_content = await self.page.content()
 
@@ -254,35 +253,59 @@ class AsyncHTMLEnvironment:
                            "element_name": label})
             selector, xpath = self.tree.get_selector_and_xpath(
                 action["element_id"])
-            print("selector:\n:", selector)
         except Exception as e:
             print(
                 f"selector:{selector},label_name:{label},element_id: {element_id}")
         try:
-
             select_str = '''() => {
+                // 选择select 下面的option
+                var values = [];
                 var selectElement = document.querySelector('%s');
                 var options = selectElement.querySelectorAll('option');
-                var values = [];
                 for (var option of options) {
                     values.push(option.innerText);
                 }
+                // 选择select下面optgroup下面的option
+                var optgroups = selectElement.querySelectorAll('optgroup');
+                for (var optgroup of optgroups) {
+                    var label = optgroup.getAttribute('label');
+                    var options = optgroup.querySelectorAll('option');
+                    for (var option of options) {
+                        values.push(option.innerText);
+                    }   
+                }
                 return values;
             }''' % (selector)
-
-            options = await self.page.evaluate(select_str)
-            print("Options values:", options)
             best_option = [-1, "", -1]
-            for i, option in enumerate(options):
-                similarity = SequenceMatcher(
-                    None, option, action['fill_text']).ratio()
+            optgroup_values = await self.page.evaluate(select_str)
+            # print("Optgroup values:", optgroup_values)
+            for i, option in enumerate(optgroup_values):
+                similarity = SequenceMatcher(None, option, action['fill_text']).ratio()
                 if similarity > best_option[2]:
                     best_option = [i, option, similarity]
-            # print("best_option:\n", best_option)
+            # print("Best option:\n", best_option)
             await self.page.evaluate(f'''() => {{
                 var selectElement = document.querySelector('{selector}');
-                selectElement.value = '{best_option[1]}';
-                selectElement.dispatchEvent(new Event('change'));
+                // 先在select下面找option
+                var options = selectElement.querySelectorAll('option');
+                for (var option of options) {{
+                    if (option.innerText === "{best_option[1]}") {{
+                        option.selected = true;
+                        selectElement.dispatchEvent(new Event('change'));
+                        return;
+                    }}
+                }}
+                var optgroups = selectElement.querySelectorAll('optgroup');
+                for (var optgroup of optgroups) {{
+                    var options = optgroup.querySelectorAll('option');
+                    for (var option of options) {{
+                        if (option.innerText === "{best_option[1]}") {{
+                            option.selected = true;
+                            selectElement.dispatchEvent(new Event('change'));
+                            return;
+                        }}
+                    }}
+                }}
             }}''')
             await self.page.wait_for_timeout(2000)
             self.html_content = await self.page.content()
@@ -525,4 +548,6 @@ class AsyncHTMLEnvironment:
         else:
             return False
         return True
+    
+
 

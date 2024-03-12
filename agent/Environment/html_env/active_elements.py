@@ -49,7 +49,7 @@ class ActiveElements:
         elif tag_name == 'select':
             return 'select'
         elif tag_name == 'optgroup':
-            return 'select'
+            return 'optgroup'
         elif tag_name == 'textarea':
             return 'textarea'
         elif tag_name == 'option':

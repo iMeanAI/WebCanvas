@@ -38,8 +38,10 @@ TagNameList = [
     "h4",
     "h5",
     "h6",
-    "filter-chip"
-
+    "filter-chip",
+    "sup",
+    "select-label",
+    "optgroup"
 ]
 
 MapTagNameList = [
