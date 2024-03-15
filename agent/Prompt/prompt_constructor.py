@@ -91,7 +91,7 @@ class ObservationPromptConstructor(BasePromptConstructor):
                     f"Task completion description is {status_description}"
             if feedback != "":
                 self.prompt_user += f"Here are some other things you need to know:\n {feedback}\n"
-            self.prompt_user += observation
+            self.prompt_user += observation #TODO：描述此处observation
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages

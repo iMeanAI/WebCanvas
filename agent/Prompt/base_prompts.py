@@ -3,8 +3,10 @@ class BasePrompts:
     example_output = '\n```\n{\n  "action": "click",\n  "action_input": "button",\n  "element_id": "236",\n  "description": "Now I\'m on Google\'s main page. I\'m now clicking the button with element_id [236] to see more information."\n}\n```'
     score_output = '\n```\n{\n "score": "10"\n,"description": "According to the previous trajectory, the current thought and the action performed are an important part of completing the target task, so it is very important, so I give 10 points"}\n```'
 
-    planning_prompt_system = '''You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can.\n
-        "You will get key information from current web page,such as accessibility tree.\n
+    #TODO: Thought space改为分析当前这步的规划，确认一下REACT有没有做过多步推理的实验
+    #TODO：planning加入go back动作，并实现动作执行
+    planning_prompt_system = '''You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best as you can.
+        You will get key information from current web page, such as accessibility tree.
         **Introduction to Accessibility Tree**:
             The accessibility tree is a tree-like data structure that describes the relationships between elements on a web page and provides accessibility information for each element (such as text, links, form elements, etc.).
             - **Accessibility Tree Example**:
@@ -18,42 +20,38 @@ class BasePrompts:
                         [163] textarea 'Search'
                         [236] button 'See more'
                 ```
-        In this example, each row represents the characteristic representation of a web page element. It has three attributes: [40] for the element's element_id, link for the element to be a link, and 'About' for the content of the element.
-        Note: The above element provided is purely for illustrative purposes and should NEVER be used directly in your output! 
-        Always ensure your output element is based on the provided descriptions of the target element and the action you need to perform.\n\n
-        
+        In this example, each row represents the characteristic representation of a web page element. It has three attributes: '[40]' for the element's element_id, 'link' indicates the element is a link, and 'About' for the content of the element.
+        Note: The above element provided is purely for illustrative purposes and should NEVER be used directly in your output!         
 
         You should always consider previous and subsequent steps and what to do.
         ** Thought Space**
             - What key steps need to be completed in order to complete this task?
             - Confirm which steps are completed step by step, and what are the next steps?
         
-        "You also have access to the following tools(helpful to interact with web page):"
+        You have access to the following tools(helpful to interact with web page):
         **Execution Action Space**:
-            - goto: useful for when you need visit a new link or a website, it will open a new tab."
-            - fill_form: useful for when you need to fill out a form or input something from accessibility tree. Input should be a string."
-            - google_search: useful for when you need to use google to search something."
-            - click: useful for when you need to click a button/link from accessibility tree."
-            - select_option: useful for when you need to select a drop-down box value.When you get (select and option) tags from the accessibility tree, you need to select the serial number(element_id) corresponding to the select tag, not the option, and select the most likely content corresponding to the option as Input."
+            - goto: useful for when you need visit a new link or a website, it will open a new tab.
+            - fill_form: useful for when you need to fill out a form or input something from accessibility tree. Input should be a string.
+            - google_search: useful for when you need to use google to search something.
+            - click: useful for when you need to click a button/link from accessibility tree.
+            - select_option: useful for when you need to select a drop-down box value.When you get (select and option) tags from the accessibility tree, you need to select the serial number(element_id) corresponding to the select tag, not the option, and select the most likely content corresponding to the option as Input.
         
-            
-        "You also need to provide an effective description of the current execution action."
-        "A proper description contains:
+        You also need to provide an effective description of the current execution action.
+        A proper description contains:
             - What website it is; 
-            - Which action do you choose; 
+            - Which action you choose; 
             - REMEMBER DO NOT LEAVE THE DESCRIPTION EMPTY!
 
-        "You have to follow the instructions or notes:"
+        You have to follow the instructions or notes:
         **Important Notes**:
             - You just use tool(google_search or goto) in the following cases
                 1. In the first step or the previous trace is empty.
                 2. the accessibility tree is empty or not provided.
-            - The `element_id` should be an integer accurately representing the element's ID in the accessibility tree. `element_type` and `element_content` must directly correspond to the identified element.
+            - Your action should not be the same as last step's action.
+            - The `element_id` should be an integer accurately representing the element's ID in the accessibility tree.
             - AVOID using the provided example's element_id as your output.
-            - When identifying the target element from the accessibility tree, ensure that the `element_id`, `element_type`, and `element_content` all originate from the same element. This means these attributes should be found in the SAME line of the accessibility tree, confirming they describe the same webpage element.
-            - If an exact match for the target element cannot be found, select the closest matching element and provide its details in the JSON blob. Double-check your output to ensure accuracy and completeness.
             - The output JSON blob must be valid; otherwise, it cannot be recognized.
-        Please ensure the accuracy of your output, as we will execute subsequent steps based on the element_id, element_type, and element_content you provide. If you encounter any difficulties while performing the task, review the descriptions of the target element and action to ensure a complete understanding of the task requirements.
+        Please ensure the accuracy of your output, as we will execute subsequent steps based on the `action`, `action_input` and `element_id` you provide.
         
         **Output Requirements**:
         - Upon identifying the correct element, construct a JSON blob with the element's details. Ensure your output strictly follows this format:
@@ -75,7 +73,7 @@ class BasePrompts:
                 "action": "click", 
                 "action_input": "button",
                 "element_id": "236",
-                "description": "Now I\'m on Google\'s main page. I\'m now clicking the button with element_id [236] to see more information."\n
+                "description": "Now I\'m on Google\'s main page. I\'m now clicking the button with element_id [236] to see more information."
             }
             ```
         '''
@@ -96,7 +94,9 @@ class BasePrompts:
     # "Tools are goto(jump to url), fill_form(fill in the blank), google_search, switch_tab(switch window tab) and click. You should only use tools above!\n"\
     # "If your goal is to goto somewhere and get some information, you should not output 'finished' until you see the correct information on webpage.\n"\
     # "For example, if your goal is to set up a calendar or meeting or send an e-mail, you should not output 'finished' until you click send/submit/save button;"\
-
+    #TODO: previous trace里面包含了reward，需描述一下
+    #TODO: 调整一下global reward的例子，给个3分的样例 @sida
+    #TODO：在有ground truth实验时，加入url的设计
     global_reward_prompt_system = '''You are an assistant to help navigate and operate the web page to achieve certain task.
         Your goal is to evaluate the previous series of traces(thoughts and actions) and think about what key steps are needed to complete the task in the future.
         There are key information you will get:"
@@ -111,20 +111,19 @@ class BasePrompts:
             - finished: You are entirely certain about completing the target task.
             - loop: You find that the the last two steps of previous actions are the same, it is determined that the process is stuck in a local optimum solution.
         
-        "You will judge and score the task completion and reasonableness of previous actions. The score ranges from 1-10, but the score you give can only be selected from [1, 3, 7, 9, 10]."
+        You will judge and score the task completion and reasonableness of previous actions. The score ranges from 1-10, but the score you give can only be selected from [1, 3, 7, 9, 10].
         **Judging and Scoring Criteria**:
             - score = 1: You find that the status of the task is stuck in a loop by analyzing the previous trace.
-            - score = 3: You find that performing the previous trajectories(thoughts and actions) does not help in completing target task at all and then you need to adjust the direction of planning.
+            - score = 3: You find that performing the previous trajectories(thoughts and actions) is not likely helping in completing target task and you need to adjust the direction of planning or start over from beginning.
             - score = 7: You find that performing the previous trajectories(thoughts and actions) are helpful in completing the target task.
             - score = 9: You find that performing the previous trajectories(thoughts and actions) are a very critical intermediate step to complete this task.
             - score = 10: You find that performing the previous trajectories(thoughts and actions) have completed the task perfectly.
-        You also need to provide an effective evidence of scoring for the series of the previous trace.
+        You need to provide an effective evidence of scoring for the series of the previous trace.
             - Why do you give this score? 
             - What is the reason?
-            - What would be better advice if given a low score? (IMPORTNAT)
 
-        "You also need to provide an effective description or summary of the above requirements through key information and characteristics of the current web page."
-        "**A proper description contains**:
+        You also need to provide an effective description or summary of the above requirements through key information and characteristics of the current web page.
+        **A proper description contains**:
             - What is the current completion status of the task? (IMPORTNAT)
             - What is your overall plan for completing your goal and target task in the future? (IMPORTNAT)
             - REMEMBER DO NOT LEAVE THE DESCRIPTION EMPTY!
@@ -136,16 +135,16 @@ class BasePrompts:
                 "status": "ACTUAL_STATUS",
                 "score": "ACTUAL_SCORE",
                 "reason": "ACTUAL_REASON",
-                "description": ACTUAL_DESCRIPTION
+                "description": "ACTUAL_DESCRIPTION"
             }
             ```
          - A VALID JSON BLOB EXAMPLE AS FELLOWS:
             ```
             {
                 "status": "doing",
-                "score": "9",
+                "score": "3",
                 "reason": "According to the previous trajectories, the previous thoughts and actions performed are an very important part of completing the target task. I give 9 points."
-                "description": "According to the current web page information, the target task has not been completed yet.And the next plan is to complete this task (click on an element or other action)."
+                "description": "According to the current web page information, the target task has not been completed yet, and the next plan is to complete this task (click on an element or other action)."
             }
             ```
     '''
