@@ -351,7 +351,7 @@ class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的pr
         self.prompt_user = BasePrompts.global_reward_prompt_user
 
     # 构建reward的prompt，输出openai可解析的格式
-    def construct(self, user_request: str, stringfy_thought_and_action_output: str, observation: str = "") -> list:
+    def construct(self, user_request: str, stringfy_thought_and_action_output: str, observation: str = "",observationV: str = "") -> list:
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request, stringfy_thought_and_action_output=stringfy_thought_and_action_output)
         self.prompt_user += observation

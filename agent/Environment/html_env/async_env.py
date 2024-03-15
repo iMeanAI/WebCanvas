@@ -82,8 +82,7 @@ class AsyncHTMLEnvironment:
                 "async_env.py _get_obs fetch_html_content(self.html_content) finished!")
             tab_name = await self.page.title()
             dom_tree = self.tree.build_dom_tree()
-            observation = f"current web tab name is \'{tab_name}\'\n" + \
-                          "current accessibility tree is below:\n" + dom_tree
+            observation = f"current web tab name is \'{tab_name}\'\n" + dom_tree
             if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                 observation_VforD = await self.capture()
         except Exception as e:
@@ -162,7 +161,10 @@ class AsyncHTMLEnvironment:
     async def goto(self, action):
         self.last_page = self.page
         self.page = await self.context.new_page()
-        await self.page.goto(action["url"], timeout=10000)
+        try:
+            await self.page.goto(action["url"], timeout=20000)
+        except TimeoutError:
+            await self.retry_load_page(action["url"])
         await self.page.wait_for_timeout(3000)
         await self.page.wait_for_load_state('load')
         self.html_content = await self.page.content()
@@ -234,7 +236,7 @@ class AsyncHTMLEnvironment:
     async def search(self, action):
         self.last_page = self.page
         self.page = await self.context.new_page()
-        await self.page.goto("https://www.google.com/search?q="+action["fill_text"],timeout=10000)
+        await self.page.goto("https://www.google.com/search?q="+action["fill_text"], timeout=10000)
         await self.page.wait_for_load_state('load')
         self.html_content = await self.page.content()
 
@@ -280,7 +282,8 @@ class AsyncHTMLEnvironment:
             optgroup_values = await self.page.evaluate(select_str)
             # print("Optgroup values:", optgroup_values)
             for i, option in enumerate(optgroup_values):
-                similarity = SequenceMatcher(None, option, action['fill_text']).ratio()
+                similarity = SequenceMatcher(
+                    None, option, action['fill_text']).ratio()
                 if similarity > best_option[2]:
                     best_option = [i, option, similarity]
             # print("Best option:\n", best_option)
@@ -548,6 +551,14 @@ class AsyncHTMLEnvironment:
         else:
             return False
         return True
-    
 
-
+    async def retry_load_page(self, url, max_retries=3):
+        retry_count = 0
+        while retry_count < max_retries:
+            try:
+                await self.page.goto(url, timeout=20000)
+                return  # 成功加载页面，退出循环
+            except TimeoutError:
+                print(f"页面加载超时，重试中 ({retry_count + 1}/{max_retries})")
+                retry_count += 1
+        print("达到最大重试次数，无法加载页面。")

@@ -23,21 +23,21 @@ class BasePrompts:
         Always ensure your output element is based on the provided descriptions of the target element and the action you need to perform.\n\n
         
 
-        You should always consider previous and subsequent steps and what to do
+        You should always consider previous and subsequent steps and what to do.
         ** Thought Space**
             - What key steps need to be completed in order to complete this task?
             - Confirm which steps are completed step by step, and what are the next steps?
         
         "You also have access to the following tools(helpful to interact with web page):"
         **Execution Action Space**:
-            - goto: useful for when you need visit a new link or a website, it will open a new tab"
-            - fill_form: useful for when you need to fill out a form or input something from accessibility tree. Input should be a string"
-            - google_search: useful for when you need to use google to search something"
-            - click: useful for when you need to click a button/link from accessibility tree"
-            - select_option: useful for when you need to select a drop-down box value.\nWhen you get (select and option) tags from the accessibility tree, you need to select the serial number(element_id) corresponding to the select tag, not the option, and select the most likely content corresponding to the option as Input.\n"
+            - goto: useful for when you need visit a new link or a website, it will open a new tab."
+            - fill_form: useful for when you need to fill out a form or input something from accessibility tree. Input should be a string."
+            - google_search: useful for when you need to use google to search something."
+            - click: useful for when you need to click a button/link from accessibility tree."
+            - select_option: useful for when you need to select a drop-down box value.When you get (select and option) tags from the accessibility tree, you need to select the serial number(element_id) corresponding to the select tag, not the option, and select the most likely content corresponding to the option as Input."
         
             
-        "You also need to provide an effective description of the current execution action"
+        "You also need to provide an effective description of the current execution action."
         "A proper description contains:
             - What website it is; 
             - Which action do you choose; 
@@ -80,27 +80,79 @@ class BasePrompts:
             ```
         '''
 
-
     planning_prompt_user = "The question here is described as \"{{user_request}}\".\n\n"
 
-    global_reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain task."\
-        "Your objective is to assess the completion status of the target task by analyzing the preceding trajectory and assigning an appropriate score ranging from 0% to 100%"\
-        "This entails acquiring crucial details, including the score from the most recent task accomplishment and the distinctive features of the new web page, represented through an accessibility tree or screenshot."\
-        "If you are entirely certain about completing the target task, just return 'finished'(without quotation marks);\n"\
-        "If you believe you have completed the intermediate steps of the target task but not entirely finish the target task,you should return 'doing'(without quotation marks);\n"\
-        "If you find that the target task is too difficult to complete, you should return 'hard'(without quotation marks);\n"\
-        "If you find that the the last two steps of previous actions are the same, it is determined that the process is stuck in a local optimum solution and you should return 'loop'(without quotation marks);\n"\
-        "Also, you should have description for completing the target task base on the score\n"\
-        "Above all,you should return the status of completing the targe task and description of task completion"\
-        "Here is an example of a valid $JSON_BLOB:\n\n```\n{\n  \"status\": $finished,\n  \"description\": $description,\n }\n```\n\n"\
+    # global_reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain task."\
+    #     "Your objective is to assess the completion status of the target task by analyzing the preceding trajectory and assigning an appropriate score ranging from 0% to 10"\
+    #     "This entails acquiring crucial details, including the score from the most recent task accomplishment and the distinctive features of the new web page, represented through an accessibility tree or screenshot."\
+    #     "If you are entirely certain about completing the target task, just return 'finished'(without quotation marks);\n"\
+    #     "If you believe you have completed the intermediate steps of the target task but not entirely finish the target task,you should return 'doing'(without quotation marks);\n"\
+    #     "If you find that the target task is too difficult to complete, you should return 'hard'(without quotation marks);\n"\
+    #     "If you find that the the last two steps of previous actions are the same, it is determined that the process is stuck in a local optimum solution and you should return 'loop'(without quotation marks);\n"\
+    #     "Also, you should have description for completing the target task base on the score\n"\
+    #     "Above all,you should return the status of completing the targe task and description of task completion"\
+    #     "Here is an example of a valid $JSON_BLOB:\n\n```\n{\n  \"status\": $finished,\n  \"description\": $description,\n }\n```\n\n"\
 
     # "Tools are goto(jump to url), fill_form(fill in the blank), google_search, switch_tab(switch window tab) and click. You should only use tools above!\n"\
     # "If your goal is to goto somewhere and get some information, you should not output 'finished' until you see the correct information on webpage.\n"\
     # "For example, if your goal is to set up a calendar or meeting or send an e-mail, you should not output 'finished' until you click send/submit/save button;"\
 
-    global_reward_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
-        "The previous thoughts and actions are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"\
+    global_reward_prompt_system = '''You are an assistant to help navigate and operate the web page to achieve certain task.
+        Your goal is to evaluate the previous series of traces(thoughts and actions) and think about what key steps are needed to complete the task in the future.
+        There are key information you will get:"
+        **Key Information**:
+            - Previous trace: all thoughts and actions to complete this task step by step.
+            - Accessibility tree: characteristic expression of the current web page.
+            - Screenshot: screenshot information of the current web page.
+        
+        You also need to combine the previous trace to give the completion status of the current task.
+        **Status Of Task Completion**
+            - doing: You have completed the intermediate steps of the target task but not entirely finish the target task.
+            - finished: You are entirely certain about completing the target task.
+            - loop: You find that the the last two steps of previous actions are the same, it is determined that the process is stuck in a local optimum solution.
+        
+        "You will judge and score the task completion and reasonableness of previous actions. The score ranges from 1-10, but the score you give can only be selected from [1, 3, 7, 9, 10]."
+        **Judging and Scoring Criteria**:
+            - score = 1: You find that the status of the task is stuck in a loop by analyzing the previous trace.
+            - score = 3: You find that performing the previous trajectories(thoughts and actions) does not help in completing target task at all and then you need to adjust the direction of planning.
+            - score = 7: You find that performing the previous trajectories(thoughts and actions) are helpful in completing the target task.
+            - score = 9: You find that performing the previous trajectories(thoughts and actions) are a very critical intermediate step to complete this task.
+            - score = 10: You find that performing the previous trajectories(thoughts and actions) have completed the task perfectly.
+        You also need to provide an effective evidence of scoring for the series of the previous trace.
+            - Why do you give this score? 
+            - What is the reason?
+            - What would be better advice if given a low score? (IMPORTNAT)
 
+        "You also need to provide an effective description or summary of the above requirements through key information and characteristics of the current web page."
+        "**A proper description contains**:
+            - What is the current completion status of the task? (IMPORTNAT)
+            - What is your overall plan for completing your goal and target task in the future? (IMPORTNAT)
+            - REMEMBER DO NOT LEAVE THE DESCRIPTION EMPTY!
+
+        **Output Requirements**:
+        - Ensure your output strictly follows this format:
+            ```json
+            {
+                "status": "ACTUAL_STATUS",
+                "score": "ACTUAL_SCORE",
+                "reason": "ACTUAL_REASON",
+                "description": ACTUAL_DESCRIPTION
+            }
+            ```
+         - A VALID JSON BLOB EXAMPLE AS FELLOWS:
+            ```
+            {
+                "status": "doing",
+                "score": "9",
+                "reason": "According to the previous trajectories, the previous thoughts and actions performed are an very important part of completing the target task. I give 9 points."
+                "description": "According to the current web page information, the target task has not been completed yet.And the next plan is to complete this task (click on an element or other action)."
+            }
+            ```
+    '''
+
+    global_reward_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
+        "The previous trajectories(thoughts and actions) are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"\
+        "Accessibility tree here is:"
 
     # current_reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain task.\n"\
     #     "Your goal is to make an assessment of the action you are currently performing.\n There are key information you will get：\n"\
@@ -110,7 +162,7 @@ class BasePrompts:
     #     "Please judge whether executing this action is helpful for finishing the target task,and give this action a rating, range from [1,3,7,9,10]. Give your score.\n"\
     #     "Also, you should give the reason or description for giving this score.\n"\
     #     f"Example output:{str(score_output)}\n"
-    
+
     current_reward_prompt_system = '''You are an assistant to help navigate and operate the web page to achieve certain task.
         Your goal is to make an assessment of the action you are currently performing.
         "There are key information you will get:"
