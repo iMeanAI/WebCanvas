@@ -1,8 +1,34 @@
 import json5
 import base64
+# used for save_screenshot
+import os
+from PIL import Image
+from io import BytesIO
+from datetime import datetime
 
 
 # class Utility:
+
+def save_screenshot(mode: str, record_time: str, task_name: str, step_number: int, description: str, screenshot_base64: str):
+    # 获取当前时间戳，格式为年月日时分秒
+    timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+
+    # 创建任务文件夹（如果不存在）
+    task_folder = f'results/screenshots/screenshots_{mode}_{record_time}/{task_name}'
+    if not os.path.exists(task_folder):
+        os.makedirs(task_folder)
+
+    # 解码截图
+    image_data = base64.b64decode(screenshot_base64)
+    image = Image.open(BytesIO(image_data))
+
+    # 构建截图文件名，包含步骤编号、描述和时间戳
+    screenshot_filename = f'{task_folder}/Step{step_number}_{timestamp}_{description}.png'
+
+    # 保存截图到指定文件夹
+    image.save(screenshot_filename)
+
+
 def print_limited_json(obj, limit=500, indent=0):
     """
     限制json的长度

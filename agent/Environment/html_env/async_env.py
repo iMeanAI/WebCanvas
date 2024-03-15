@@ -16,7 +16,7 @@ from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
 import time
 
-from ...Utils.utils import is_valid_base64
+from agent.Prompt import *
 
 
 class AsyncHTMLEnvironment:
@@ -88,20 +88,20 @@ class AsyncHTMLEnvironment:
         except Exception as e:
             print(f"Error in get_obs: {e}")
         if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-            # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+            # byCarl: 仅用于判断图片是否是base64编码
             is_valid, message = is_valid_base64(
                 observation_VforD)
             print("async_env.py _get_obs observation_VforD:", message)
         return (observation, observation_VforD) if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"] else observation
 
-    async def reset(self, start_url: str = "") -> Union[str, Tuple[str, str]]:
+    async def reset(self, start_url: str = ""):
         await self.setup(start_url)
-        if self.mode == "d_v":
-            observation, observation_VforD = await self.get_obs()
-            return observation, observation_VforD
-        else:
-            observation = await self.get_obs()
-            return observation
+        # if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
+        #     observation, observation_VforD = await self.get_obs()
+        #     return observation, observation_VforD
+        # else:
+        #     observation = await self.get_obs()
+        #     return observation
 
     async def click(self, action):
         try:
@@ -517,10 +517,10 @@ class AsyncHTMLEnvironment:
             raise ValueError("Page not initialized or loaded.")
 
         # await self.page.wait_for_load_state("load")
-        await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
+        # await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
         # 捕获屏幕截图
         screenshot_bytes = ""
-        for i in range(5):
+        for i in range(6):
             try:
                 screenshot_bytes = await self.page.screenshot()
                 break
