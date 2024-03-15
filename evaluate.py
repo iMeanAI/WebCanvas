@@ -469,34 +469,32 @@ async def main(num_steps=0, mode="dom"):
                 else:
                     await env.execute_action(execute_action)
                     observation = await env.get_obs()
-
+                previous_trace.append(current_trace)
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
 
                 # current_trace = [current_trace]
-                current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
-                                                         current_trace=current_trace, observation=observation)
-                step_reward_str = current_reward if current_reward else "X"
-                step_reward_list.append(str(step_reward_str))
-                if current_reward and int(current_reward.get("score")) < config['basic']['Step_Score_Threshold']:
-                    execute_action.update(
-                        {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                    if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-                        await env.execute_action(execute_action)
-                        observation, observation_VforD = await env.get_obs()
-                        save_screenshot(mode=mode, record_time=record_time, task_name=task_name, step_number=num_steps, description="new-obs",
-                                        screenshot_base64=observation_VforD)
-                    else:
-                        await env.execute_action(execute_action)
-                        observation = await env.get_obs()
-                    last_action_description = current_reward.get("description")
-                else:
-                    last_action_description = ""
-                    previous_trace.append(current_trace)
-                if current_reward and int(current_reward.get("score")) < 4:
-                    step_error_count += 1
-                else:
-                    step_error_count = 0
+                # current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
+                #                                          current_trace=current_trace, observation=observation)
+                # step_reward_str = current_reward if current_reward else "X"
+                # step_reward_list.append(str(step_reward_str))
+                # if current_reward and int(current_reward.get("score")) < config['basic']['Step_Score_Threshold']:
+                #     execute_action.update(
+                #         {"element_id": 0, "action_type": ActionTypes.GO_BACK})
+                #     if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
+                #         await env.execute_action(execute_action)
+                #         observation, observation_VforD = await env.get_obs()
+                #     else:
+                #         await env.execute_action(execute_action)
+                #         observation = await env.get_obs()
+                #     last_action_description = current_reward.get("description")
+                # else:
+                #     last_action_description = ""
+                #     previous_trace.append(current_trace)
+                # if current_reward and int(current_reward.get("score")) < 4:
+                #     step_error_count += 1
+                # else:
+                #     step_error_count = 0
 
             elif mode == "vision":
                 execute_action = dict_to_write["action"]

@@ -116,4 +116,6 @@ class ActiveElements:
         element_type = element["attributes"].get('type')
         if element_type in TypeList:
             return element_type
+        # if element['tagName'] == 'input' and element["attributes"].get('name'):
+        #     return element["attributes"].get('name')
         return ""

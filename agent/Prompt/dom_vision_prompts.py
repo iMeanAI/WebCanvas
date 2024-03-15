@@ -13,7 +13,7 @@ class DomVisionPrompts:
     example_output = '\n```\n{\n  "action": "click",\n  "action_input": "button",\n  "element_id": "236",\n  "description": "Now I\'m on Google\'s main page. I\'m now clicking the button with element_id [236] to see more information."\n}\n```'
     score_output = '\n```\n{\n "score": "10"\n,"description": "According to the previous trajectory, the current thought and the action performed are an important part of completing the target task, so it is very important, so I give 10 points"}\n```'
 
-    d_v_planning_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can."\
+    d_v_planning_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best as you can."\
         "You have simultaneous access to two key sources of information: the accessibility tree of the current web page and screenshots that provide a visual representation of the page.\n\n"\
         "The accessibility tree helps you understand the structure and elements of the webpage, while the screenshots provide you with visual context, assisting in identifying the layout, appearance, and positions of web elements.\n"\
         f"Here is a accessibility tree example:{example_input}\n"\

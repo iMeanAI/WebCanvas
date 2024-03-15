@@ -19,7 +19,7 @@ class HistoryMemory:
     def construct_previous_trace_prompt(self) -> str:
         stringfy_thought_and_action_output = self.stringfy_thought_and_action()
         previous_trace_prompt = f"The previous thoughts and actions are: \
-            {stringfy_thought_and_action_output}.\n\nYou have done the things above.\n\n"
+            {stringfy_thought_and_action_output}.\n\nYou have done the things above.\n\n" #TODO：对reward的描述
         return previous_trace_prompt
 
     def construct_cache_trace(self):

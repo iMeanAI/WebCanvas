@@ -14,13 +14,13 @@ class InteractionMode:
     def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         pass
 
-    async def get_global_reward(self, user_request, previous_trace):
+    async def get_global_reward(self, user_request, previous_trace, observation):
         status_and_description = None
         if len(previous_trace) > 0:
             stringfy_thought_and_action_output = ObservationPromptConstructor().stringfy_thought_and_action(
                 previous_trace)
             reward_request = RewardPromptConstructor().construct(
-                user_request, stringfy_thought_and_action_output)
+                user_request, stringfy_thought_and_action_output, observation)
             # print(f"\033[32mGlobal_reward_Request{reward_request}")  # 绿色
             # print("\033[0m")
             print_info(
