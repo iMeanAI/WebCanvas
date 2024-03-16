@@ -6,7 +6,11 @@ class BasePrompts:
     #TODO: Thought space改为分析当前这步的规划，确认一下REACT有没有做过多步推理的实验
     #TODO：planning加入go back动作，并实现动作执行
     planning_prompt_system = '''You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best as you can.
-        You will get key information from current web page, such as accessibility tree.
+        There are key information you will get:"
+        **Key Information**:
+            - Previous trace: all thoughts, actions and reflections you have made historically.
+            - Accessibility tree: characteristic expression of the current web page.
+            
         **Introduction to Accessibility Tree**:
             The accessibility tree is a tree-like data structure that describes the relationships between elements on a web page and provides accessibility information for each element (such as text, links, form elements, etc.).
             - **Accessibility Tree Example**:
@@ -25,8 +29,8 @@ class BasePrompts:
 
         You should always consider previous and subsequent steps and what to do.
         ** Thought Space**
-            - What key steps need to be completed in order to complete this task?
-            - Confirm which steps are completed step by step, and what are the next steps?
+            - What action do you think is needed now to complete the task?
+            - What's the reason of taking that action?
         
         You have access to the following tools(helpful to interact with web page):
         **Execution Action Space**:
@@ -34,7 +38,8 @@ class BasePrompts:
             - fill_form: useful for when you need to fill out a form or input something from accessibility tree. Input should be a string.
             - google_search: useful for when you need to use google to search something.
             - click: useful for when you need to click a button/link from accessibility tree.
-            - select_option: useful for when you need to select a drop-down box value.When you get (select and option) tags from the accessibility tree, you need to select the serial number(element_id) corresponding to the select tag, not the option, and select the most likely content corresponding to the option as Input.
+            - select_option: useful for when you need to select a drop-down box value. When you get (select and option) tags from the accessibility tree, you need to select the serial number(element_id) corresponding to the select tag, not the option, and select the most likely content corresponding to the option as Input.
+            - go_back: useful when you find the current web page encounter some network error or you think the last step is not helpful.
         
         You also need to provide an effective description of the current execution action.
         A proper description contains:
@@ -44,7 +49,7 @@ class BasePrompts:
 
         You have to follow the instructions or notes:
         **Important Notes**:
-            - You just use tool(google_search or goto) in the following cases
+            - You just use these two tools (google_search and goto) in the following cases
                 1. In the first step or the previous trace is empty.
                 2. the accessibility tree is empty or not provided.
             - Your action should not be the same as last step's action.
@@ -101,7 +106,7 @@ class BasePrompts:
         Your goal is to evaluate the previous series of traces(thoughts and actions) and think about what key steps are needed to complete the task in the future.
         There are key information you will get:"
         **Key Information**:
-            - Previous trace: all thoughts and actions to complete this task step by step.
+            - Previous trace: all thoughts, actions and reflections you have made historically.
             - Accessibility tree: characteristic expression of the current web page.
             - Screenshot: screenshot information of the current web page.
         
@@ -114,7 +119,7 @@ class BasePrompts:
         You will judge and score the task completion and reasonableness of previous actions. The score ranges from 1-10, but the score you give can only be selected from [1, 3, 7, 9, 10].
         **Judging and Scoring Criteria**:
             - score = 1: You find that the status of the task is stuck in a loop by analyzing the previous trace.
-            - score = 3: You find that performing the previous trajectories(thoughts and actions) is not likely helping in completing target task and you need to adjust the direction of planning or start over from beginning.
+            - score = 3: You find that performing the previous trajectories(thoughts and actions) is not likely helpful in completing target task and you need to adjust the direction of your planning and action or start over from beginning.
             - score = 7: You find that performing the previous trajectories(thoughts and actions) are helpful in completing the target task.
             - score = 9: You find that performing the previous trajectories(thoughts and actions) are a very critical intermediate step to complete this task.
             - score = 10: You find that performing the previous trajectories(thoughts and actions) have completed the task perfectly.
@@ -143,14 +148,14 @@ class BasePrompts:
             {
                 "status": "doing",
                 "score": "3",
-                "reason": "According to the previous trajectories, the previous thoughts and actions performed are an very important part of completing the target task. I give 9 points."
-                "description": "According to the current web page information, the target task has not been completed yet, and the next plan is to complete this task (click on an element or other action)."
+                "reason": "You need to complete a search for camping tents that can accommodate 2 people and sort the results in rei by price from low to high. According to your previous trajectory, you navigated to the rei official website and clicked the 2-person button, which are correct actions. But when you complete the final step of sorting prices, you actually click on a link to a tent product. This is a completely unreasonable action. So I give it 3 points. Maybe you need to return to the previous interface to re-plan and select the 'sort by' button"
+                "description": "According to the current web page information, you can know that this is the homepage of a tent product, which is not very consistent with the purpose of the target task. The next overall plan to complete this task is to return to the previous page and select the sort by button."
             }
             ```
     '''
 
     global_reward_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
-        "The previous trajectories(thoughts and actions) are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"\
+        "The previous trajectories(thoughts, actions and reflections) are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"\
         "Accessibility tree here is:"
 
     # current_reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain task.\n"\
