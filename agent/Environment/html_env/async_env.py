@@ -352,7 +352,6 @@ class AsyncHTMLEnvironment:
             await self.page.hover(selector)
             # await self.page.wait_for_load_state('load')
             self.html_content = await self.page.content()
-            return await self._get_obs()
         except:
             self.last_page = self.page
             hover = '''() => {
@@ -380,7 +379,6 @@ class AsyncHTMLEnvironment:
                 await self.page.evaluate("window.scrollBy(0, 500)")
                 print("scroll_down: By(0, 500)")
                 self.html_content = await self.page.content()
-                return await self._get_obs()
             # 获取当前滚动位置
             current_scroll = await self.page.evaluate("window.pageYOffset")
             # 计算剩余高度
@@ -395,7 +393,6 @@ class AsyncHTMLEnvironment:
                 await self.page.evaluate(f"window.scrollTo(0, {scroll_amount})")
                 print(f"scroll_down: scrollTo(0, {scroll_amount})")
             self.html_content = await self.page.content()
-            return await self._get_obs()
         except:
             self.last_page = self.page
             await self.page.mouse.wheel(0, 100)
@@ -417,7 +414,6 @@ class AsyncHTMLEnvironment:
                     scroll_amount = current_scroll - viewport_height / 2
                 await self.page.evaluate(f"window.scrollTo(0, {scroll_amount})")
             self.html_content = await self.page.content()
-            return await self._get_obs()
         except:
             self.last_page = self.page
             await self.page.mouse.wheel(0, -100)
@@ -453,7 +449,7 @@ class AsyncHTMLEnvironment:
                         print(e)
                 case ActionTypes.FILL_FORM:
                     try:
-                        await self.fill_search(action)
+                        await self.fill_form(action)
                     except Exception as e:
                         print("can't execute fill form action")
                         print(e)
