@@ -1,4 +1,6 @@
 import re
+from typing import Tuple, Any, List
+
 import json5
 import json
 
@@ -12,7 +14,7 @@ class ActionParser():
         pass
 
     # 将OpenAI返回的结果中提取Thought和Action，返回thought(str)和action(dict), 其中action拥有action, element_id, action_input, description四个字段
-    def extract_thought_and_action(self, message) -> dict:
+    def extract_thought_and_action(self, message) -> tuple[Any, Any]:
         # result_thought = "null"
         # try:
         #     result_thought = re.findall(
