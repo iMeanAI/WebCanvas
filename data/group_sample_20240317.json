@@ -1,0 +1,2159 @@
+[
+    {
+        "index": 0,
+        "task": "Find a parking with EV charging for month with lowest price in Chicago in spothero",
+        "reference_task_length": 10,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "spothero.",
+                    "url": "https://spothero.com/"
+                }
+            },
+            {
+                "match_function_name": "element_value_semantic_match",
+                "content": {
+                    "reference_answer": "Decide whether are searching for Chicago",
+                    "netloc": "spothero",
+                    "url": "https://spothero.com/"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "monthly",
+                    "reference_answer": "true",
+                    "url": "https://spothero.com/search?kind=city&id=1&monthly=true"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#Checkbox-FilterItem-ev ",
+                    "netloc": "spothero",
+                    "url": "https://spothero.com/search?kind=city&id=1&monthly=true"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".Button.Button-primary ",
+                    "netloc": "spothero",
+                    "url": "https://spothero.com/search?kind=city&id=1&monthly=true"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".SpotListSorter >.Select.FormElement >.FormElement-control >.FormElement-item >option:nth-child(2)",
+                    "netloc": "spothero",
+                    "url": "https://spothero.com/search?kind=city&id=1&monthly=true"
+                }
+            }
+        ]
+    },
+    {
+        "index": 1,
+        "task": "Find Kevin Durant's bio in espn",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "espn.",
+                    "url": "https://www.espn.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "_/id/3202/kevin-durant",
+                    "url": "https://www.espn.com/nba/player/_/id/3202/kevin-durant"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "bio/",
+                    "url": "https://www.espn.com/nba/player/_/id/3202/kevin-durant"
+                }
+            }
+        ]
+    },
+    {
+        "index": 2,
+        "task": "Look for a hybrid job at Resy in software development, if the job is open apply immediately in resy",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "resy.",
+                    "url": "https://resy.com/?date=2024-01-27&seats=1&activeView=list"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/jobapply.ftl",
+                    "url": "https://axp.taleo.net/careersection/5/jobapply.ftl?job=23009999&lang=en&src=Eightfold"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/careersection",
+                    "url": "https://axp.taleo.net/careersection/5/jobapply.ftl?job=23009999&lang=en&src=Eightfold"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "axp.taleo",
+                    "url": "https://axp.taleo.net/careersection/5/jobapply.ftl?job=23009999&lang=en&src=Eightfold"
+                }
+            }
+        ]
+    },
+    {
+        "index": 3,
+        "task": "Look up information on the potential side effects of rogaine in cvs",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "cvs.",
+                    "url": "https://www.cvs.com/"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "searchTerm",
+                    "reference_answer": "Decide whether is searching for rogaine",
+                    "url": "https://www.cvs.com/search?searchTerm=rogaine"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".accordionParent >div:nth-child(5)>.cardContainer >.cardTitleContainer ",
+                    "netloc": "cvs",
+                    "url": "https://www.cvs.com/shop/rogaine-men-s-extra-strength-5-minoxidil-solution-for-hair-regrowth-prodid-1013645"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "shop/",
+                    "url": "https://www.cvs.com/shop/rogaine-men-s-extra-strength-5-minoxidil-solution-for-hair-regrowth-prodid-1013645"
+                }
+            }
+        ]
+    },
+    {
+        "index": 4,
+        "task": "Find the newest silver-colored Lexus SUV with a black interior and backup camera to purchase which has been made between 2022-2023 and is within 50 miles of zip 10017 in cargurus",
+        "reference_task_length": 25,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "cargurus.",
+                    "url": "https://www.cargurus.com/"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "zip",
+                    "reference_answer": "10017",
+                    "url": "https://www.cargurus.com/Cars/new/searchresults.action?zip=10017&inventorySearchWidgetType=BODYSTYLE&bodyTypeGroup=bg7&sortDir=ASC&sourceContext=untrackedWithinSite_false_0&distance=100&sortType=PRICE"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "bodyTypeGroup",
+                    "reference_answer": "bg7",
+                    "url": "https://www.cargurus.com/Cars/new/searchresults.action?zip=10017&inventorySearchWidgetType=BODYSTYLE&bodyTypeGroup=bg7&sortDir=ASC&sourceContext=untrackedWithinSite_false_0&distance=100&sortType=PRICE"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".Gv7Z4V >div:nth-child(1)>.HObdBl.vT3i0_ >.mvXVZO.Xb7sZe >option:nth-child(3)",
+                    "netloc": "cargurus",
+                    "url": "https://www.cargurus.com/Cars/new/searchresults.action?zip=10017&inventorySearchWidgetType=BODYSTYLE&bodyTypeGroup=bg7&sortDir=ASC&sourceContext=untrackedWithinSite_false_0&distance=100&sortType=PRICE"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".Gv7Z4V >div:nth-child(1)>.HObdBl.vT3i0_ >.mvXVZO.Xb7sZe >option:nth-child(4)",
+                    "netloc": "cargurus",
+                    "url": "https://www.cargurus.com/Cars/new/searchresults.action?zip=10017&inventorySearchWidgetType=BODYSTYLE&bodyTypeGroup=bg7&sortDir=ASC&sourceContext=untrackedWithinSite_false_0&distance=100&sortType=PRICE"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#select-filter-search-distance >option:nth-child(3)",
+                    "netloc": "cargurus",
+                    "url": "https://www.cargurus.com/Cars/new/searchresults.action?zip=10017&inventorySearchWidgetType=BODYSTYLE&bodyTypeGroup=bg7&sortDir=ASC&sourceContext=untrackedWithinSite_false_0&distance=100&sortType=PRICE"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".FXiauQ >ul:nth-child(1)>li:nth-child(11)>.fimP4_ >.y0gbTE.zsNQOE >.MaigNX >.pV9_6g ",
+                    "netloc": "cargurus",
+                    "url": "https://www.cargurus.com/Cars/new/searchresults.action?zip=10017&inventorySearchWidgetType=BODYSTYLE&bodyTypeGroup=bg7&sortDir=ASC&sourceContext=untrackedWithinSite_false_0&distance=100&sortType=PRICE"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#radix-4 >.UWCYC >.FXiauQ >ul:nth-child(1)>li:nth-child(1)>.fimP4_ >.y0gbTE.zsNQOE >.MaigNX >.pV9_6g ",
+                    "netloc": "cargurus",
+                    "url": "https://www.cargurus.com/Cars/new/searchresults.action?zip=10017&inventorySearchWidgetType=BODYSTYLE&bodyTypeGroup=bg7&sortDir=ASC&sourceContext=untrackedWithinSite_false_0&distance=100&sortType=PRICE"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".FXiauQ >ul:nth-child(1)>li:nth-child(23)>.fimP4_ >.y0gbTE.zsNQOE ",
+                    "netloc": "cargurus",
+                    "url": "https://www.cargurus.com/Cars/new/searchresults.action?zip=10017&inventorySearchWidgetType=BODYSTYLE&bodyTypeGroup=bg7&sortDir=ASC&sourceContext=untrackedWithinSite_false_0&distance=100&sortType=PRICE"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".FXiauQ >ul:nth-child(2)>ul:nth-child(1)>li:nth-child(1)>.fimP4_ >.y0gbTE.zsNQOE ",
+                    "netloc": "cargurus",
+                    "url": "https://www.cargurus.com/Cars/new/searchresults.action?zip=10017&inventorySearchWidgetType=BODYSTYLE&bodyTypeGroup=bg7&sortDir=ASC&sourceContext=untrackedWithinSite_false_0&distance=100&sortType=PRICE"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#Listing-Sort >option:nth-child(9)",
+                    "netloc": "cargurus",
+                    "url": "https://www.cargurus.com/Cars/new/searchresults.action?zip=10017&inventorySearchWidgetType=BODYSTYLE&bodyTypeGroup=bg7&sortDir=ASC&sourceContext=untrackedWithinSite_false_0&distance=100&sortType=PRICE"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".IWo5PZ.orzDm5 >div:nth-child(4)>div:nth-child(1)>.MOfIEd.HgPBTU.prRsnF >.Z0_BC0.ZGMXbN.kKD2eQ >.biZGS4.LtXpwU >.k4FSCT >.bLgDNy >.gN7yGT ",
+                    "netloc": "cargurus",
+                    "url": "https://www.cargurus.com/Cars/new/searchresults.action?zip=10017&inventorySearchWidgetType=BODYSTYLE&bodyTypeGroup=bg7&sortDir=ASC&sourceContext=untrackedWithinSite_false_0&distance=100&sortType=PRICE"
+                }
+            }
+        ]
+    },
+    {
+        "index": 5,
+        "task": "Play the Wakanda Forever trailer in redbox",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "redbox.",
+                    "url": "https://www.redbox.com/movies/black-panther-wakanda-forever"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/black-panther-wakanda-forever",
+                    "url": "https://www.redbox.com/movies/black-panther-wakanda-forever"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#maincontent >div:nth-child(1)>div:nth-child(2)>div:nth-child(3)>div:nth-child(2)>div:nth-child(1)>button:nth-child(1)>svg:nth-child(1)>g:nth-child(2)>path:nth-child(1)",
+                    "netloc": "redbox",
+                    "url": "https://www.redbox.com/movies/black-panther-wakanda-forever"
+                }
+            }
+        ]
+    },
+    {
+        "index": 6,
+        "task": "Show MLB tickets for this weekend in ticketcenter",
+        "reference_task_length": 5,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "ticketcenter.",
+                    "url": "https://www.ticketcenter.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/sports/baseball/professional-mlb",
+                    "url": "https://www.ticketcenter.com/sports/baseball/professional-mlb"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".filters >span:nth-child(6)>div:nth-child(1)>ul:nth-child(2)>li:nth-child(1)>a:nth-child(1)",
+                    "netloc": "ticketcenter",
+                    "url": "https://www.ticketcenter.com/sports/baseball/professional-mlb"
+                }
+            }
+        ]
+    },
+    {
+        "index": 7,
+        "task": "Add a pack of toilet paper and a bottle of laundry detergent to your Amazon cart with the lowest total price in amazon",
+        "reference_task_length": 16,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "amazon.",
+                    "url": "https://www.amazon.com/"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "k",
+                    "reference_answer": "Decide whether are searching for a pack of toilet paper",
+                    "url": "https://www.amazon.com/s?k=a+pack+of+toilet+paper&crid=2ZDNFT3712A2Z&sprefix=a+pack+of+toilet+paper%2Caps%2C344&ref=nb_sb_noss_2"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".s-main-slot.s-result-list.s-search-results.sg-row >div:nth-child(12)>.sg-col-inner >div:nth-child(1)>span:nth-child(1)>div:nth-child(1)>div:nth-child(1)>div:nth-child(2)>.a-section.s-title-instructions-style >h2:nth-child(1)>.a-link-normal.s-underline-text.s-underline-link-text.s-link-style.a-text-normal >span:nth-child(1)",
+                    "netloc": "amazon",
+                    "url": "https://www.amazon.com/s?k=a+pack+of+toilet+paper&crid=2ZDNFT3712A2Z&sprefix=a+pack+of+toilet+paper%2Caps%2C344&ref=nb_sb_noss_2"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "ref",
+                    "reference_answer": "nb_sb_noss_2",
+                    "url": "https://www.amazon.com/s?k=a+pack+of+toilet+paper&crid=2ZDNFT3712A2Z&sprefix=a+pack+of+toilet+paper%2Caps%2C344&ref=nb_sb_noss_2"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#add-to-cart-button ",
+                    "netloc": "amazon",
+                    "url": "https://www.amazon.com/Peelitical-Toilet-Paper-Roll-Full-Color/dp/B0B6GRTS3K/ref=sr_1_3?crid=2ZDNFT3712A2Z&keywords=a+pack+of+toilet+paper&qid=1706435470&sprefix=a+pack+of+toilet+paper%2Caps%2C344&sr=8-3"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "k",
+                    "reference_answer": "Decide whether are searching for a bottle of laundry detergent",
+                    "url": "https://www.amazon.com/s?k=a+bottle+of+laundry+detergent&crid=24SHUQD9K9BYI&sprefix=a+bottle+of+laundry+detergent%2Caps%2C353&ref=nb_sb_noss_2"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".s-main-slot.s-result-list.s-search-results.sg-row >div:nth-child(10)>.sg-col-inner >div:nth-child(1)>span:nth-child(1)>div:nth-child(1)>div:nth-child(1)>div:nth-child(2)>.a-section.s-title-instructions-style >h2:nth-child(1)>.a-link-normal.s-underline-text.s-underline-link-text.s-link-style.a-text-normal >span:nth-child(1)",
+                    "netloc": "amazon",
+                    "url": "https://www.amazon.com/s?k=a+bottle+of+laundry+detergent&crid=24SHUQD9K9BYI&sprefix=a+bottle+of+laundry+detergent%2Caps%2C353&ref=nb_sb_noss_2"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "ref",
+                    "reference_answer": "nb_sb_noss_2",
+                    "url": "https://www.amazon.com/s?k=a+bottle+of+laundry+detergent&crid=24SHUQD9K9BYI&sprefix=a+bottle+of+laundry+detergent%2Caps%2C353&ref=nb_sb_noss_2"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#add-to-cart-button ",
+                    "netloc": "amazon",
+                    "url": "https://www.amazon.com/MAZI-Laundry-Detergent-Catcher-Economic/dp/B09CF6KC2Y/ref=sr_1_1?crid=24SHUQD9K9BYI&keywords=a+bottle+of+laundry+detergent&qid=1706435504&sprefix=a+bottle+of+laundry+detergent%2Caps%2C353&sr=8-1"
+                }
+            }
+        ]
+    },
+    {
+        "index": 8,
+        "task": "Confirm my vip tour at the six flags Discovery Kingdom in sixflags",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "sixflags.",
+                    "url": "https://www.sixflags.com/america"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "discoverykingdom",
+                    "url": "https://www.sixflags.com/discoverykingdom"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "store/vip-tours",
+                    "url": "https://www.sixflags.com/discoverykingdom/store/vip-tours"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".entry-content.clear >div:nth-child(1)>section:nth-child(1)>div:nth-child(1)>div:nth-child(1)>div:nth-child(1)>section:nth-child(1)>div:nth-child(1)>div:nth-child(2)>div:nth-child(1)>div:nth-child(9)>div:nth-child(1)>div:nth-child(1)>a:nth-child(1)",
+                    "netloc": "sixflags",
+                    "url": "https://www.sixflags.com/discoverykingdom/store/vip-tours"
+                }
+            }
+        ]
+    },
+    {
+        "index": 9,
+        "task": "Plan an accessible trip from empire state building to little Caribbean with least walking in new.mta.info",
+        "reference_task_length": 14,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "new.mta.info",
+                    "url": "https://new.mta.info/"
+                }
+            },
+            {
+                "match_function_name": "element_value_semantic_match",
+                "content": {
+                    "reference_answer": "Decide whether are searching for empire state building",
+                    "netloc": "new",
+                    "url": "https://new.mta.info/"
+                }
+            },
+            {
+                "match_function_name": "element_value_semantic_match",
+                "content": {
+                    "reference_answer": "Decide whether are searching for little Caribbean",
+                    "netloc": "new",
+                    "url": "https://new.mta.info/"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#linkPreferencesModal ",
+                    "netloc": "new",
+                    "url": "https://new.mta.info/"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#edit-minimize ",
+                    "netloc": "new",
+                    "url": "https://new.mta.info/"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#edit-minimize >option:nth-child(3)",
+                    "netloc": "new",
+                    "url": "https://new.mta.info/"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".button.primary-dark-button.travel-preferences-button.close-modal.close-preferences ",
+                    "netloc": "new",
+                    "url": "https://new.mta.info/"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".form-item.js-form-item.form-type-checkbox.js-form-type-checkbox.form-item-accessible.js-form-item-accessible.checkbox >.control-label.option ",
+                    "netloc": "new",
+                    "url": "https://new.mta.info/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/tripplanner/results",
+                    "url": "https://new.mta.info/tripplanner/results/Empire%20State%20Building%2C%20West%2034th%20Street%2C%20New%20York%2C%20NY%2C%20USA/40.7484405%2C%20-73.98566439999999/Little%20Caribbean%2C%20Brooklyn%2C%20NY%2C%20USA/40.6508146%2C%20-73.9495972/1706595587/D/B%2CX%2CC%2CR/W/804/true/null/null"
+                }
+            }
+        ]
+    },
+    {
+        "index": 10,
+        "task": "Go to the page with help in choosing a solar energy product for homes in tesla",
+        "reference_task_length": 5,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "tesla.",
+                    "url": "https://www.tesla.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "energy/design",
+                    "url": "https://www.tesla.com/energy/design"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/help-me-choose",
+                    "url": "https://www.tesla.com/energy/design/help-me-choose"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/help-me-choose-quiz",
+                    "url": "https://www.tesla.com/energy/design/help-me-choose-quiz"
+                }
+            }
+        ]
+    },
+    {
+        "index": 11,
+        "task": "Find the trade-in options for PS4 in gamestop",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "gamestop.",
+                    "url": "https://www.gamestop.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/trade",
+                    "url": "https://www.gamestop.com/trade/"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "cgid",
+                    "reference_answer": "playstation-4",
+                    "url": "https://www.gamestop.com/trade/?cgid=playstation-4"
+                }
+            }
+        ]
+    },
+    {
+        "index": 12,
+        "task": "Find cheapest bus for 2 persons from New York to Washington, DC in us.megabus",
+        "reference_task_length": 10,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "us.megabus.",
+                    "url": "https://us.megabus.com/"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "totalPassengers",
+                    "reference_answer": "2",
+                    "url": "https://us.megabus.com/journey-planner/journeys?days=1&concessionCount=0&departureDate=2024-01-27&destinationId=142&inboundDepartureDate=2024-01-27&inboundOtherDisabilityCount=0&inboundPcaCount=0&inboundWheelchairSeated=0&nusCount=0&originId=123&otherDisabilityCount=0&pcaCount=0&totalPassengers=2&wheelchairSeated=0"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "destinationId",
+                    "reference_answer": "142",
+                    "url": "https://us.megabus.com/journey-planner/journeys?days=1&concessionCount=0&departureDate=2024-01-27&destinationId=142&inboundDepartureDate=2024-01-27&inboundOtherDisabilityCount=0&inboundPcaCount=0&inboundWheelchairSeated=0&nusCount=0&originId=123&otherDisabilityCount=0&pcaCount=0&totalPassengers=2&wheelchairSeated=0"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "originId",
+                    "reference_answer": "123",
+                    "url": "https://us.megabus.com/journey-planner/journeys?days=1&concessionCount=0&departureDate=2024-01-27&destinationId=142&inboundDepartureDate=2024-01-27&inboundOtherDisabilityCount=0&inboundPcaCount=0&inboundWheelchairSeated=0&nusCount=0&originId=123&otherDisabilityCount=0&pcaCount=0&totalPassengers=2&wheelchairSeated=0"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#sortselected ",
+                    "netloc": "us",
+                    "url": "https://us.megabus.com/journey-planner/journeys?days=1&concessionCount=0&departureDate=2024-01-27&destinationId=142&inboundDepartureDate=2024-01-27&inboundOtherDisabilityCount=0&inboundPcaCount=0&inboundWheelchairSeated=0&nusCount=0&originId=123&otherDisabilityCount=0&pcaCount=0&totalPassengers=2&wheelchairSeated=0"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#sortselected >option:nth-child(3)",
+                    "netloc": "us",
+                    "url": "https://us.megabus.com/journey-planner/journeys?days=1&concessionCount=0&departureDate=2024-01-27&destinationId=142&inboundDepartureDate=2024-01-27&inboundOtherDisabilityCount=0&inboundPcaCount=0&inboundWheelchairSeated=0&nusCount=0&originId=123&otherDisabilityCount=0&pcaCount=0&totalPassengers=2&wheelchairSeated=0"
+                }
+            }
+        ]
+    },
+    {
+        "index": 13,
+        "task": "List of publishers for board games in boardgamegeek",
+        "reference_task_length": 4,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "boardgamegeek.",
+                    "url": "https://boardgamegeek.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "browse/boardgamepublisher",
+                    "url": "https://boardgamegeek.com/browse/boardgamepublisher"
+                }
+            }
+        ]
+    },
+    {
+        "index": 14,
+        "task": "Find FC Barcelona's next fixture in the Spanish Copa de Rey in espn",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "espn.",
+                    "url": "https://www.espn.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/_/id/83/",
+                    "url": "https://www.espn.com/soccer/team/_/id/83/barcelona"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/fixtures/",
+                    "url": "https://www.espn.com/soccer/team/fixtures/_/id/83/esp.barcelona"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "ESP.COPA_DEL_REY",
+                    "url": "https://www.espn.com/soccer/team/fixtures/_/id/83/esp.barcelona"
+                }
+            }
+        ]
+    },
+    {
+        "index": 15,
+        "task": "Browse hip hop concerts that are happening this weekend",
+        "reference_task_length": 5,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "ticketcenter.",
+                    "url": "https://www.ticketcenter.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/concerts",
+                    "url": "https://www.ticketcenter.com/concerts"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/rap-hip-hop",
+                    "url": "https://www.ticketcenter.com/concerts/rap-hip-hop"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".filters >span:nth-child(6)>div:nth-child(1)>ul:nth-child(2)>li:nth-child(1)>a:nth-child(1)",
+                    "netloc": "ticketcenter",
+                    "url": "https://www.ticketcenter.com/concerts/rap-hip-hop"
+                }
+            }
+        ]
+    },
+    {
+        "index": 16,
+        "task": "Show me the coming soon AMC Artisan Films in amctheatres",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "amctheatres.",
+                    "url": "https://www.amctheatres.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/movies",
+                    "url": "https://www.amctheatres.com/movies"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "availability",
+                    "reference_answer": "COMING_SOON",
+                    "url": "https://www.amctheatres.com/movies?availability=COMING_SOON"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".select-styled__select >option:nth-child(2)",
+                    "netloc": "amctheatres",
+                    "url": "https://www.amctheatres.com/movies?availability=COMING_SOON"
+                }
+            }
+        ]
+    },
+    {
+        "index": 17,
+        "task": "Show me the schedule for the orange line in mbta",
+        "reference_task_length": 4,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "mbta.",
+                    "url": "https://www.mbta.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/schedules/Orange/line",
+                    "url": "https://www.mbta.com/schedules/Orange/line"
+                }
+            }
+        ]
+    },
+    {
+        "index": 18,
+        "task": "View the toddler collection and add one pair of the cheapest socks for a 6 months to 5 years to the wishlist in uniqlo",
+        "reference_task_length": 11,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "uniqlo.",
+                    "url": "https://www.uniqlo.com/us/en/baby"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "baby/toddler",
+                    "url": "https://www.uniqlo.com/us/en/baby/toddler"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "path",
+                    "reference_answer": "22213,23321,24798,",
+                    "url": "https://www.uniqlo.com/us/en/baby/toddler?path=22213%2C23321%2C24798%2C"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "sort",
+                    "reference_answer": "2",
+                    "url": "https://www.uniqlo.com/us/en/baby/toddler?path=22213%2C23321%2C24798%2C&sort=2"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#root >section:nth-child(10)>div:nth-child(1)>section:nth-child(1)>div:nth-child(1)>div:nth-child(2)>div:nth-child(1)>div:nth-child(1)>div:nth-child(1)>div:nth-child(1)>div:nth-child(1)>a:nth-child(1)>div:nth-child(1)>div:nth-child(1)>button:nth-child(2)>svg:nth-child(1)",
+                    "netloc": "uniqlo",
+                    "url": "https://www.uniqlo.com/us/en/baby/toddler?path=22213%2C23321%2C24798%2C&sort=2"
+                }
+            }
+        ]
+    },
+    {
+        "index": 19,
+        "task": "Find adventure movies coming to theaters in rottentomatoes",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "rottentomatoes.",
+                    "url": "https://www.rottentomatoes.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "browse/movies_coming_soon",
+                    "url": "https://www.rottentomatoes.com/browse/movies_coming_soon/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "genres:adventure",
+                    "url": "https://www.rottentomatoes.com/browse/movies_coming_soon/"
+                }
+            }
+        ]
+    },
+    {
+        "index": 20,
+        "task": "Browse comedy TV shows streaming on Netflix that was released in 2010 in tvguide",
+        "reference_task_length": 8,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "tvguide.",
+                    "url": "https://www.tvguide.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "streaming/netflix/",
+                    "url": "https://www.tvguide.com/streaming/netflix/"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "genre",
+                    "reference_answer": "comedy",
+                    "url": "https://www.tvguide.com/streaming/netflix/comedy/show/1/?sort=mostPopular&network=netflix&genre=comedy&type=show&releaseYearMin=2010&page=1"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "type",
+                    "reference_answer": "show",
+                    "url": "https://www.tvguide.com/streaming/netflix/comedy/show/1/?sort=mostPopular&network=netflix&genre=comedy&type=show&releaseYearMin=2010&page=1"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "releaseYearMin",
+                    "reference_answer": "2010",
+                    "url": "https://www.tvguide.com/streaming/netflix/comedy/show/1/?sort=mostPopular&network=netflix&genre=comedy&type=show&releaseYearMin=2010&page=1"
+                }
+            }
+        ]
+    },
+    {
+        "index": 21,
+        "task": "What are Gloomhaven's ratings? in boardgamegeek",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "boardgamegeek.",
+                    "url": "https://boardgamegeek.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "boardgame/174430/gloomhaven",
+                    "url": "https://boardgamegeek.com/boardgame/174430/gloomhaven"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/ratings",
+                    "url": "https://boardgamegeek.com/boardgame/174430/gloomhaven"
+                }
+            }
+        ]
+    },
+    {
+        "index": 22,
+        "task": "Find a pair of mens running shoes in black, size 7 extra wide, 4+ stars and under $50 and add them to my cart in amazon",
+        "reference_task_length": 13,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "amazon.",
+                    "url": "https://www.amazon.com/"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "k",
+                    "reference_answer": "Decide whether are searching for men's running shoes",
+                    "url": "https://www.amazon.com/s?k=men%27s+running+shoes&crid=2MMQANPUETJE8&sprefix=men%27s+running+shoes%2Caps%2C636&ref=nb_sb_noss_1"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "rh",
+                    "reference_answer": "n:679255011,p_n_size_two_browse-vebin:5391077011",
+                    "url": "https://www.amazon.com/s?k=men%27s+running+shoes&rh=n%3A679255011%2Cp_n_size_two_browse-vebin%3A5391077011&dc&ds=v1%3ASFtSwRmUUn1QStxZlBtZpXzzCgfDIXR9zTmT47h1kF4&crid=2MMQANPUETJE8&qid=1706274799&rnid=5391076011&sprefix=men%27s+running+shoes%2Caps%2C636&ref=sr_nr_p_n_size_two_browse-vebin_1"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "rh",
+                    "reference_answer": "p_n_size_browse-vebin:1285096011",
+                    "url": "https://www.amazon.com/s?k=men%27s+running+shoes&i=fashion-mens-shoes&rh=n%3A679286011%2Cp_n_size_two_browse-vebin%3A5391077011%2Cp_n_size_browse-vebin%3A1285096011&dc&ds=v1%3AMXA6en9x4F6k4tkaNkOi9UqCGZDpF%2F8%2FhgkLQTkUR7M&crid=2MMQANPUETJE8&qid=1706274815&rnid=1285068011&sprefix=men%27s+running+shoes%2Caps%2C636&ref=sr_nr_p_n_size_browse-vebin_7"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "rh",
+                    "reference_answer": "p_72:2661618011",
+                    "url": "https://www.amazon.com/s?k=men%27s+running+shoes&i=fashion-mens-shoes&rh=n%3A679286011%2Cp_n_size_two_browse-vebin%3A5391077011%2Cp_n_size_browse-vebin%3A1285096011&dc&ds=v1%3AMXA6en9x4F6k4tkaNkOi9UqCGZDpF%2F8%2FhgkLQTkUR7M&crid=2MMQANPUETJE8&qid=1706274815&rnid=1285068011&sprefix=men%27s+running+shoes%2Caps%2C636&ref=sr_nr_p_n_size_browse-vebin_7"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "rh",
+                    "reference_answer": "p_36:-5000",
+                    "url": "https://www.amazon.com/s?k=men%27s+running+shoes&i=fashion-mens-shoes&rh=n%3A679286011%2Cp_n_size_two_browse-vebin%3A5391077011%2Cp_n_size_browse-vebin%3A1285096011%2Cp_72%3A2661618011%2Cp_36%3A-5000&dc&crid=2MMQANPUETJE8&qid=1706274827&rnid=2661611011&sprefix=men%27s+running+shoes%2Caps%2C636&ref=sr_nr_p_36_4"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "cart/view",
+                    "url": "https://www.amazon.com/cart/smart-wagon?newItems=8b4cdfc6-2f4d-459e-9148-edccbb5e97cb,1&ref_=sw_refresh"
+                }
+            }
+        ]
+    },
+    {
+        "index": 23,
+        "task": "Search for newest girls' training  leggings in size yxl and save the top three results in underarmour",
+        "reference_task_length": 13,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "underarmour.",
+                    "url": "https://www.underarmour.com/en-us/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/girls/clothing/bottoms",
+                    "url": "https://www.underarmour.com/en-us/c/girls/clothing/bottom"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/training",
+                    "url": "https://www.underarmour.com/en-us/c/girls/clothing/bottoms/training/"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "prefv1",
+                    "reference_answer": "YXL",
+                    "url": "https://www.underarmour.com/en-us/c/girls/clothing/bottoms/training/?prefn1=size&prefv1=YXL"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/fitted-training",
+                    "url": "https://www.underarmour.com/en-us/c/girls/clothing/bottoms/fitted-training/?prefn1=size&prefv1=YXL"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "srule",
+                    "reference_answer": "newest",
+                    "url": "https://www.underarmour.com/en-us/c/girls/clothing/bottoms/fitted-training/?prefn1=size&prefv1=YXL&srule=newest"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#product-1361239-465-YXL >.ProductTile_product-tile-container__flx2K.module__primary-img.false.ProductTile_split-view-enabled__eCRsC >.ProductTile_wishlist-toggle__I7EGR >label:nth-child(2)>span:nth-child(2)>svg:nth-child(2)>circle:nth-child(1)",
+                    "netloc": "underarmour",
+                    "url": "https://www.underarmour.com/en-us/c/girls/clothing/bottoms/fitted-training/?prefn1=size&prefv1=YXL&srule=newest"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#product-1369974-697-YXL >.ProductTile_product-tile-container__flx2K.module__primary-img.false.ProductTile_split-view-enabled__eCRsC >.ProductTile_wishlist-toggle__I7EGR >label:nth-child(2)>span:nth-child(2)>svg:nth-child(2)>circle:nth-child(1)",
+                    "netloc": "underarmour",
+                    "url": "https://www.underarmour.com/en-us/c/girls/clothing/bottoms/fitted-training/?prefn1=size&prefv1=YXL&srule=newest"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#product-1366857-003-YXL >.ProductTile_product-tile-container__flx2K.module__primary-img.false.ProductTile_split-view-enabled__eCRsC >.ProductTile_wishlist-toggle__I7EGR >label:nth-child(2)>span:nth-child(2)>svg:nth-child(2)>circle:nth-child(1)",
+                    "netloc": "underarmour",
+                    "url": "https://www.underarmour.com/en-us/c/girls/clothing/bottoms/fitted-training/?prefn1=size&prefv1=YXL&srule=newest"
+                }
+            }
+        ]
+    },
+    {
+        "index": 24,
+        "task": "Browse cafes that have outdoor seating and is dog friendly in yelp",
+        "reference_task_length": 9,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "yelp.",
+                    "url": "https://www.yelp.com/"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "find_desc",
+                    "reference_answer": "Decide whether is searching for cafes",
+                    "url": "https://www.yelp.com/search?find_desc=cafes&find_loc=West+Hollywood%2C+CA"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "attrs",
+                    "reference_answer": "OutdoorSeating",
+                    "url": "https://www.yelp.com/search?find_desc=cafes&find_loc=West+Hollywood%2C+CA&attrs=DogsAllowed%2COutdoorSeating"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "attrs",
+                    "reference_answer": "DogsAllowed",
+                    "url": "https://www.yelp.com/search?find_desc=cafes&find_loc=West+Hollywood%2C+CA&attrs=DogsAllowed%2COutdoorSeating"
+                }
+            }
+        ]
+    },
+    {
+        "index": 25,
+        "task": "Find an article about a new restaurant and share it on X in resy",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "resy.",
+                    "url": "https://resy.com/?date=2024-01-29&seats=2"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "category/new-on-resy",
+                    "url": "https://blog.resy.com/category/new-on-resy/?city=los-angeles"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "blog.resy.",
+                    "url": "https://blog.resy.com/category/new-on-resy/?city=los-angeles"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".icon-twitter.addthis_button_twitter ",
+                    "netloc": "blog",
+                    "url": "https://blog.resy.com/2024/01/new-to-resy-restaurants-in-los-angeles/"
+                }
+            }
+        ]
+    },
+    {
+        "index": 26,
+        "task": "find kinect camera for xbox one in gamestop",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "gamestop.",
+                    "url": "https://www.gamestop.com/"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#product-grid-container >div:nth-child(3)>.product.grid-tile >.product-tile.product-detail.gme-card.gme-card--shadow.product-tile-render.loaded >a:nth-child(1)",
+                    "netloc": "gamestop",
+                    "url": "https://www.gamestop.com/search/?q=kinect+camera+for+xbox+one&lang=default&start=0&sz=20"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "q",
+                    "reference_answer": "Decide whether is searching for kinect camera for xbox one",
+                    "url": "https://www.gamestop.com/search/?q=kinect+camera+for+xbox+one&lang=default&start=0&sz=20"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "search/",
+                    "url": "https://www.gamestop.com/search/?q=kinect+camera+for+xbox+one&lang=default&start=0&sz=20"
+                }
+            }
+        ]
+    },
+    {
+        "index": 27,
+        "task": "Find ideas and recommendation for things to do in Cancun in viator",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "viator.",
+                    "url": "https://www.viator.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "Cancun/d631",
+                    "url": "https://www.viator.com/Cancun/d631"
+                }
+            }
+        ]
+    },
+    {
+        "index": 28,
+        "task": "Find musical instruments and filter the results to show only those that are available for free local pickup in ebay",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "ebay.",
+                    "url": "https://www.ebay.com/"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "_nkw",
+                    "reference_answer": "Decide whether are searching for musical instruments",
+                    "url": "https://www.ebay.com/sch/i.html?_from=R40&_trksid=p4432023.m570.l1313&_nkw=musical+instrument&_sacat=0"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "LH_LPickup",
+                    "reference_answer": "1",
+                    "url": "https://www.ebay.com/sch/i.html?_from=R40&_nkw=musical+instrument&_sacat=0&rt=nc&_stpos=90026&_fspt=1&LH_PrefLoc=99&_sadis=25&LH_LPickup=1"
+                }
+            }
+        ]
+    },
+    {
+        "index": 29,
+        "task": "Show the list of countries with the highest number of seen aircrafts in flightaware",
+        "reference_task_length": 5,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "flightaware.",
+                    "url": "https://www.flightaware.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "adsb/stats/",
+                    "url": "https://www.flightaware.com/adsb/stats/"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".statsTableSwitcherContainer >div:nth-child(3)",
+                    "netloc": "flightaware",
+                    "url": "https://www.flightaware.com/adsb/stats/"
+                }
+            }
+        ]
+    },
+    {
+        "index": 30,
+        "task": "Browse camping stoves that have an auto ignition feature in rei",
+        "reference_task_length": 5,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "rei.",
+                    "url": "https://www.rei.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "c/stoves-and-grills",
+                    "url": "https://www.rei.com/c/stoves-and-grills"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "r",
+                    "reference_answer": "c;features:Auto Ignition",
+                    "url": "https://www.rei.com/c/stoves-and-grills?ir=category%3Astoves-and-grills&r=c%3Bfeatures%3AAuto+Ignition"
+                }
+            }
+        ]
+    },
+    {
+        "index": 31,
+        "task": "Browse the page to find classic rock concert tickets in seatgeek",
+        "reference_task_length": 3,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "seatgeek.",
+                    "url": "https://seatgeek.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "concert-tickets/classic-rock",
+                    "url": "https://seatgeek.com/concert-tickets/classic-rock"
+                }
+            }
+        ]
+    },
+    {
+        "index": 32,
+        "task": "Add two $50 playstation store gift cards to cart in gamestop",
+        "reference_task_length": 8,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "gamestop.",
+                    "url": "https://www.gamestop.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/playstation-store-gift-card-50",
+                    "url": "https://www.gamestop.com/gift-cards/gaming-gift-cards/products/playstation-store-gift-card-50/154535.html"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": "#primary-details-row >div:nth-child(18)>.add-to-cart-buttons.tulsa-atcbutton-toggle >.atc-btns-wrapper >div:nth-child(1)>.js-add-to-cart.add-to-cart.btn.btn-primary.add-to-cart-redesign.all ",
+                    "netloc": "gamestop",
+                    "url": "https://www.gamestop.com/gift-cards/gaming-gift-cards/products/playstation-store-gift-card-50/154535.html"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".icon.icon-close ",
+                    "netloc": "gamestop",
+                    "url": "https://www.gamestop.com/gift-cards/gaming-gift-cards/products/playstation-store-gift-card-50/154535.html"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".atc-btn-wrapper.veiled >.js-add-to-cart.add-to-cart.btn.btn-primary.add-to-cart-redesign.all ",
+                    "netloc": "gamestop",
+                    "url": "https://www.gamestop.com/gift-cards/gaming-gift-cards/products/playstation-store-gift-card-50/154535.html"
+                }
+            }
+        ]
+    },
+    {
+        "index": 33,
+        "task": "Filter women's sports bras that are purple that are S size in underarmour",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "underarmour.",
+                    "url": "https://www.underarmour.com/en-us/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "womens/clothing/sports-bras",
+                    "url": "https://www.underarmour.com/en-us/c/womens/clothing/sports-bras/"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "viewPreference",
+                    "reference_answer": "S",
+                    "url": "https://www.underarmour.com/en-us/c/womens/clothing/sports-bras/?viewPreference=S"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/purple",
+                    "url": "https://www.underarmour.com/en-us/c/womens/clothing/sports-bras/purple/?viewPreference=S&prefn1=size&prefv1=S"
+                }
+            }
+        ]
+    },
+    {
+        "index": 34,
+        "task": "Purchase the classic bundle for the simulation game Cities Skylines in store.steampowered",
+        "reference_task_length": 10,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "store.steampowered.",
+                    "url": "https://store.steampowered.com/app/2167580/Summoners_War_Chronicles/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/Cities_Skylines__The_Classics_Bundle",
+                    "url": "https://store.steampowered.com/bundle/28813/Cities_Skylines__The_Classics_Bundle/"
+                }
+            },
+            {
+                "match_function_name": "element_value_exactly_match",
+                "content": {
+                    "reference_answer": "In Cart",
+                    "netloc": "store",
+                    "url": "https://store.steampowered.com/bundle/28813/Cities_Skylines__The_Classics_Bundle/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "checkout.steampowered.",
+                    "url": "https://checkout.steampowered.com/login/?purchasetype=self&checkout=1&redir=checkout%2F%3Fpurchasetype%3Dself%26cart%3D4893791698082289964%26snr%3D1_8_4__503&redir_ssl=1&snr=1_8_4__503"
+                }
+            }
+        ]
+    },
+    {
+        "index": 35,
+        "task": "Search for kayaks and filter the results to show only those that are suitable for whitewater rapids in rei",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "rei.",
+                    "url": "https://www.rei.com/"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "q",
+                    "reference_answer": "Decide whether are searching for kayaks",
+                    "url": "https://www.rei.com/search?q=kayaks"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "r",
+                    "reference_answer": "best-use:Whitewater Kayaking",
+                    "url": "https://www.rei.com/search?q=kayaks&ir=q%3Akayaks&r=best-use%3AWhitewater+Kayaking"
+                }
+            }
+        ]
+    },
+    {
+        "index": 36,
+        "task": "Check my trip for Smith and booking number X89998 in aa",
+        "reference_task_length": 8,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "aa.",
+                    "url": "https://www.aa.com/homePage.do"
+                }
+            },
+            {
+                "match_function_name": "element_value_exactly_match",
+                "content": {
+                    "reference_answer": "Smith",
+                    "netloc": "aa",
+                    "path": ".zeta >input:nth-child(3)",
+                    "url": "https://www.aa.com/homePage.do"
+                }
+            },
+            {
+                "match_function_name": "element_value_exactly_match",
+                "content": {
+                    "reference_answer": "X89998",
+                    "netloc": "aa",
+                    "path": ".zeta >input:nth-child(2)",
+                    "url": "https://www.aa.com/homePage.do"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/find-your-trip",
+                    "url": "https://www.aa.com/reservation/view/find-your-trip?fromHomePage=true&from=manageTripsHomeWidget"
+                }
+            }
+        ]
+    },
+    {
+        "index": 37,
+        "task": "Locate the list of movies \"at home\", sorted by most recent in rottentomatoes",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "rottentomatoes.",
+                    "url": "https://www.rottentomatoes.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "browse/movies_at_home",
+                    "url": "https://www.rottentomatoes.com/browse/movies_at_home/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "sort:newest",
+                    "url": "https://www.rottentomatoes.com/browse/movies_at_home/sort:newest"
+                }
+            }
+        ]
+    },
+    {
+        "index": 38,
+        "task": "Show me all NFL tickets in ticketcenter",
+        "reference_task_length": 3,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "ticketcenter.",
+                    "url": "https://www.ticketcenter.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/sports/football/nfl",
+                    "url": "https://www.ticketcenter.com/sports/football/nfl"
+                }
+            }
+        ]
+    },
+    {
+        "index": 39,
+        "task": "Show most played games based on daily players in store.steampowered",
+        "reference_task_length": 6,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "store.steampowered.",
+                    "url": "https://store.steampowered.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "charts/mostplayed",
+                    "url": "https://store.steampowered.com/charts"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".dropdown_DialogDropDownMenu_1tiuY._DialogInputContainer >div:nth-child(2)",
+                    "netloc": "store",
+                    "url": "https://store.steampowered.com/charts"
+                }
+            }
+        ]
+    },
+    {
+        "index": 40,
+        "task": "Find JetBlue career openings in New York in jetblue",
+        "reference_task_length": 7,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "jetblue.",
+                    "url": "https://www.jetblue.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "careers.jetblue.",
+                    "url": "https://careers.jetblue.com/"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "locationsearch",
+                    "reference_answer": "Decide whether are searching for New York",
+                    "url": "https://careers.jetblue.com/search/?createNewAlert=false&q=&locationsearch=new+york"
+                }
+            }
+        ]
+    },
+    {
+        "index": 41,
+        "task": "Search for women's sports wear, size S in uniqlo",
+        "reference_task_length": 11,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "uniqlo.",
+                    "url": "https://www.uniqlo.com/us/en/"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "q",
+                    "reference_answer": "Decide whether are searching for sports wear",
+                    "url": "https://www.uniqlo.com/us/en/search?q=sports%20wear"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "path",
+                    "reference_answer": "22210,,,",
+                    "url": "https://www.uniqlo.com/us/en/search?q=sports%20wear&path=22210%2C%2C%2C&sizeCodes=SMA003"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "sizeCodes",
+                    "reference_answer": "SMA003",
+                    "url": "https://www.uniqlo.com/us/en/search?q=sports%20wear&path=22210%2C%2C%2C&sizeCodes=SMA003"
+                }
+            }
+        ]
+    },
+    {
+        "index": 42,
+        "task": "Browse bluetooth headphones with active noise-cancellation in newegg",
+        "reference_task_length": 11,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "newegg.",
+                    "url": "https://www.newegg.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/Headphones",
+                    "url": "https://www.newegg.com/Headphones-Accessories/SubCategory/ID-70"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "N",
+                    "reference_answer": "100167718 600010980 601304085",
+                    "url": "https://www.newegg.com/p/pl?N=100167718%20600010980%20601304085"
+                }
+            }
+        ]
+    },
+    {
+        "index": 43,
+        "task": "Browse black strollers within $100 to $250 in kohls",
+        "reference_task_length": 9,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "kohls.",
+                    "url": "https://www.kohls.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/search.jsp",
+                    "url": "https://www.kohls.com/search.jsp?submit-search=web-regular&search=stroller&kls_sbp=68405109696688798524419626354526575444"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "search",
+                    "reference_answer": "Decide whether is searching for stroller",
+                    "url": "https://www.kohls.com/search.jsp?submit-search=web-regular&search=stroller&kls_sbp=68405109696688798524419626354526575444"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "CN",
+                    "reference_answer": "Color:Black",
+                    "url": "https://www.kohls.com/search/black.jsp?CN=Color:Black&search=stroller&S=1&PPP=48&kls_sbp=68405109696688798524419626354526575444&pfm=search%20refine"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "CN",
+                    "reference_answer": "Price:$100 to $250",
+                    "url": "https://www.kohls.com/search/black.jsp?CN=Color:Black+Price:%24100%20to%20%24250&BL=y&search=stroller&S=1&PPP=48&pfm=search%20refine&kls_sbp=68405109696688798524419626354526575444"
+                }
+            }
+        ]
+    },
+    {
+        "index": 44,
+        "task": "Browse mens Timberland boots in size 9 and under $100 and filter by lowest price in ebay",
+        "reference_task_length": 16,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "ebay.",
+                    "url": "https://www.ebay.com/"
+                }
+            },
+            {
+                "match_function_name": "url_semantic_match",
+                "content": {
+                    "key": "_nkw",
+                    "reference_answer": "Decide whether is searching for men's boots",
+                    "url": "https://www.ebay.com/sch/i.html?_from=R40&_trksid=p4432023.m570.l1313&_nkw=mens+boots&_sacat=0"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "_sacat",
+                    "reference_answer": "Size=9",
+                    "url": "https://www.ebay.com/sch/i.html?_from=R40&_nkw=mens+boots&_sacat=0&rt=nc&US%2520Shoe%2520Size=9&_dcat=11498"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "Brand",
+                    "reference_answer": "Timberland",
+                    "url": "https://www.ebay.com/sch/i.html?_dcat=11498&_fsrp=1&rt=nc&_from=R40&_nkw=mens+boots&_sacat=0&US%2520Shoe%2520Size=9&Brand=Timberland"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "_udhi",
+                    "reference_answer": "100",
+                    "url": "https://www.ebay.com/sch/i.html?_dcat=11498&_fsrp=1&_from=R40&_nkw=mens%20boots&_sacat=0&US%2520Shoe%2520Size=9&Brand=Timberland&rt=nc&_udhi=100"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "_sop",
+                    "reference_answer": "15",
+                    "url": "https://www.ebay.com/sch/i.html?_dcat=11498&_fsrp=1&_from=R40&_nkw=mens+boots&_sacat=0&US%2520Shoe%2520Size=9&Brand=Timberland&_udhi=100&_sop=15"
+                }
+            }
+        ]
+    },
+    {
+        "index": 45,
+        "task": "Find deals in New York in yellowpages",
+        "reference_task_length": 5,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "yellowpages.",
+                    "url": "https://www.yellowpages.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "new-york-ny",
+                    "url": "https://www.yellowpages.com/new-york-ny"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "coupons/",
+                    "url": "https://www.yellowpages.com/coupons/new-york-ny"
+                }
+            }
+        ]
+    },
+    {
+        "index": 46,
+        "task": "Find cheapest 2018 Honda Civic for sale within 100 miles of 07055 in kbb",
+        "reference_task_length": 21,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "kbb.",
+                    "url": "https://www.kbb.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "/cars-for-sale",
+                    "url": "https://www.kbb.com/cars-for-sale/all"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "searchRadius",
+                    "reference_answer": "100",
+                    "url": "https://www.kbb.com/cars-for-sale/all/2018/honda/civic/passaic-nj?searchRadius=100&sortBy=derivedpriceASC&zip=07055"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "zip",
+                    "url": "https://www.kbb.com/cars-for-sale/all/2018/honda/civic/passaic-nj?searchRadius=100&sortBy=derivedpriceASC&zip=07055"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "2018/",
+                    "url": "https://www.kbb.com/cars-for-sale/all/2018/honda/civic/passaic-nj?searchRadius=100&sortBy=derivedpriceASC&zip=07055"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "honda/",
+                    "url": "https://www.kbb.com/cars-for-sale/all/2018/honda/civic/passaic-nj?searchRadius=100&sortBy=derivedpriceASC&zip=07055"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "civic/",
+                    "url": "https://www.kbb.com/cars-for-sale/all/2018/honda/civic/passaic-nj?searchRadius=100&sortBy=derivedpriceASC&zip=07055"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".row.display-flex.flex-wrap.margin-top-3 >div:nth-child(1)>div:nth-child(3)>div:nth-child(1)>.item-card.row.display-flex.align-items-stretch.flex-grow-1.flex-column >.col-xs-12.item-card-content.display-flex.flex-column.flex-grow-1.justify-content-between >.item-card-body.margin-bottom-auto >.margin-bottom-2 >div:nth-child(1)>div:nth-child(1)>.display-flex.justify-content-between.margin-bottom-3 >a:nth-child(1)>.text-bold.text-size-400.link-unstyled ",
+                    "netloc": "kbb",
+                    "url": "https://www.kbb.com/cars-for-sale/all/2018/honda/civic/passaic-nj?searchRadius=100&sortBy=derivedpriceASC&zip=07055"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "sortBy",
+                    "reference_answer": "derivedpriceASC",
+                    "url": "https://www.kbb.com/cars-for-sale/all/2018/honda/civic/passaic-nj?searchRadius=100&sortBy=derivedpriceASC&zip=07055"
+                }
+            }
+        ]
+    },
+    {
+        "index": 47,
+        "task": "Show the hot deals within 500 miles from 10001 in koa",
+        "reference_task_length": 9,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "koa.",
+                    "url": "https://koa.com/"
+                }
+            },
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "hot-deals/",
+                    "url": "https://koa.com/hot-deals/"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "q",
+                    "reference_answer": "10001",
+                    "url": "https://koa.com/hot-deals/?q=10001"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "r",
+                    "reference_answer": "500",
+                    "url": "https://koa.com/hot-deals/?q=10001&r=500"
+                }
+            }
+        ]
+    },
+    {
+        "index": 48,
+        "task": "Find the reservation made by James Smith in the United States with Confirmation Number 123456",
+        "reference_task_length": 10,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "budget.",
+                    "url": "https://www.budget.com/en/home"
+                }
+            },
+            {
+                "match_function_name": "element_value_exactly_match",
+                "content": {
+                    "reference_answer": "ALBANIA\nANDORRA\nANGOLA\nANTIGUA\nARGENTINA\nARMENIA\nARUBA\nARUBA\nAUSTRALIA\nAUSTRALIA\nAUSTRIA\nBAHAMAS\nBAHAMAS\nBAHRAIN\nBELARUS\nBELGIUM\nBELIZE\nBOLIVIA\nBONAIRE\nBONAIRE\nBOSNIA\nBOSNIA & HERZEGOVINA\nBOTSWANA\nBRAZIL\nBRUNEI\nBULGARIA\nCAMBODIA\nCAMBODIA\nCANADA\nCANADA\nCAYMAN ISLANDS (GRAND CAYMAN)\nCHILE\nCOLOMBIA\nCONGO\nCOOK ISLANDS\nCOSTA RICA\nCOSTA RICA\nCROATIA\nCURACAO (NETHERLAND ANTILLES)\nCURACAO (NETHERLAND ANTILLES)\nCYPRUS\nCZECH REPUBLIC\nDENMARK\nDOMINICAN REPUBLIC\nECUADOR\nEGYPT\nEL SALVADOR\nESTONIA\nFAROE ISLANDS\nFEDERATED STATES OF MICRONESIA\nFIJI\nFINLAND\nFRANCE\nFRENCH GUIANA\nGEORGIA\nGERMANY\nGERMANY\nGHANA\nGRAND CAYMAN (CAYMAN ISLANDS)\nGREAT BRITAIN\nGREECE\nGUADELOUPE\nGUADELOUPE\nGUAM\nGUATEMALA\nHERZEGOVINA\nHOLLAND\nHONDURAS\nHUNGARY\nICELAND\nIRELAND\nISRAEL\nITALY\nIVORY COAST\nJAMAICA\nJAMAICA\nJAPAN\nJAPAN\nJORDAN\nKENYA\nKOSOVO\nKUWAIT\nLAOS\nLA REUNION\nLATVIA\nLEBANON\nLESOTHO\nLIBYA\nLITHUANIA\nLUXEMBOURG\nMACEDONIA\nMADAGASCAR\nMALTA\nMARIANA ISLANDS\nMARTINIQUE\nMAURITIUS\nMAYOTTE\nMEXICO\nMICRONESIA\nMONTENEGRO\nMOROCCO\nMOZAMBIQUE\nNAMIBIA\nNETHERLAND ANTILLES (CURACAO)\nNETHERLAND ANTILLES (CURACAO)\nNETHERLANDS\nNEW CALEDONIA\nNEW GUINEA (PAPAU)\nNEW ZEALAND\nNICARAGUA\nNORTHERN MARIANA ISLANDS\nNORWAY\nOMAN (SULTANATE OF)\nPALAU\nPANAMA\nPAPUA NEW GUINEA\nPARAGUAY\nPERU\nPHILIPPINES\nPOHNPEI\nPOLAND\nPORTUGAL\nPUERTO RICO\nQATAR\nREPUBLIC OF IRELAND\nREUNION ISLANDS\nROMANIA\nROTA, MARIANA ISLAND\nRUSSIA\nSAIPAIN, MARIANA ISLAND\nSAMOA (WESTERN)\nSAUDI ARABIA\nSENEGAL\nSENEGAL\nSERBIA\nSINGAPORE\nSLOVAKIA\nSLOVENIA\nSOUTH AFRICA\nSOUTH KOREA\nSPAIN\nSRI LANKA\nSRI LANKA\nST BARTHELEMY\nST BARTHELEMY\nST CROIX (US VIRGIN ISLANDS)\nST CROIX (US VIRGIN ISLANDS)\nST LUCIA\nST MAARTEN (DUTCH)\nST MARTIN (FRENCH)\nST MARTIN (FRENCH)\nST THOMAS (US VIRGIN ISLANDS)\nSURINAME\nSWAZILAND\nSWEDEN\nSWITZERLAND\nTAIWAN\nTHAILAND\nTOBAGO\nTOGO\nTRINIDAD & TOBAGO\nTUNISIA\nTURKEY\nTURKS & CAICOS\nUKRAINE\nUNITED ARAB EMIRATES\nUNITED KINGDOM\nUNITED STATES\nURUGUAY\nUS VIRGIN ISLANDS (ST CROIX)\nUS VIRGIN ISLANDS (ST CROIX)\nUS VIRGIN ISLANDS (ST THOMAS)\nVANUATU\nVENEZUELA\nWESTERN SAMOA\nYAP\nYEMEN\nZIMBABWE",
+                    "netloc": "budget",
+                    "url": "https://www.budget.com/en/reservation/view-modify-cancel"
+                }
+            },
+            {
+                "match_function_name": "element_value_exactly_match",
+                "content": {
+                    "reference_answer": "Smith",
+                    "netloc": "budget",
+                    "path": "#res-view-lastName ",
+                    "url": "https://www.budget.com/en/reservation/view-modify-cancel"
+                }
+            },
+            {
+                "match_function_name": "element_value_exactly_match",
+                "content": {
+                    "reference_answer": "123456",
+                    "netloc": "budget",
+                    "path": "#res-view-confirmationNumber ",
+                    "url": "https://www.budget.com/en/reservation/view-modify-cancel"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".VMC-button >.btn.btn-red ",
+                    "netloc": "budget",
+                    "url": "https://www.budget.com/en/reservation/view-modify-cancel"
+                }
+            }
+        ]
+    },
+    {
+        "index": 49,
+        "task": "Search and book the cheapest daytime only monthly parking option in Seattle near Stripe, 5th Avenue in spothero",
+        "reference_task_length": 12,
+        "evaluation": [
+            {
+                "match_function_name": "url_included_match",
+                "content": {
+                    "key": "",
+                    "reference_answer": "spothero.",
+                    "url": "https://spothero.com/?utm_source=Partnerships&utm_campaign=Tune_Platform&utm_medium=paid%20advertising&_branch_referrer=H4sIAAAAAAAAA32SyW7bMBCGn0a8BLW1WUsBokhjJ24QpAdnAXIRphRlMaZEhaRc%2BO07VBTXSxBAB83PmX8437C2tjPfp1PTKVtzrSbQdRMp2s1Ub9kibXUV5D%2B8MI46CkUNRlUV14agAlUlpADLi1ejWlqjkRddeuE1flYD24h2PdnbMtWgjjUF86LrwaUQpRfNYy9MnDwEQZjkGBvVa8YxvlJNB5pfLJXl8mLOQZoxvW%2FFW88DZ5BmcXKkhk71szzLj%2FUI9R3cvEAW1Hezy2%2B36m%2B2fHq%2BKZdX%2FttOJtuH2%2BZ%2BjSWV0g1YzHaTkbvV%2Ferx5%2BrXw4L%2BboS1vCwOXEiv5TC82U9%2FxhK1%2FzRxfC%2BcOaLY4IAp9j3B4qULJgXbjGz8kCdxHOR%2BUMZlOoNZClkYsAogCfwxXRlbsF5r3rId1jyu5gcHW5C9ozomG85UW4LeFV3%2FRwqDV8ZDh7%2BGYr%2FdUTrZiJvAH7Yy%2FH1sZq1AOvoRMazmDX8HQ2rsTs%2BokA5sTY%2FYkPOXNljSiHywoTF5vwz95HGQA2T0a2DkFBdFWOQIFfX%2FAaB1axceAwAA&%243p=a_hasoffers&%24affiliate_json=http%3A%2F%2Ftracking.spothero.com%2Faff_c%3Foffer_id%3D4%26aff_id%3D1269%26source%3DCompare%20Hotel%20Deals%26aff_unique1%3D47846%26aff_unique2%3D4089896%26aff_unique3%3DyaGZa81hL5A-Jow8HVWGdHC0qyl6vTJmNg%26format%3Djson&LSNSUBSITE=Omitted_yaGZa81hL5A&_branch_match_id=1279491293787710157"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "monthly",
+                    "reference_answer": "true",
+                    "url": "https://spothero.com/search?kind=destination&id=807&monthly=true"
+                }
+            },
+            {
+                "match_function_name": "url_exactly_match",
+                "content": {
+                    "key": "id",
+                    "reference_answer": "807",
+                    "url": "https://spothero.com/search?kind=destination&id=807&monthly=true"
+                }
+            },
+            {
+                "match_function_name": "element_value_exactly_match",
+                "content": {
+                    "reference_answer": "daytime_only",
+                    "netloc": "spothero",
+                    "url": "https://spothero.com/search?kind=destination&id=807&monthly=true"
+                }
+            },
+            {
+                "match_function_name": "element_value_exactly_match",
+                "content": {
+                    "reference_answer": "price",
+                    "netloc": "spothero",
+                    "url": "https://spothero.com/search?kind=destination&id=807&monthly=true"
+                }
+            },
+            {
+                "match_function_name": "element_path_exactly_match",
+                "method": "selector",
+                "content": {
+                    "reference_answer": ".SpotListItem.result62223 >div:nth-child(1)>div:nth-child(1)>div:nth-child(1)>div:nth-child(2)>div:nth-child(1)>div:nth-child(1)>h2:nth-child(1)>span:nth-child(1)",
+                    "netloc": "spothero",
+                    "url": "https://spothero.com/search?kind=destination&id=807"
+                }
+            },
+            {
+                "match_function_name": "element_value_exactly_match",
+                "content": {
+                    "reference_answer": "Proceed to Checkout",
+                    "netloc": "spothero",
+                    "url": "https://spothero.com/search?kind=destination&id=807&monthly=true&spot-id=62223"
+                }
+            }
+        ]
+    }
+]
