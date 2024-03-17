@@ -189,16 +189,26 @@ class AsyncHTMLEnvironment:
             self.html_content = await self.page.content()
         except:
             self.last_page = self.page
-            fill_and_press_enter = '''() => {
-                        var element = document.querySelector('%s');
-                        if (element) {
-                            element.value = '%s';
-                            element.dispatchEvent(new Event('input', { bubbles: true }));
-                            element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-                        }
-                    }
-                ''' % (selector, action['fill_text'])
-            await self.page.evaluate(fill_and_press_enter)
+            # fill_and_press_enter = '''() => {
+            #             var element = document.querySelector('%s');
+            #             if (element) {
+            #                 element.value = '%s';
+            #                 element.dispatchEvent(new Event('input', { bubbles: true }));
+            #                 element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+            #             }
+            #         }
+            #     ''' % (selector, action['fill_text'])
+            # await self.page.evaluate(fill_and_press_enter)
+            await self.page.evaluate(f'''
+                () => {{
+                    var element = document.querySelector('{selector}');
+                    if (element) {{
+                        element.value = '{action['fill_text']}';
+                        element.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                        element.dispatchEvent(new KeyboardEvent('keydown', {{ key: 'Enter' }}));
+                    }}
+                }}
+            ''')
             await self.page.wait_for_load_state('load')
             self.html_content = await self.page.content()
 
@@ -221,22 +231,32 @@ class AsyncHTMLEnvironment:
             self.html_content = await self.page.content()
         except:
             self.last_page = self.page
-            fill = '''() => {
-                        var element = document.querySelector('%s');
-                        if (element) {
-                            element.value = '%s';
-                            element.dispatchEvent(new Event('input', { bubbles: true }));
-                        }
-                    }
-                ''' % (selector, action['fill_text'])
-            await self.page.evaluate(fill)
+            # fill = '''() => {
+            #             var element = document.querySelector('%s');
+            #             if (element) {
+            #                 element.value = '%s';
+            #                 element.dispatchEvent(new Event('input', { bubbles: true }));
+            #             }
+            #         }
+            #     ''' % (selector, action['fill_text'])
+            # await self.page.evaluate(fill)
+            await self.page.evaluate(f'''
+                () => {{
+                    var element = document.querySelector('{selector}');
+                    if (element) {{
+                        element.value = '{action['fill_text']}';
+                        element.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    }}
+                }}
+            ''')
             await self.page.wait_for_load_state('load')
             self.html_content = await self.page.content()
 
     async def search(self, action):
         self.last_page = self.page
         self.page = await self.context.new_page()
-        await self.page.goto("https://www.google.com/search?q="+action["fill_text"], timeout=10000)
+        await self.page.goto("https://www.google.com/search?q="+action["fill_text"], timeout=30000)
+        await self.page.wait_for_timeout(2000)
         await self.page.wait_for_load_state('load')
         self.html_content = await self.page.content()
 

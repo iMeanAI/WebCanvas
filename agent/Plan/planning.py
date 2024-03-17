@@ -207,7 +207,7 @@ class Planning:
 
         # get global reward
         reward_response, status_and_description = await InteractionMode(text_model=gpt4).get_global_reward(
-                user_request=user_request, previous_trace=previous_trace)
+                user_request=user_request, previous_trace=previous_trace,observation=observation)
 
         # 构建planning prompt及查询
         status_description = ""
