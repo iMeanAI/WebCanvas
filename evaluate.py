@@ -32,7 +32,7 @@ parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
 interaction_mode = args.mode
 raw_data_index = args.index
-
+run_mode = "test"
 
 def read_file(file_path="./data/group_sample_20240317.json"):
     '''读取标签数据'''
@@ -277,7 +277,10 @@ async def get_observation(mode: str, env: AsyncHTMLEnvironment, action: Action):
 
 
 async def main(num_steps=0, mode="dom"):
+    record_time_short = time.strftime("%Y%m%d", time.localtime())
     record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
+    write_result_file_path = f"./csv_results/group2_{record_time_short}/{mode}_{record_time}"
+
     file = read_file()
 
     with open('./configs/dom.toml', 'r') as f:
@@ -293,12 +296,13 @@ async def main(num_steps=0, mode="dom"):
         raw_data_end_index = len(file)
     print(raw_data_start_index, raw_data_end_index)
 
-    
+
 
     # start_index = 1
     # score_dif = [2, 3, 10, 15, 22, 32, 40, 47, 51,
     #              54, 55, 63, 72, 75, 79, 87, 89, 101, 103, 105]
     # for task_index in score_dif:
+    # for task_index in [1]:
     for task_index in range(raw_data_start_index, raw_data_end_index):
         task = file[task_index]
         task_name, reference_task_length, reference_evaluate_steps = task
@@ -572,7 +576,7 @@ async def main(num_steps=0, mode="dom"):
                 selector_list=selector_list,
                 action_list=action_list,
                 match_func_result_list=match_func_result_list,
-                file_path=f"./csv_results/group2_{record_time}/{mode}_{record_time}"
+                file_path=write_result_file_path
             )
 
             # length score
