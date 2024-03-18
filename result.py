@@ -20,7 +20,7 @@ def write_result_to_excel(
     selector_list,
     action_list,
     match_func_result_list,
-    file_path="./csv_results/group1/DOM-Based",
+    file_path="",
 ):
 
     if not os.path.exists(file_path):

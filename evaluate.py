@@ -34,10 +34,10 @@ interaction_mode = args.mode
 raw_data_index = args.index
 
 
-def read_file(file_path="./data/group1.json"):
+def read_file(file_path="./data/group_sample_20240317.json"):
     '''读取标签数据'''
     return_list = []
-    with open(file_path) as f:
+    with open(file_path,encoding='utf-8') as f:
         test_data = json5.load(f)
     for task in test_data:
         task_name = task["task"]
@@ -243,7 +243,7 @@ async def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
     except:
         element_id = 0
     #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
-    if action_type in ["fill_form", "fill_search", "click"]:
+    if action_type in ["fill_form", "fill_search", "click","select_option"]:
         try:
             selector = env.tree.get_selector_and_xpath(
                 env.tree.nodeDict[element_id])
@@ -293,14 +293,13 @@ async def main(num_steps=0, mode="dom"):
         raw_data_end_index = len(file)
     print(raw_data_start_index, raw_data_end_index)
 
-    # for task_index in range(raw_data_start_index, raw_data_end_index):
+    
 
-    # # start_index = 1
-    score_dif = [2, 3, 10, 15, 22, 32, 40, 47, 51,
-                 54, 55, 63, 72, 75, 79, 87, 89, 101, 103, 105]
-    # # for task_index in range(start_index, len(file)):
-    # for task_index in [1]:
-    for task_index in score_dif:
+    # start_index = 1
+    # score_dif = [2, 3, 10, 15, 22, 32, 40, 47, 51,
+    #              54, 55, 63, 72, 75, 79, 87, 89, 101, 103, 105]
+    # for task_index in score_dif:
+    for task_index in range(raw_data_start_index, raw_data_end_index):
         task = file[task_index]
         task_name, reference_task_length, reference_evaluate_steps = task
         print("task index:", task_index)
@@ -485,6 +484,9 @@ async def main(num_steps=0, mode="dom"):
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
 
+                step_reward_str = dict_to_write["description"].get("reward") if dict_to_write["description"].get("reward") else "X"
+                step_reward_list.append(str(step_reward_str))
+
                 # current_trace = [current_trace]
                 # current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
                 #                                          current_trace=current_trace, observation=observation)
@@ -536,9 +538,9 @@ async def main(num_steps=0, mode="dom"):
             if num_steps >= 25:  # 防止无限循环
                 break
 
-            a = input("回车继续下一个Action，按q退出")
-            if a == "q" or step_error_count > 3:
-                break
+            # a = input("回车继续下一个Action，按q退出")
+            # if a == "q" or step_error_count > 3:
+            #     break
             # if step_error_count > 3:
             #     task_error = True
             #     break
@@ -570,7 +572,7 @@ async def main(num_steps=0, mode="dom"):
                 selector_list=selector_list,
                 action_list=action_list,
                 match_func_result_list=match_func_result_list,
-                file_path=f"./csv_results/group1_{record_time}/{mode}_{record_time}"
+                file_path=f"./csv_results/group2_{record_time}/{mode}_{record_time}"
             )
 
             # length score
