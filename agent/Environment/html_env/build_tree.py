@@ -18,6 +18,7 @@ class HTMLTree:
         self.valid: list[bool] = [False] * 100000
         self.nodeCounts: int
         self.nodeDict = {}
+        self.element_value = {}
 
     def fetch_html_content(self, html_content) -> str:
         self.__init__()
@@ -145,17 +146,20 @@ class HTMLTree:
             tag_name = current_node["tagName"]
             siblingId = str(current_node["siblingId"])
             if current_node["attributes"].get('id'):
-                current_node["attributes"].get('id').replace(
-                    "[", "\\[").replace("]", "\\]")
-                return "#" + current_node["attributes"].get('id') + selector_str
+                # current_node["attributes"].get('id').replace(
+                #     "[", "\\[").replace("]", "\\]")
+                # return "#" + current_node["attributes"].get('id') + selector_str
+                current_selector = stringfy_selector(
+                    current_node["attributes"].get('id'))
+                return "#" + current_selector + selector_str
             if len(self.elementNodes[current_node["parentId"]]["childIds"]) > 1:
                 uu_twin_node = True
                 uu_id = True
                 for childId in self.elementNodes[current_node["parentId"]]["childIds"]:
-                    bro_node = self.elementNodes[childId]
-                    if bro_node["nodeId"] != current_node["nodeId"] and current_node["attributes"].get('class') and bro_node["attributes"].get("class") == current_node["attributes"].get('class'):
+                    sib_node = self.elementNodes[childId]
+                    if sib_node["nodeId"] != current_node["nodeId"] and current_node["attributes"].get('class') and sib_node["attributes"].get("class") == current_node["attributes"].get('class'):
                         uu_twin_node = False
-                    if bro_node["nodeId"] != current_node["nodeId"] and current_node["tagName"] == bro_node["tagName"]:
+                    if sib_node["nodeId"] != current_node["nodeId"] and current_node["tagName"] == sib_node["tagName"]:
                         uu_id = False
                 if uu_id:
                     selector_str = " > " + tag_name + selector_str
@@ -281,6 +285,7 @@ class HTMLTree:
                         self.nodeDict[num] = tag_idx
                         contents += "  " * (node["depth"]-1) + "[" + str(num) + "] " + tag_name + \
                             " " + f"\'{content_text}\'" + "\n"
+                        self.element_value[str(tag_idx)] = content_text
             children = []
             for child_id in node["childIds"]:
                 children.append(self.pruningTreeNode[child_id])
@@ -308,7 +313,7 @@ class HTMLTree:
         parentid_str += "-1"
         return parentid_str, parent_tag_str, twinId_str
 
-    def get_selector_and_xpath(self, idx: int) -> (str, str): # type: ignore
+    def get_selector_and_xpath(self, idx: int) -> (str, str):  # type: ignore
         try:
             selector = self.get_selector(idx)
             xpath = self.get_xpath(idx)
@@ -335,6 +340,9 @@ class HTMLTree:
             higher_element = self.elementNodes[higher_element["parentId"]]
             lower_element = self.elementNodes[lower_element["parentId"]]
         return element1["depth"] + element2["depth"] - 2 * lower_element["depth"]
+
+    def get_element_value(self, element_id: int) -> str:
+        return self.element_value[str(element_id)]
 
 
 __all__ = [
