@@ -49,9 +49,9 @@ class BasePrompts:
 
         You have to follow the instructions or notes:
         **Important Notes**:
-            - You just use these two tools (google_search and goto) in the following cases
-                1. In the first step or the previous trace is empty.
-                2. the accessibility tree is empty or not provided.
+            - Under the following conditions, you are restricted to using the `google_search` or `goto` tools exclusively: 
+                1. In the initial step of a process or when there's no preceding interaction history (i.e., the previous trace is empty). 
+                2. In situations where the accessibility tree is absent or not provided.
             - Your action should not be the same as last step's action.
             - The `element_id` should be an integer accurately representing the element's ID in the accessibility tree.
             - AVOID using the provided example's element_id as your output.
