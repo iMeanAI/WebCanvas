@@ -177,7 +177,7 @@ class BasePrompts:
         
         You will judge and score the currently performed action. The score ranges from 1-10, but the score you give can only be selected from [1, 3, 7, 9, 10]
         **Judging and Scoring Criteria**:
-            - score = 1: You may not have obtained accessibility tree information(IMPORTANT).You may have encountered the issues such as Network connection issues,Human-computer verification issues,Encountered a blank page
+            - score = 1: You may not have obtained accessibility tree information(IMPORTANT).You may have encountered the issues such as Network connection issues,Human-computer verification issues,Encountered a blank page.
             - score = 3: The action you performed (such as clicking on an element) does not help at all to complete the task when accessibility tree is provided
             - score = 7: The action you performed (such as clicking on an element) is helpful in completing this task when accessibility tree is provided
             - score = 9: This action you performed is a very critical intermediate step to complete this task when accessibility tree is provided
