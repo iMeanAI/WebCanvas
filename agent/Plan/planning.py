@@ -286,12 +286,12 @@ class Planning:
         GPT4 = GPTGenerator4()
         GPT4V = GPTGenerator4V()
         GPT35 = GPTGenerator35()
-        current_trace = [current_trace]
+        # current_trace = [current_trace]
         if len(previous_trace) > 0:
             stringfy_previous_trace_output = ObservationPromptConstructor(
             ).stringfy_thought_and_action(previous_trace)
-            stringfy_current_trace_output = ObservationPromptConstructor(
-            ).stringfy_thought_and_action(current_trace)
+            # current_trace = json5.loads(current_trace, encoding="utf-8")[0]
+            stringfy_current_trace_output = f'Current Step:\"Thought: {current_trace["thought"]}, Action: {current_trace["action"]}\";\n'
             if observation_VforD == "":
                 current_reward_resquest = CurrentRewardPromptConstructor().construct(
                     user_request, stringfy_previous_trace_output, stringfy_current_trace_output, observation)

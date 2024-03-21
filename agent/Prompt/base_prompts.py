@@ -49,9 +49,9 @@ class BasePrompts:
 
         You have to follow the instructions or notes:
         **Important Notes**:
-            - You just use these two tools (google_search and goto) in the following cases
+            - You can only use these two tools(google_search and goto) in the following situations.
                 1. In the first step or the previous trace is empty.
-                2. the accessibility tree is empty or not provided.
+                2. The accessibility tree is empty or not provided.
             - Your action should not be the same as last step's action.
             - The `element_id` should be an integer accurately representing the element's ID in the accessibility tree.
             - AVOID using the provided example's element_id as your output.
@@ -177,7 +177,7 @@ class BasePrompts:
         
         You will judge and score the currently performed action. The score ranges from 1-10, but the score you give can only be selected from [1, 3, 7, 9, 10]
         **Judging and Scoring Criteria**:
-            - score = 1: You may not have obtained accessibility tree information(IMPORTANT).You may have encountered the issues such as Network connection issues,Human-computer verification issues.
+            - score = 1: You may not have obtained accessibility tree information(IMPORTANT).You may have encountered the issues such as Network connection issues,Human-computer verification issues,Encountered a blank page
             - score = 3: The action you performed (such as clicking on an element) does not help at all to complete the task when accessibility tree is provided
             - score = 7: The action you performed (such as clicking on an element) is helpful in completing this task when accessibility tree is provided
             - score = 9: This action you performed is a very critical intermediate step to complete this task when accessibility tree is provided
@@ -208,7 +208,7 @@ class BasePrompts:
     '''
 
     current_reward_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
-        "The previous thought and action are:{{stringfy_previous_trace_output}}."\
+        "The previous thought and action are:{{stringfy_previous_trace_output}}.\n\n"\
         "The current thought and action is: {{stringfy_current_trace_output}}.\n\nYou have done the current action\n\n"\
 
     judge_searchbar_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can.\n"\

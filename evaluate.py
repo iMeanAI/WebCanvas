@@ -370,11 +370,6 @@ async def main(num_steps=0, mode="dom"):
                 use_vimium_effect=True
             )
 
-        DF = config['basic']['default']
-        GR = config['basic']['global_reward']
-        CR = config['basic']['current_step_reward']
-        PT = config['basic']['previous_trace']
-
         observation = ""
         observation_VforD = ""
         await env.reset("about:blank")
@@ -509,7 +504,6 @@ async def main(num_steps=0, mode="dom"):
                 print("vision_execute_action finished!")
                 observation = await env.get_obs()
                 print("执行动作后的url", env.page.url)
-
                 previous_trace.append(current_trace)
                 if dict_to_write["description"].get('reward'):
                     if "loop" in dict_to_write["description"].get('reward').get("status"):
