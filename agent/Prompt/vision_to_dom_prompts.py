@@ -84,6 +84,7 @@ class VisionToDomPrompts:
                 - Under the following conditions, you are restricted to using the `google_search` or `goto` tools exclusively: 
                     1. In the initial step of a process or when there's no preceding interaction history (i.e., the previous trace is empty). 
                     2. In situations where the accessibility tree is absent or not provided.
+                - When performing a search on a website, if you find the search results do not display sufficient content, consider simplifying or modifying your search query. Reducing the complexity of your search query or altering keywords may yield more comprehensive results.
                 - Only when `$TOOL_NAME` is either `fill_form`, `click`, `hover`, or `select_option`, the `target_element` key becomes necessary. For other `$TOOL_NAME` values, this key is not required.
                 - When using tool `fill_form`, ensure to fill out only one form element at a time.
                 - If repeated scrolling fails to uncover the information you're after, consider using any available search features or navigation menus on the webpage for a more direct route to locating your desired content.
