@@ -19,6 +19,15 @@ import time
 from agent.Prompt import *
 
 
+class ActionExecutionError(Exception):
+    """自定义动作执行异常类"""
+
+    def __init__(self, action_type, message, selector=None):
+        self.action_type = action_type
+        self.message = message
+        self.selector = selector
+        super().__init__(message)
+
 class AsyncHTMLEnvironment:
     @beartype
     def __init__(
@@ -427,82 +436,93 @@ class AsyncHTMLEnvironment:
             print('tree.nodeDict[action["element_id"]]:',
                   self.tree.nodeDict[action["element_id"]])
             action["element_id"] = self.tree.nodeDict[action["element_id"]]
-        try:
-            match action["action_type"]:
-                case ActionTypes.CLICK:
-                    try:
-                        await self.click(action)
-                    except Exception as e:
-                        print("can't execute click action")
-                        print(e)
-                case ActionTypes.GOTO:
-                    try:
-                        await self.goto(action)
-                    except Exception as e:
-                        print("can't execute goto action")
-                        print(e)
-                case ActionTypes.FILL_SEARCH:
-                    try:
-                        await self.fill_search(action)
-                    except Exception as e:
-                        print("can't execute fill search action")
-                        print(e)
-                case ActionTypes.FILL_FORM:
-                    try:
-                        await self.fill_form(action)
-                    except Exception as e:
-                        print("can't execute fill form action")
-                        print(e)
-                case ActionTypes.GOOGLE_SEARCH:
-                    try:
-                        await self.search(action)
-                    except Exception as e:
-                        print("can't execute google search action")
-                        print(e)
-                case ActionTypes.GO_BACK:
-                    try:
-                        await self.go_back_last_page(action)
-                    except Exception as e:
-                        print("can't execute go back action")
-                        print(e)
-                case ActionTypes.SELECT_OPTION:
-                    try:
-                        await self.select_option(action)
-                    except Exception as e:
-                        print("can't execute select option action")
-                        print(e)
-                case ActionTypes.HOVER:
-                    try:
-                        await self.hover(action)
-                    except Exception as e:
-                        print("can't execute hover action")
-                        print(e)
-                case ActionTypes.SCROLL_DOWN:
-                    try:
-                        await self.scroll_down()
-                    except Exception as e:
-                        print("can't execute scroll down action")
-                        print(e)
-                case ActionTypes.SCROLL_UP:
-                    try:
-                        await self.scroll_up()
-                    except Exception as e:
-                        print("can't execute scroll up action")
-                        print(e)
-                case ActionTypes.NONE:
-                    try:
-                        await self.page.wait_for_load_state('load')
-                        self.html_content = await self.page.content()
-                    except:
-                        print("can't execute none action")
-                        print(e)
-                case _:
-                    raise ValueError(
-                        f"Unknown action type {action['action_type']}"
-                    )
-        except Exception as e:
-            print("execute action error")
-            print(e)
+        # try:
+        match action["action_type"]:
+            case ActionTypes.CLICK:
+                try:
+                    await self.click(action)
+                except Exception as e:
+                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    print(error_message)
+                    raise ActionExecutionError(action['action_type'], error_message) from e
+            case ActionTypes.GOTO:
+                try:
+                    await self.goto(action)
+                except Exception as e:
+                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    print(error_message)
+                    raise ActionExecutionError(action['action_type'], error_message) from e
+            case ActionTypes.FILL_SEARCH:
+                try:
+                    await self.fill_search(action)
+                except Exception as e:
+                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    print(error_message)
+                    raise ActionExecutionError(action['action_type'], error_message) from e
+            case ActionTypes.FILL_FORM:
+                try:
+                    await self.fill_form(action)
+                except Exception as e:
+                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    print(error_message)
+                    raise ActionExecutionError(action['action_type'], error_message) from e
+            case ActionTypes.GOOGLE_SEARCH:
+                try:
+                    await self.search(action)
+                except Exception as e:
+                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    print(error_message)
+                    raise ActionExecutionError(action['action_type'], error_message) from e
+            case ActionTypes.GO_BACK:
+                try:
+                    await self.go_back_last_page(action)
+                except Exception as e:
+                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    print(error_message)
+                    raise ActionExecutionError(action['action_type'], error_message) from e
+            case ActionTypes.SELECT_OPTION:
+                try:
+                    await self.select_option(action)
+                except Exception as e:
+                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    print(error_message)
+                    raise ActionExecutionError(action['action_type'], error_message) from e
+            case ActionTypes.HOVER:
+                try:
+                    await self.hover(action)
+                except Exception as e:
+                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    print(error_message)
+                    raise ActionExecutionError(action['action_type'], error_message) from e
+            case ActionTypes.SCROLL_DOWN:
+                try:
+                    await self.scroll_down()
+                except Exception as e:
+                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    print(error_message)
+                    raise ActionExecutionError(action['action_type'], error_message) from e
+            case ActionTypes.SCROLL_UP:
+                try:
+                    await self.scroll_up()
+                except Exception as e:
+                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    print(error_message)
+                    raise ActionExecutionError(action['action_type'], error_message) from e
+            case ActionTypes.NONE:
+                try:
+                    await self.page.wait_for_load_state('load')
+                    self.html_content = await self.page.content()
+                except:
+                    error_message = f"can't execute {action['action_type']} action:"
+                    print(error_message)
+                    raise ActionExecutionError(action['action_type'], error_message) from e
+            case _:
+                raise ValueError(
+                    f"Unknown action type {action['action_type']}"
+                )
+        # except Exception as e:
+        #     print("execute action error")
+        #     print(e)
 
     async def get_page(self, element_id: int) -> Tuple[Page, str]:
         try:
