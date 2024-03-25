@@ -21,6 +21,7 @@ def write_result_to_excel(
     action_list,
     match_func_result_list,
     element_value_list,
+    error_message_list,
     file_path="",
 ):
 
@@ -38,6 +39,7 @@ def write_result_to_excel(
     print("selector_list len: ", len(selector_list))
     print("action_list len: ", len(action_list))
     print("element_value_list len",len(element_value_list))
+    print("error_message_list len",len(error_message_list))
 
     if task_finished:
         url_list.append("finished")
@@ -69,7 +71,8 @@ def write_result_to_excel(
         "selector": selector_list,
         "action": action_list,
         "match_result": match_func_result_list,
-        "element_value":element_value_list
+        "element_value":element_value_list,
+        "error":error_message_list
     })
 
     df.to_csv(csv_path)

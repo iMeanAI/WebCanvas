@@ -395,6 +395,8 @@ async def main(num_steps=0, mode="dom"):
         previoust_trace_list = []
         match_func_result_list = []
         element_value_list = []
+        error_message_list = []
+        
         task_finished = False
         step_error_count = 0
         task_error = False
@@ -410,6 +412,7 @@ async def main(num_steps=0, mode="dom"):
         additional_steps = 0
         task_global_status = ""
         while num_steps < max_steps + additional_steps:
+            error_message = ""
             step_index_list.append(num_steps)
             total_step_score = 0
             # break
@@ -461,6 +464,7 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace.append(current_trace)
                     except ActionExecutionError as ee:
                         print(ee.message)
+                        error_message = ee.message
                         execute_action.update(
                             {"element_id": 0, "action_type": ActionTypes.GO_BACK})
                         await env.execute_action(execute_action)
@@ -473,6 +477,7 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace.append(current_trace)
                     except ActionExecutionError as ee:
                         print(ee.message)
+                        error_message = ee.message
                         execute_action.update(
                             {"element_id": 0, "action_type": ActionTypes.GO_BACK})
                         await env.execute_action(execute_action)
@@ -480,6 +485,7 @@ async def main(num_steps=0, mode="dom"):
                 
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
+                error_message_list.append(error_message)
 
                 step_reward_str = dict_to_write["description"].get(
                     "reward") if dict_to_write["description"].get("reward") else "X"
@@ -574,6 +580,7 @@ async def main(num_steps=0, mode="dom"):
                 action_list=action_list,
                 match_func_result_list=match_func_result_list,
                 element_value_list=element_value_list,
+                error_message_list=error_message_list,
                 file_path=write_result_file_path
             )
 
