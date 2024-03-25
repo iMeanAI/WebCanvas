@@ -231,13 +231,13 @@ async def aexec_playwright(code, page):
     return await locals()['__ex'](page)
 
 
-async def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
+def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
     thought = response["description"].get("thought")
     action_type = response['action_type']
     acton_input = response['value']
     action = response["description"].get("action")
     current_trace = {"thought": thought, "action": action}
-    element_value = None
+    element_value = ""
     selector = None
     try:
         element_id = int(response['id'])
@@ -248,12 +248,12 @@ async def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
         try:
             selector = env.tree.get_selector_and_xpath(
                 env.tree.nodeDict[element_id])
-            element_value = env.tree.get_element_value(
-                env.tree.nodeDict[element_id])
             if action_type in ["fill_form", "fill_search"]:
                 element_value = acton_input
-            else:
-                element_value = await get_element_content(env.page, selector)
+            # else:
+            #     element_value = await get_element_content(env.page, selector)
+            element_value = env.tree.get_element_value(
+                env.tree.nodeDict[element_id])
         except:
             print("accessibility tree don't have this element_id")
             element_id = 0
@@ -394,6 +394,7 @@ async def main(num_steps=0, mode="dom"):
         action_list = []
         previoust_trace_list = []
         match_func_result_list = []
+        element_value_list = []
         task_finished = False
         step_error_count = 0
         task_error = False
@@ -430,12 +431,13 @@ async def main(num_steps=0, mode="dom"):
             print("dict_to_write:", dict_to_write)
             dict_result_list.append(str(dict_to_write))
             if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
-                execute_action, current_trace, path, element_value = await parse_current_trace(
+                execute_action, current_trace, path, element_value = parse_current_trace(
                     dict_to_write, env)
                 selector, xpath = (
                     path[0], path[1]) if path is not None else (None, None)
                 print("current trace:\n", current_trace)
                 current_trace_list.append(str(current_trace))
+                element_value_list.append(element_value)
                 print("response:\n", execute_action)
                 action_list.append(str(execute_action))
                 print("selector:", selector)
@@ -571,6 +573,7 @@ async def main(num_steps=0, mode="dom"):
                 selector_list=selector_list,
                 action_list=action_list,
                 match_func_result_list=match_func_result_list,
+                element_value_list=element_value_list,
                 file_path=write_result_file_path
             )
 
