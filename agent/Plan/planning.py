@@ -283,18 +283,19 @@ class Planning:
     async def evaluate(user_request, previous_trace, current_trace, observation, observation_VforD=""):  # TODO
         GPT4 = GPTGenerator4()
         GPT4V = GPTGenerator4V()
-        current_trace = [current_trace]
+        GPT35 = GPTGenerator35()
+        # current_trace = [current_trace]
         if len(previous_trace) > 0:
             stringfy_previous_trace_output = ObservationPromptConstructor(
             ).stringfy_thought_and_action(previous_trace)
-            stringfy_current_trace_output = ObservationPromptConstructor(
-            ).stringfy_thought_and_action(current_trace)
+            # current_trace = json5.loads(current_trace, encoding="utf-8")[0]
+            stringfy_current_trace_output = f'Current Step:\"Thought: {current_trace["thought"]}, Action: {current_trace["action"]}\";\n'
             if observation_VforD == "":
                 current_reward_resquest = CurrentRewardPromptConstructor().construct(
                     user_request, stringfy_previous_trace_output, stringfy_current_trace_output, observation)
                 print(f"\033[32m{current_reward_resquest}")  # 绿色
                 print("\033[0m")
-                evaluate_response, error_message = await GPT4.request(current_reward_resquest)
+                evaluate_response, error_message = await GPT35.request(current_reward_resquest)
                 score_description = ActionParser().extract_score_and_description(
                     evaluate_response)
                 # 蓝色

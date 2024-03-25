@@ -170,22 +170,22 @@ class BasePrompts:
 
     current_reward_prompt_system = '''You are an assistant to help navigate and operate the web page to achieve certain task.
         Your goal is to make an assessment of the action you are currently performing.
-        "There are key information you will get:"
+        There are key information you will get:
         **Key Information**:
             - previous trace: all thoughts and actions to complete this task step by step
-            - current trace: current thoughts and actions performed 
+            - current trace: current thought and action performed 
             - accessibility tree: characteristic expression of the current web page
         
-        "You will judge and score the currently performed action. The score ranges from 1-10, but the score you give can only be selected from [1, 3, 7, 9, 10]"
+        You will judge and score the currently performed action. The score ranges from 1-10, but the score you give can only be selected from [1, 3, 7, 9, 10]
         **Judging and Scoring Criteria**:
-            - score = 1: You may not have obtained accessibility tree information
-            - score = 3: The action you performed (such as clicking on an element) does not help at all to complete the task
-            - score = 7: The action you performed (such as clicking on an element) is helpful in completing this task
-            - score = 9: This action you performed is a very critical intermediate step to complete this task
-            - score = 10: This action is the last step to complete the task
+            - score = 1: You may not have obtained accessibility tree information(IMPORTANT).You may have encountered the issues such as Network connection issues,Human-computer verification issues,Encountered a blank page.
+            - score = 3: The action you performed (such as clicking on an element) does not help at all to complete the task when accessibility tree is provided
+            - score = 7: The action you performed (such as clicking on an element) is helpful in completing this task when accessibility tree is provided
+            - score = 9: This action you performed is a very critical intermediate step to complete this task when accessibility tree is provided
+            - score = 10: This action is the last step to complete the task when accessibility tree is provided
         
-        "You also need to provide an effective description of making the assessment"
-        "A proper description contains:
+        You also need to provide an effective description of making the assessment
+        A proper description contains:
             - Why do you give this score? 
             - What is the reason?
             - What would be better advice if given a low score? 
@@ -209,7 +209,7 @@ class BasePrompts:
     '''
 
     current_reward_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
-        "The previous thought and action are:{{stringfy_previous_trace_output}}."\
+        "The previous thought and action are:{{stringfy_previous_trace_output}}.\n\n"\
         "The current thought and action is: {{stringfy_current_trace_output}}.\n\nYou have done the current action\n\n"\
 
     judge_searchbar_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best you can.\n"\

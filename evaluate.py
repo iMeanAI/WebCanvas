@@ -1,7 +1,7 @@
 import time
 import json5
 import requests
-from agent.Environment.html_env.async_env import AsyncHTMLEnvironment
+from agent.Environment.html_env.async_env import AsyncHTMLEnvironment,ActionExecutionError
 from agent.Environment.html_env.vision_async_env import VisionAsyncHTMLEnvironment
 from evaluate import *
 from agent.Plan import *
@@ -37,7 +37,7 @@ run_mode = "test"
 def read_file(file_path="./data/group_sample_20240317.json"):
     '''读取标签数据'''
     return_list = []
-    with open(file_path,encoding='utf-8') as f:
+    with open(file_path, encoding='utf-8') as f:
         test_data = json5.load(f)
     for task in test_data:
         task_name = task["task"]
@@ -243,18 +243,18 @@ async def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
     except:
         element_id = 0
     #! env.tree.nodeDict[element_id]勿动，调用映射关系，否则selector会出错
-    if action_type in ["fill_form", "fill_search", "click","select_option"]:
+    if action_type in ["fill_form", "fill_search", "click", "select_option"]:
         try:
             selector = env.tree.get_selector_and_xpath(
                 env.tree.nodeDict[element_id])
-
+            element_value = env.tree.get_element_value(
+                env.tree.nodeDict[element_id])
             if action_type in ["fill_form", "fill_search"]:
                 element_value = acton_input
             else:
                 element_value = await get_element_content(env.page, selector)
         except:
             print("accessibility tree don't have this element_id")
-            selector = None
             element_id = 0
             action_type = "None"
     else:
@@ -296,15 +296,12 @@ async def main(num_steps=0, mode="dom"):
         raw_data_end_index = len(file)
     print(raw_data_start_index, raw_data_end_index)
 
-
-
     # start_index = 1
-    # score_dif = [2, 3, 10, 15, 22, 32, 40, 47, 51,
-    #              54, 55, 63, 72, 75, 79, 87, 89, 101, 103, 105]
-    # for task_index in score_dif:
-    # for task_index in [1]:
-    for task_index in range(raw_data_start_index, raw_data_end_index):
+    score_dif = [44,45]
+    for task_index in score_dif:
+    # for task_index in range(raw_data_start_index, raw_data_end_index):
         task = file[task_index]
+
         task_name, reference_task_length, reference_evaluate_steps = task
         print("task index:", task_index)
         print("task_name:", task_name)
@@ -374,11 +371,6 @@ async def main(num_steps=0, mode="dom"):
                 use_vimium_effect=True
             )
 
-        DF = config['basic']['default']
-        GR = config['basic']['global_reward']
-        CR = config['basic']['current_step_reward']
-        PT = config['basic']['previous_trace']
-
         observation = ""
         observation_VforD = ""
         await env.reset("about:blank")
@@ -411,8 +403,10 @@ async def main(num_steps=0, mode="dom"):
 
         # for num_steps in range(max(config['basic']['Max_Action_Step'], 1.5*reference_task_length)):
         num_steps = 0
-        max_steps = int(max(config['basic']['Max_Action_Step'], 1.5*reference_task_length))
+        max_steps = int(
+            max(config['basic']['Max_Action_Step'], 1.5*reference_task_length))
         additional_steps = 0
+        task_global_status = ""
         while num_steps < max_steps + additional_steps:
             step_index_list.append(num_steps)
             total_step_score = 0
@@ -421,32 +415,13 @@ async def main(num_steps=0, mode="dom"):
             print("planning前observation：", observation)
             for _ in range(3):
                 try:
-                    if DF:
-                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
-                                                            previous_trace=previous_trace, observation=observation,
-                                                            feedback=last_action_description, mode=mode,
-                                                            observation_VforD=observation_VforD)
-                        if dict_to_write is not None:
-                            break
-                    elif GR == False:
-                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
-                                                            previous_trace=previous_trace, observation=observation,
-                                                            feedback=last_action_description, mode=mode,
-                                                            observation_VforD=observation_VforD, global_reward=False)
-                        if dict_to_write is not None:
-                            break
-                    elif CR == False:
-                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
-                                                            previous_trace=previous_trace, observation=observation,
-                                                            feedback="", mode=mode, observation_VforD=observation_VforD)
-                        if dict_to_write is not None:
-                            break
-                    elif PT == False:
-                        dict_to_write = await Planning.plan(uuid=1, user_request=task_name, observation=observation,
-                                                            feedback=last_action_description, mode=mode,
-                                                            observation_VforD=observation_VforD)
-                        if dict_to_write is not None:
-                            break
+
+                    dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
+                                                        previous_trace=previous_trace, observation=observation,
+                                                        feedback=last_action_description, mode=mode,
+                                                        observation_VforD=observation_VforD)
+                    if dict_to_write is not None:
+                        break
                 except Exception as e:
                     traceback.print_exc()
                     continue
@@ -478,18 +453,32 @@ async def main(num_steps=0, mode="dom"):
                     break
                 # input()
                 if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-                    await env.execute_action(execute_action)
-                    observation, observation_VforD = await env.get_obs()
-                    save_screenshot(mode=mode, record_time=record_time, task_name=task_name, step_number=num_steps, description="obs", screenshot_base64=observation_VforD)
+                    try:
+                        await env.execute_action(execute_action)
+                        observation, observation_VforD = await env.get_obs()
+                        save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
+                                        step_number=num_steps, description="obs", screenshot_base64=observation_VforD)
+                        previous_trace.append(current_trace)
+                    except ActionExecutionError as ee:
+                        print(ee.message)
                 else:
-                    await env.execute_action(execute_action)
-                    observation = await env.get_obs()
-                previous_trace.append(current_trace)
+                    try:
+                        await env.execute_action(execute_action)
+                        observation = await env.get_obs()
+                        previous_trace.append(current_trace)
+                    except ActionExecutionError as ee:
+                        print(ee.message)
+                    
+                
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
 
-                step_reward_str = dict_to_write["description"].get("reward") if dict_to_write["description"].get("reward") else "X"
+                step_reward_str = dict_to_write["description"].get(
+                    "reward") if dict_to_write["description"].get("reward") else "X"
                 step_reward_list.append(str(step_reward_str))
+                if dict_to_write["description"].get("reward"):
+                    task_global_status = dict_to_write["description"].get(
+                        "reward").get("status")
 
                 # current_trace = [current_trace]
                 # current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
@@ -525,7 +514,6 @@ async def main(num_steps=0, mode="dom"):
                 print("vision_execute_action finished!")
                 observation = await env.get_obs()
                 print("执行动作后的url", env.page.url)
-
                 previous_trace.append(current_trace)
                 if dict_to_write["description"].get('reward'):
                     if "loop" in dict_to_write["description"].get('reward').get("status"):
@@ -533,18 +521,19 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace.append(current_trace)
             previoust_trace_list.append(previous_trace)
 
-            print(f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
+            print(
+                f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
             current_info = {"URL": env.page.url}
             step_increase, encountered_errors = await adjust_max_action_step(
                 conditions, current_info, encountered_errors, increase_step)
             additional_steps += step_increase
             num_steps += 1
-            if num_steps >= 25:  # 防止无限循环
+            if num_steps >= 25 or task_global_status == "finished":  # 防止无限循环
                 break
 
-            # a = input("回车继续下一个Action，按q退出")
-            # if a == "q" or step_error_count > 3:
-            #     break
+            a = input("回车继续下一个Action，按q退出")
+            if a == "q" or step_error_count > 3:
+                break
             # if step_error_count > 3:
             #     task_error = True
             #     break
