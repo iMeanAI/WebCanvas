@@ -452,19 +452,20 @@ async def main(num_steps=0, mode="dom"):
                 if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                     try:
                         await env.execute_action(execute_action)
+                        observation, observation_VforD = await env.get_obs()
+                        save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
+                                        step_number=num_steps, description="obs", screenshot_base64=observation_VforD)
                         previous_trace.append(current_trace)
                     except ActionExecutionError as ee:
                         print(ee.message)
-                    observation, observation_VforD = await env.get_obs()
-                    save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
-                                    step_number=num_steps, description="obs", screenshot_base64=observation_VforD)
                 else:
                     try:
                         await env.execute_action(execute_action)
+                        observation = await env.get_obs()
                         previous_trace.append(current_trace)
                     except ActionExecutionError as ee:
                         print(ee.message)
-                    observation = await env.get_obs()
+                    
                 
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
