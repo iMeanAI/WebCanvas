@@ -42,22 +42,19 @@ def write_result_to_excel(
         step_reward_list.append("finished")
         previous_trace_list.append("finished")
 
-    cleaned_task_name = re.sub(r'[\\/:*?"<>|]', '', task_name)
+    # cleaned_task_name = re.sub(r'[\\/:*?"<>|]', '', task_name)
 
     csv_path = ""
 
     if task_finished:
         csv_path = file_path + "/" +\
-            str(task_id) + "_" + str(cleaned_task_name) + \
-            "_" + "finished" + "_" + ".csv"
+            str(task_id) + "_" + "finished" + "_" + ".csv"
     else:
         csv_path = file_path + "/" +\
-            str(task_id) + "_" + str(cleaned_task_name) + \
-            "_" + "step_limit" + "_" + ".csv"
+            str(task_id) + "_" + "step_limit" + "_" + ".csv"
         if task_global_status == "finished":
             csv_path = file_path + "/" +\
-                str(task_id) + "_" + str(cleaned_task_name) + \
-                "_" + "llm_finished" + "_" + ".csv"
+                str(task_id) + "_" + "llm_finished" + "_" + ".csv"
 
     df = pd.DataFrame({
         "step_index": step_index_list,
@@ -69,9 +66,7 @@ def write_result_to_excel(
         "previous_trace": previous_trace_list,
         "selector": selector_list,
         "action": action_list,
-        "match_result":match_func_result_list
+        "match_result": match_func_result_list
     })
 
     df.to_csv(csv_path)
-
-

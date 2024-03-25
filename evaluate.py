@@ -465,7 +465,6 @@ async def main(num_steps=0, mode="dom"):
                 else:
                     try:
                         await env.execute_action(execute_action)
-                        
                         previous_trace.append(current_trace)
                     except ActionExecutionError as ee:
                         print(ee.message)
