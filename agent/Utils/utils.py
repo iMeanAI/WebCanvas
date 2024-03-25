@@ -12,6 +12,10 @@ from datetime import datetime
 def save_screenshot(mode: str, record_time: str, task_name: str, step_number: int, description: str, screenshot_base64: str):
     # 获取当前时间戳，格式为年月日时分秒
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+    # 替换路径中的非法字符
+    invalid_chars = '<>:"/\\|?*'
+    for char in invalid_chars:
+        task_name = task_name.replace(char, '_')
 
     # 创建任务文件夹（如果不存在）
     task_folder = f'results/screenshots/screenshots_{mode}_{record_time}/{task_name}'

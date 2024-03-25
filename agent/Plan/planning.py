@@ -96,19 +96,20 @@ class VisionToDomMode(InteractionMode):
             vision_act_response, error_message = await self.visual_model.request(vision_act_request)
             print(f"\033[36mvision_act_response:\n{vision_act_response}")  # 蓝色输出
             print("\033[0m")  # 重置颜色
-            planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(
+            planning_response_thought, planning_response_get = ActionParser().extract_thought_and_action(
                 vision_act_response)
             actions = {
                 'goto': "Found 'goto' in the vision_act_response.",
                 'google_search': "Found 'google_search' in the vision_act_response.",
                 'switch_tab': "Found 'switch_tab' in the vision_act_response.",
                 'scroll_down': "Found 'scroll_down' in the vision_act_response.",
-                'scroll_up': "Found 'scroll_up' in the vision_act_response."
+                'scroll_up': "Found 'scroll_up' in the vision_act_response.",
+                'go_back': "Found 'go_back' in the vision_act_response."
             }
             # 检查行为是否在预定义的行为列表中
             actions_found = False
             for action, message in actions.items():
-                if action == planning_response_action.get('action'):
+                if action == planning_response_get.get('action'):
                     print(message)
                     actions_found = True
                     # action无需改变
@@ -117,11 +118,10 @@ class VisionToDomMode(InteractionMode):
 
             # 如果没有找到预定义的行为
             if not actions_found:
-                print(
-                    "None of 'goto', 'google_search', 'switch_tab', 'scroll_down', or 'scroll_up' were found in the vision_act_response.")
+                print("None of 'goto', 'google_search', 'switch_tab', 'scroll_down', 'scroll_up', or 'go_back' were found in the vision_act_response.")
 
-                target_element = planning_response_action.get('target_element')
-                description = planning_response_action.get('description')
+                target_element = planning_response_get.get('target_element')
+                description = planning_response_get.get('description')
 
                 # 如果目标元素为空或不存在
                 if not target_element:
@@ -135,31 +135,29 @@ class VisionToDomMode(InteractionMode):
                 print("\033[0m")
 
                 # 发送请求并等待响应
-                planning_response, error_message = await self.text_model.request(planning_request)
-                print(f"\033[34mVisionToDomplanning_response:\n{planning_response}")
+                planning_response_dom, error_message = await self.text_model.request(planning_request)
+                print(f"\033[34mVisionToDomplanning_response:\n{planning_response_dom}")
                 print("\033[0m")
                 # 解析元素ID
-                element_id = ActionParser().get_element_id(planning_response)
+                element_id = ActionParser().get_element_id(planning_response_dom)
                 if element_id == "-1":
                     print("The 'element_id' is not found in the planning_response.")
                     continue  # 如果未找到元素ID，则继续下一次循环尝试
                 else:
-                    planning_response_action['element_id'] = element_id
+                    planning_response_get['element_id'] = element_id
                     break  # 如果找到元素ID，则退出循环
 
             else:
                 # 如果找到了预定义的行为，则不需要重试，直接退出循环
                 break
 
-        action_json_str = json5.dumps(planning_response_action, indent=2)
-        # 将 "Action:" 文本和 JSON 字符串拼接，JSON 字符串用三个单引号包围
-        action_result = f'Action:\n```\n{action_json_str}\n```'
-        planning_response = f"Thought: {planning_response_thought}\n\n" + action_result
+        planning_response_json_str = json5.dumps(planning_response_get, indent=2)
+        planning_response = f'```\n{planning_response_json_str}\n```'
         # 检查是否达到最大重试次数
         if attempt == max_retries - 1:
             print("Max retries of vision_act reached. Unable to proceed.")
 
-        return planning_response, error_message, planning_response_thought, planning_response_action
+        return planning_response, error_message, planning_response_thought, planning_response_get
 
 
 class DVMode(InteractionMode):
@@ -207,7 +205,7 @@ class Planning:
 
         # get global reward
         reward_response, status_and_description = await InteractionMode(text_model=gpt4).get_global_reward(
-                user_request=user_request, previous_trace=previous_trace,observation=observation)
+                user_request=user_request, previous_trace=previous_trace, observation=observation)
 
         # 构建planning prompt及查询
         status_description = ""
