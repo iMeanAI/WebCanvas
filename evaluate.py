@@ -34,7 +34,7 @@ interaction_mode = args.mode
 raw_data_index = args.index
 run_mode = "test"
 
-def read_file(file_path="./data/group_sample_20240317.json"):
+def read_file(file_path="./data/group_sample_20240325.json"):
     '''读取标签数据'''
     return_list = []
     with open(file_path, encoding='utf-8') as f:
@@ -238,6 +238,7 @@ async def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
     action = response["description"].get("action")
     current_trace = {"thought": thought, "action": action}
     element_value = None
+    selector = None
     try:
         element_id = int(response['id'])
     except:
@@ -279,7 +280,7 @@ async def get_observation(mode: str, env: AsyncHTMLEnvironment, action: Action):
 async def main(num_steps=0, mode="dom"):
     record_time_short = time.strftime("%Y%m%d", time.localtime())
     record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-    write_result_file_path = f"./csv_results/group2_{record_time_short}/{mode}_{record_time}"
+    write_result_file_path = f"./csv_results/group_sample_{record_time_short}/{mode}_{record_time}"
 
     file = read_file()
 
@@ -297,9 +298,9 @@ async def main(num_steps=0, mode="dom"):
     print(raw_data_start_index, raw_data_end_index)
 
     # start_index = 1
-    score_dif = [44,45]
-    for task_index in score_dif:
-    # for task_index in range(raw_data_start_index, raw_data_end_index):
+    # score_dif = [44,45]
+    # for task_index in score_dif:
+    for task_index in range(raw_data_start_index, raw_data_end_index):
         task = file[task_index]
 
         task_name, reference_task_length, reference_evaluate_steps = task
@@ -455,20 +456,20 @@ async def main(num_steps=0, mode="dom"):
                 if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                     try:
                         await env.execute_action(execute_action)
-                        observation, observation_VforD = await env.get_obs()
-                        save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
-                                        step_number=num_steps, description="obs", screenshot_base64=observation_VforD)
                         previous_trace.append(current_trace)
                     except ActionExecutionError as ee:
                         print(ee.message)
+                    observation, observation_VforD = await env.get_obs()
+                    save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
+                                    step_number=num_steps, description="obs", screenshot_base64=observation_VforD)
                 else:
                     try:
                         await env.execute_action(execute_action)
-                        observation = await env.get_obs()
+                        
                         previous_trace.append(current_trace)
                     except ActionExecutionError as ee:
                         print(ee.message)
-                    
+                    observation = await env.get_obs()
                 
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
@@ -531,9 +532,9 @@ async def main(num_steps=0, mode="dom"):
             if num_steps >= 25 or task_global_status == "finished":  # 防止无限循环
                 break
 
-            a = input("回车继续下一个Action，按q退出")
-            if a == "q" or step_error_count > 3:
-                break
+            # a = input("回车继续下一个Action，按q退出")
+            # if a == "q" or step_error_count > 3:
+            #     break
             # if step_error_count > 3:
             #     task_error = True
             #     break
@@ -554,7 +555,7 @@ async def main(num_steps=0, mode="dom"):
                 task_name=task_name,
                 task_id=task_index,
                 task_finished=task_finished,
-                error_occ=task_error,
+                task_global_status=task_global_status,
                 step_index_list=step_index_list,
                 score_list=score_list,
                 step_reward_list=step_reward_list,
@@ -579,11 +580,11 @@ async def main(num_steps=0, mode="dom"):
                 len(reference_evaluate_steps), total_step_score)
             print("finish_task_score:", finish_task_score)
 
-        a = input("回车继续，按q退出")
+        # a = input("回车继续，按q退出")
         await env.close()
         del env
-        if a == "q":
-            break
+        # if a == "q":
+        #     break
 
     print(f"\033[31mtask finished!\033[0m")  # 红色
     input(f"\033[31m按回车键结束\033[0m")

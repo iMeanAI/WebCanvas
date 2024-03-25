@@ -9,7 +9,7 @@ def write_result_to_excel(
     task_name,
     task_id,
     task_finished,
-    error_occ,
+    task_global_status,
     step_index_list,
     score_list,
     step_reward_list,
@@ -54,10 +54,10 @@ def write_result_to_excel(
         csv_path = file_path + "/" +\
             str(task_id) + "_" + str(cleaned_task_name) + \
             "_" + "step_limit" + "_" + ".csv"
-        if error_occ:
+        if task_global_status == "finished":
             csv_path = file_path + "/" +\
                 str(task_id) + "_" + str(cleaned_task_name) + \
-                "_" + "error" + "_" + ".csv"
+                "_" + "llm_finished" + "_" + ".csv"
 
     df = pd.DataFrame({
         "step_index": step_index_list,
