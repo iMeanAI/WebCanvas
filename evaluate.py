@@ -459,6 +459,9 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace.append(current_trace)
                     except ActionExecutionError as ee:
                         print(ee.message)
+                        execute_action.update(
+                            {"element_id": 0, "action_type": ActionTypes.GO_BACK})
+                        await env.execute_action(execute_action)
                     observation, observation_VforD = await env.get_obs()
                     save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
                                     step_number=num_steps, description="obs", screenshot_base64=observation_VforD)
@@ -468,6 +471,9 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace.append(current_trace)
                     except ActionExecutionError as ee:
                         print(ee.message)
+                        execute_action.update(
+                            {"element_id": 0, "action_type": ActionTypes.GO_BACK})
+                        await env.execute_action(execute_action)
                     observation = await env.get_obs()
                 
                 print("执行动作后的url", env.page.url)
