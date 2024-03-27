@@ -28,3 +28,4 @@ test_get_selector_func.py
 test_select_option.py
 *.ipynb
 results/
+merge_data.py
