@@ -19,7 +19,12 @@ csv_results
 test_score_dif_1.py
 async_env2.py
 planning1.py
-data_analyse.ipynb
 base_prompts2.py
 random_sample.py
 sample_data.py
+test_click_action.py
+test_fill_form_action.py
+test_get_selector_func.py
+test_select_option.py
+*.ipynb
+results/

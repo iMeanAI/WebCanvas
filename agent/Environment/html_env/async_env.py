@@ -142,13 +142,14 @@ class AsyncHTMLEnvironment:
             except:
                 try:
                     self.last_page = self.page
-                    await self.page.evaluate('''() => {
-                        var element = document.querySelector('%s');
-                        if (element) {
-                            element.click();
-                        }
-                    }''' % selector)
-                    # await self.page.locator(selector).click()
+                    selector = rf"{selector}"
+                    await self.page.evaluate(f'''(selector) => {{
+                        var element = document.querySelector(selector);
+                        // 如果找到了元素，则执行点击操作
+                        if (element) {{
+                            element.click();   
+                        }} 
+                    }}''', selector)
                     await self.page.wait_for_load_state('load')
                     self.html_content = await self.page.content()
                 except Exception as e:
@@ -159,13 +160,14 @@ class AsyncHTMLEnvironment:
                 try:
                     await self.page.locator(selector).click()
                 except:
-                    await self.page.evaluate('''() => {
-                        var element = document.querySelector('%s');
-                        if (element) {
-                            element.click();
-                        }
-                    }''' % selector)
-                    # await self.page.locator(selector).click()
+                    selector = rf"{selector}"
+                    await self.page.evaluate(f'''(selector) => {{
+                        var element = document.querySelector(selector);
+                        // 如果找到了元素，则执行点击操作
+                        if (element) {{
+                            element.click();   
+                        }} 
+                    }}''', selector)
                 await self.page.wait_for_load_state('load')
                 self.html_content = await self.page.content()
             except Exception as e:
@@ -205,26 +207,17 @@ class AsyncHTMLEnvironment:
         except:
             try:
                 self.last_page = self.page
-                # fill_and_press_enter = '''() => {
-                #             var element = document.querySelector('%s');
-                #             if (element) {
-                #                 element.value = '%s';
-                #                 element.dispatchEvent(new Event('input', { bubbles: true }));
-                #                 element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-                #             }
-                #         }
-                #     ''' % (selector, action['fill_text'])
-                # await self.page.evaluate(fill_and_press_enter)
+                selector = rf"{selector}"
                 await self.page.evaluate(f'''
-                    () => {{
-                        var element = document.querySelector('{selector}');
+                    (selector) => {{
+                        var element = document.querySelector(selector);
                         if (element) {{
                             element.value = '{action['fill_text']}';
                             element.dispatchEvent(new Event('input', {{ bubbles: true }}));
                             element.dispatchEvent(new KeyboardEvent('keydown', {{ key: 'Enter' }}));
                         }}
                     }}
-                ''')
+                ''',selector)
                 await self.page.wait_for_load_state('load')
                 self.html_content = await self.page.content()
             except Exception as e:
@@ -250,24 +243,15 @@ class AsyncHTMLEnvironment:
         except:
             try:
                 self.last_page = self.page
-                # fill = '''() => {
-                #             var element = document.querySelector('%s');
-                #             if (element) {
-                #                 element.value = '%s';
-                #                 element.dispatchEvent(new Event('input', { bubbles: true }));
-                #             }
-                #         }
-                #     ''' % (selector, action['fill_text'])
-                # await self.page.evaluate(fill)
-                await self.page.evaluate(f'''
-                    () => {{
-                        var element = document.querySelector('{selector}');
+                selector = rf"{selector}"
+                await self.page.evaluate(f'''(selector) => {{
+                        var element = document.querySelector(selector);
                         if (element) {{
                             element.value = '{action['fill_text']}';
                             element.dispatchEvent(new Event('input', {{ bubbles: true }}));
                         }}
                     }}
-                ''')
+                ''',selector)
                 await self.page.wait_for_load_state('load')
                 self.html_content = await self.page.content()
             except Exception as e:
@@ -300,36 +284,31 @@ class AsyncHTMLEnvironment:
             print(
                 f"selector:{selector},label_name:{label},element_id: {element_id}")
         try:
-            select_str = '''() => {
-                // 选择select 下面的option
+            selector = rf"{selector}"
+            optgroup_values = await self.page.evaluate(f'''(selector) => {{
                 var values = [];
-                var selectElement = document.querySelector('%s');
+                var selectElement = document.querySelector(selector);
                 var options = selectElement.querySelectorAll('option');
-                for (var option of options) {
+                for (var option of options) {{
                     values.push(option.innerText);
-                }
-                // 选择select下面optgroup下面的option
+                }}
                 var optgroups = selectElement.querySelectorAll('optgroup');
-                for (var optgroup of optgroups) {
-                    var label = optgroup.getAttribute('label');
+                for (var optgroup of optgroups) {{
                     var options = optgroup.querySelectorAll('option');
-                    for (var option of options) {
+                    for (var option of options) {{
                         values.push(option.innerText);
-                    }   
-                }
+                    }}   
+                }}
                 return values;
-            }''' % (selector)
+            }}''', selector)
             best_option = [-1, "", -1]
-            optgroup_values = await self.page.evaluate(select_str)
-            # print("Optgroup values:", optgroup_values)
             for i, option in enumerate(optgroup_values):
                 similarity = SequenceMatcher(
                     None, option, action['fill_text']).ratio()
                 if similarity > best_option[2]:
                     best_option = [i, option, similarity]
-            # print("Best option:\n", best_option)
-            await self.page.evaluate(f'''() => {{
-                var selectElement = document.querySelector('{selector}');
+            await self.page.evaluate(f'''(selector) => {{
+                var selectElement = document.querySelector(selector);
                 // 先在select下面找option
                 var options = selectElement.querySelectorAll('option');
                 for (var option of options) {{
@@ -350,7 +329,7 @@ class AsyncHTMLEnvironment:
                         }}
                     }}
                 }}
-            }}''')
+            }}''',selector)
             await self.page.wait_for_timeout(2000)
             self.html_content = await self.page.content()
         except Exception as e:
@@ -610,3 +589,85 @@ class AsyncHTMLEnvironment:
                 print(f"页面加载超时，重试中 ({retry_count + 1}/{max_retries})")
                 retry_count += 1
         print("达到最大重试次数，无法加载页面。")
+    
+    async def test_click_action(self, selector):
+        await self.page.wait_for_selector(selector)
+        is_clickable = await self.page.is_enabled(selector)
+        selector = rf"{selector}"
+        if is_clickable:
+            print("元素可点击")
+        else:
+            print("元素不可点击")
+        try:
+            await self.page.evaluate(f'''(selector) => {{
+                var element = document.querySelector(selector);
+                if (element) {{
+                    element.click();   
+                }} 
+            }}''', selector)
+            print("点击成功")
+        except Exception as e:
+            print("点击失败:", e)
+        await self.page.wait_for_timeout(20000)
+
+    async def test_select_option_action(self, selector, value):
+        optgroup_values = await self.page.evaluate(f'''(selector) => {{
+                var values = [];
+                var selectElement = document.querySelector(selector);
+                var options = selectElement.querySelectorAll('option');
+                for (var option of options) {{
+                    values.push(option.innerText);
+                }}
+                var optgroups = selectElement.querySelectorAll('optgroup');
+                for (var optgroup of optgroups) {{
+                    var options = optgroup.querySelectorAll('option');
+                    for (var option of options) {{
+                        values.push(option.innerText);
+                    }}   
+                }}
+                return values;
+            }}''', selector)
+        best_option = [-1, "", -1]
+        print("Optgroup values:", optgroup_values)
+        for i, option in enumerate(optgroup_values):
+            similarity = SequenceMatcher(None, option, value).ratio()
+            if similarity > best_option[2]:
+                best_option = [i, option, similarity]
+        print("Best option:\n", best_option)
+        await self.page.evaluate(f'''(selector) => {{
+            var selectElement = document.querySelector(selector);
+            // 先在select下面找option
+            var options = selectElement.querySelectorAll('option');
+            for (var option of options) {{
+                if (option.innerText === "{best_option[1]}") {{
+                    option.selected = true;
+                    selectElement.dispatchEvent(new Event('change'));
+                    return;
+                }}
+            }}
+            var optgroups = selectElement.querySelectorAll('optgroup');
+            for (var optgroup of optgroups) {{
+                var options = optgroup.querySelectorAll('option');
+                for (var option of options) {{
+                    if (option.innerText === "{best_option[1]}") {{
+                        option.selected = true;
+                        selectElement.dispatchEvent(new Event('change'));
+                        return;
+                    }}
+                }}
+            }}
+        }}''',selector)
+        await self.page.wait_for_timeout(2000)
+
+    async def test_fill_form_action(self,selector,value):
+        selector = rf"{selector}"
+        await self.page.evaluate(f'''(selector) => {{
+                var element = document.querySelector(selector);
+                if (element) {{
+                    element.value = '{value}';
+                    element.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                }}
+            }}
+        ''',selector)
+        await self.page.wait_for_timeout(2000)
+
