@@ -32,7 +32,8 @@ parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
 interaction_mode = args.mode
 raw_data_index = args.index
-run_mode = "test"
+task_mode = "experiment_tasks"  # "experiment_tasks" or "single_task"
+single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
 
 def read_file(file_path="./data/group_sample_20240317.json"):
     '''读取标签数据'''
@@ -298,15 +299,30 @@ async def main(num_steps=0, mode="dom"):
 
     # start_index = 1
     score_dif = [44,45]
-    for task_index in score_dif:
+    # for task_index in score_dif:
     # for task_index in range(raw_data_start_index, raw_data_end_index):
-        task = file[task_index]
 
-        task_name, reference_task_length, reference_evaluate_steps = task
-        print("task index:", task_index)
-        print("task_name:", task_name)
-        print("reference_task_length:", reference_task_length)
-        print("raw data:\n", reference_evaluate_steps)
+    if task_mode == "experiment_tasks":
+        task_range1 = range(raw_data_start_index, raw_data_end_index)
+        task_range = score_dif
+    elif task_mode == "single_task":
+        task_range = [1]
+
+    for task_index in task_range:
+        if task_mode == "experiment_tasks":
+            task = file[task_index]
+
+            task_name, reference_task_length, reference_evaluate_steps = task
+            print("task index:", task_index)
+            print("task_name:", task_name)
+            print("reference_task_length:", reference_task_length)
+            print("raw data:\n", reference_evaluate_steps)
+        elif task_mode == "single_task":
+            task_name = single_task
+            reference_task_length = 10
+            reference_evaluate_steps = []
+            print("task_name:", task_name)
+
         # #! # 1. playwright
         # # 用playwright运行浏览器
         # async def run(playwright: Playwright) -> None:
