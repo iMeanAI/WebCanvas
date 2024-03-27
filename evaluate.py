@@ -32,7 +32,8 @@ parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
 interaction_mode = args.mode
 raw_data_index = args.index
-run_mode = "test"
+task_mode = "experiment_tasks"  # "experiment_tasks" or "single_task"
+single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
 
 def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json"):
     '''读取标签数据'''
@@ -241,7 +242,7 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
     current_trace = {"thought": thought, "action": action,"reflection":reflection}
     element_value = ""
     selector = None
-    
+
     try:
         element_id = int(response['id'])
     except:
@@ -302,15 +303,30 @@ async def main(num_steps=0, mode="dom"):
 
     # start_index = 1
     score_dif = [31]
-    for task_index in score_dif:
+    # for task_index in score_dif:
     # for task_index in range(raw_data_start_index, raw_data_end_index):
-        task = file[task_index]
 
-        task_name, task_name_id,reference_task_length, reference_evaluate_steps = task
-        print("task index:", task_index)
-        print("task_name:", task_name)
-        print("reference_task_length:", reference_task_length)
-        print("raw data:\n", reference_evaluate_steps)
+    if task_mode == "experiment_tasks":
+        task_range1 = range(raw_data_start_index, raw_data_end_index)
+        task_range = score_dif
+    elif task_mode == "single_task":
+        task_range = [1]
+
+    for task_index in task_range:
+        if task_mode == "experiment_tasks":
+            task = file[task_index]
+
+            task_name, task_name_id, reference_task_length, reference_evaluate_steps = task
+            print("task index:", task_index)
+            print("task_name:", task_name)
+            print("reference_task_length:", reference_task_length)
+            print("raw data:\n", reference_evaluate_steps)
+        elif task_mode == "single_task":
+            task_name = single_task
+            reference_task_length = 10
+            reference_evaluate_steps = []
+            print("task_name:", task_name)
+
         # #! # 1. playwright
         # # 用playwright运行浏览器
         # async def run(playwright: Playwright) -> None:
@@ -399,7 +415,7 @@ async def main(num_steps=0, mode="dom"):
         match_func_result_list = []
         element_value_list = []
         error_message_list = []
-        
+
         task_finished = False
         step_error_count = 0
         task_error = False
@@ -461,35 +477,25 @@ async def main(num_steps=0, mode="dom"):
                     task_finished = True
                     break
                 # input()
+                try:
+                    await env.execute_action(execute_action)
+                    previous_trace.append(current_trace)
+                    error_description = ""
+                except ActionExecutionError as ee:
+                    print(ee.message)
+                    error_message = ee.message
+                    error_description = error_message
+                    execute_action.update(
+                        {"element_id": 0, "action_type": ActionTypes.GO_BACK})
+                    await env.execute_action(execute_action)
+                print("error_description:\n", error_description)
                 if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-                    try:
-                        await env.execute_action(execute_action)
-                        previous_trace.append(current_trace)
-                        error_description = ""
-                    except ActionExecutionError as ee:
-                        print(ee.message)
-                        error_message = ee.message
-                        error_description = error_message
-                        execute_action.update(
-                            {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                        await env.execute_action(execute_action)
                     observation, observation_VforD = await env.get_obs()
                     save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
                                     step_number=num_steps, description="obs", screenshot_base64=observation_VforD)
                 else:
-                    try:
-                        await env.execute_action(execute_action)
-                        previous_trace.append(current_trace)
-                        error_description = ""
-                    except ActionExecutionError as ee:
-                        print(ee.message)
-                        error_message = ee.message
-                        error_description = error_message
-                        execute_action.update(
-                            {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                        await env.execute_action(execute_action)
                     observation = await env.get_obs()
-                print("error_description:\n",error_description)
+
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
                 error_message_list.append(error_message)
