@@ -8,6 +8,7 @@ import re
 def write_result_to_excel(
     task_name,
     task_id,
+    task_name_id,
     task_finished,
     task_global_status,
     step_index_list,
@@ -52,13 +53,13 @@ def write_result_to_excel(
 
     if task_finished:
         csv_path = file_path + "/" +\
-            str(task_id) + "_" + "finished" + "_" + ".csv"
+            str(task_id) + "_" + task_name_id + "_" + "finished" + "_" + ".csv"
     else:
         csv_path = file_path + "/" +\
-            str(task_id) + "_" + "step_limit" + "_" + ".csv"
+            str(task_id) + "_" + task_name_id + "_" + "step_limit" + "_" + ".csv"
         if task_global_status == "finished":
             csv_path = file_path + "/" +\
-                str(task_id) + "_" + "llm_finished" + "_" + ".csv"
+                str(task_id) + "_" + task_name_id + "_" + "llm_finished" + "_" + ".csv"
 
     df = pd.DataFrame({
         "step_index": step_index_list,

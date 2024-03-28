@@ -202,7 +202,6 @@ class Planning:
         gpt35 = GPTGenerator35()
         gpt4 = GPTGenerator4()
         gpt4v = GPTGenerator4V()
-        print("feed_back:\n",feedback)
 
         # get global reward
         reward_response, status_and_description = await InteractionMode(text_model=gpt4).get_global_reward(

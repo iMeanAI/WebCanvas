@@ -34,7 +34,7 @@ interaction_mode = args.mode
 raw_data_index = args.index
 run_mode = "test"
 
-def read_file(file_path="./data/group_sample_update_20240325.json"):
+def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json"):
     '''读取标签数据'''
     return_list = []
     with open(file_path, encoding='utf-8') as f:
@@ -43,6 +43,7 @@ def read_file(file_path="./data/group_sample_update_20240325.json"):
         task_name = task["task"]
         evaluation_data = task["evaluation"]
         reference_task_length = task["reference_task_length"]
+        task_name_id = task["index"]
         reference_evaluate_steps = []
         for _, evaluation in enumerate(evaluation_data):
             match_function = evaluation["match_function_name"]
@@ -70,7 +71,7 @@ def read_file(file_path="./data/group_sample_update_20240325.json"):
                                                      "reference_answer": reference_answer, "netloc": netloc,
                                                      "score": 0})
         return_list.append(
-            [task_name, reference_task_length, reference_evaluate_steps])
+            [task_name, task_name_id,reference_task_length, reference_evaluate_steps])
     # print(return_list)
     # return_list=return_list[1:]
     return return_list
@@ -236,7 +237,7 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
     action_type = response['action_type']
     acton_input = response['value']
     action = response["description"].get("action")
-    reflection = response["description"].get("reward") if response["description"].get("reward") else ""
+    reflection = response["description"].get("reward").get("description") if response["description"].get("reward") else ""
     current_trace = {"thought": thought, "action": action,"reflection":reflection}
     element_value = ""
     selector = None
@@ -300,12 +301,12 @@ async def main(num_steps=0, mode="dom"):
     print(raw_data_start_index, raw_data_end_index)
 
     # start_index = 1
-    score_dif = [38]
+    score_dif = [31]
     for task_index in score_dif:
     # for task_index in range(raw_data_start_index, raw_data_end_index):
         task = file[task_index]
 
-        task_name, reference_task_length, reference_evaluate_steps = task
+        task_name, task_name_id,reference_task_length, reference_evaluate_steps = task
         print("task index:", task_index)
         print("task_name:", task_name)
         print("reference_task_length:", reference_task_length)
@@ -573,6 +574,7 @@ async def main(num_steps=0, mode="dom"):
             write_result_to_excel(
                 task_name=task_name,
                 task_id=task_index,
+                task_name_id=task_name_id,
                 task_finished=task_finished,
                 task_global_status=task_global_status,
                 step_index_list=step_index_list,
