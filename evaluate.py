@@ -34,7 +34,7 @@ interaction_mode = args.mode
 raw_data_index = args.index
 run_mode = "test"
 
-def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json"):
+def read_file(file_path="./data/data_0328/all_data_0328.json"):
     '''读取标签数据'''
     return_list = []
     with open(file_path, encoding='utf-8') as f:
@@ -552,9 +552,9 @@ async def main(num_steps=0, mode="dom"):
             if num_steps >= 25 or task_global_status == "finished":  # 防止无限循环
                 break
 
-            a = input("回车继续下一个Action，按q退出")
-            if a == "q" or step_error_count > 3:
-                break
+            # a = input("回车继续下一个Action，按q退出")
+            # if a == "q" or step_error_count > 3:
+            #     break
             # if step_error_count > 3:
             #     task_error = True
             #     break
