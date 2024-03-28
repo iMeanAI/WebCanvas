@@ -124,10 +124,8 @@ class AsyncHTMLEnvironment:
                            "element_name": label})
             selector, xpath = self.tree.get_selector_and_xpath(
                 action["element_id"])
-            print("raw_selecotr:\n",repr(selector))
         except Exception as e:
             error_message = f"selector:{selector},label_name:{label},element_id: {element_id}"
-            print(error_message)
         if label == "link":
             try:
                 element = self.tree.elementNodes[element_id]
