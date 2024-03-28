@@ -13,6 +13,8 @@ import asyncio
 import argparse
 import toml
 
+# universal tools
+from agent.Utils.utils import *
 # evaluate tools
 from evaluate_utils import *
 
@@ -28,14 +30,21 @@ parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vi
                          "'vision_to_dom' for vision-to-dom interaction, "
                          "'vision' for vision-based interaction, "
                          "'d_v' for DOM-based and vision-based interaction.")
+parser.add_argument("--ground_truth_mode", choices=["true", "false"], default="false",
+                    help="Choose whether to use ground truth data.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
 interaction_mode = args.mode
 raw_data_index = args.index
+# setting is below
 task_mode = "experiment_tasks"  # "experiment_tasks" or "single_task"
 single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
+ground_truth_mode = args.ground_truth_mode
+# - setting: file path of experiment_tasks reference data
+ground_truth_file_path = "./data/ground_truth/sample.json"
 
-def read_file(file_path="./data/group_sample_20240317.json"):
+
+def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json"):
     '''读取标签数据'''
     return_list = []
     with open(file_path, encoding='utf-8') as f:
@@ -44,6 +53,7 @@ def read_file(file_path="./data/group_sample_20240317.json"):
         task_name = task["task"]
         evaluation_data = task["evaluation"]
         reference_task_length = task["reference_task_length"]
+        task_name_id = task["index"]
         reference_evaluate_steps = []
         for _, evaluation in enumerate(evaluation_data):
             match_function = evaluation["match_function_name"]
@@ -71,7 +81,7 @@ def read_file(file_path="./data/group_sample_20240317.json"):
                                                      "reference_answer": reference_answer, "netloc": netloc,
                                                      "score": 0})
         return_list.append(
-            [task_name, reference_task_length, reference_evaluate_steps])
+            [task_name, task_name_id,reference_task_length, reference_evaluate_steps])
     # print(return_list)
     # return_list=return_list[1:]
     return return_list
@@ -278,11 +288,18 @@ async def get_observation(mode: str, env: AsyncHTMLEnvironment, action: Action):
 
 
 async def main(num_steps=0, mode="dom"):
+    # result record for experiments_tasks
     record_time_short = time.strftime("%Y%m%d", time.localtime())
     record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
     write_result_file_path = f"./csv_results/group2_{record_time_short}/{mode}_{record_time}"
 
-    file = read_file()
+    # get reference data in experiment_tasks mode
+    file = None
+    ground_truth_data = None
+    if task_mode == "experiment_tasks":
+        file = read_file()
+    if ground_truth_mode == "true":
+        ground_truth_data = read_json_file(ground_truth_file_path)
 
     with open('./configs/dom.toml', 'r') as f:
         config = toml.load(f)
@@ -309,10 +326,11 @@ async def main(num_steps=0, mode="dom"):
         task_range = [1]
 
     for task_index in task_range:
+        task_name_id = None
         if task_mode == "experiment_tasks":
             task = file[task_index]
 
-            task_name, reference_task_length, reference_evaluate_steps = task
+            task_name, task_name_id, reference_task_length, reference_evaluate_steps = task
             print("task index:", task_index)
             print("task_name:", task_name)
             print("reference_task_length:", reference_task_length)
@@ -432,10 +450,16 @@ async def main(num_steps=0, mode="dom"):
             for _ in range(3):
                 try:
 
-                    dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
-                                                        previous_trace=previous_trace, observation=observation,
-                                                        feedback=last_action_description, mode=mode,
-                                                        observation_VforD=observation_VforD)
+                    dict_to_write = await Planning.plan(uuid=1,
+                                                        user_request=task_name,
+                                                        previous_trace=previous_trace,
+                                                        observation=observation,
+                                                        feedback=last_action_description,
+                                                        mode=mode,
+                                                        observation_VforD=observation_VforD,
+                                                        ground_truth_mode=ground_truth_mode,
+                                                        ground_truth_data=ground_truth_data,
+                                                        task_name_id=task_name_id)
                     if dict_to_write is not None:
                         break
                 except Exception as e:

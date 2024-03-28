@@ -9,6 +9,26 @@ from datetime import datetime
 
 # class Utility:
 
+# data utils
+def read_json_file(file_path):
+    """
+    Read and parse a JSON file.
+
+    Args:
+    - file_path: str, the path of the JSON file.
+
+    Returns:
+    - Returns the parsed data on success.
+    - Returns an error message on failure.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = json5.load(file)
+            return data
+    except FileNotFoundError:
+        return f"File not found: {file_path}"
+
+
 def save_screenshot(mode: str, record_time: str, task_name: str, step_number: int, description: str, screenshot_base64: str):
     # 获取当前时间戳，格式为年月日时分秒
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
