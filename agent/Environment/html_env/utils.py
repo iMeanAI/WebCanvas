@@ -85,11 +85,14 @@ TypeList = [
 
 
 def stringfy_selector(string: str):
+    special_chars = '#.>+~[]():*^$|='
     string = string.replace("\t", " ").replace("\n", " ").lstrip().rstrip()
     string = ' '.join(string.split())
-    string = string.replace("(", "\(").replace(")", "\)").replace(
-        "[", "\[").replace("]", "\]").replace(":","\:").replace(".","\.").replace("#","\#")
+    for char in special_chars:
+        string = string.replace(char, '\\' + char)
     string = '.'.join(string.split(' '))
+    if string[0].isdigit():
+        string = f"\\{'{:X}'.format(ord(string[0]))}" + " " + string[1:]
     return string
 
 

@@ -85,10 +85,10 @@ class ObservationPromptConstructor(BasePromptConstructor):
             user_request=user_request)
         if len(previous_trace) > 0:
             self.prompt_user += HistoryMemory(
-                previous_trace=previous_trace).construct_previous_trace_prompt()
-            if status_description != "":
-                self.prompt_user += \
-                    f"Task completion description is {status_description}"
+                previous_trace=previous_trace,reflection = status_description).construct_previous_trace_prompt()
+            # if status_description != "":
+            #     self.prompt_user += \
+            #         f"Task completion description is {status_description}"
             if feedback != "":
                 self.prompt_user += f"Here are some other things you need to know:\n {feedback}\n"
             self.prompt_user += observation #TODO：描述此处observation
@@ -101,7 +101,7 @@ class ObservationPromptConstructor(BasePromptConstructor):
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
         for idx, i in enumerate(input_list):
-            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}\";\n'
+            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]},Reflection:{i["reflection"]}\";\n'
         str_output += "]"
         return str_output
 
@@ -165,10 +165,10 @@ class ObservationVisionDiscPromptConstructor(BasePromptConstructor):
             user_request=user_request)
         if len(previous_trace) > 0:
             self.prompt_user += HistoryMemory(
-                previous_trace=previous_trace).construct_previous_trace_prompt()
-            if status_description != "":
-                self.prompt_user += \
-                    f"Task completion description is {status_description}"
+                previous_trace=previous_trace,reflection = status_description).construct_previous_trace_prompt()
+            # if status_description != "":
+            #     self.prompt_user += \
+            #         f"Task completion description is {status_description}"
             if feedback != "":
                 self.prompt_user += f"An invalid action description is below:\n {feedback}\n"
             self.prompt_user += "\n" + observation
@@ -206,11 +206,13 @@ class ObservationVisionActPromptConstructor(BasePromptConstructor):
             user_request=user_request)
         prompt_elements = [{"type": "text", "text": rendered_prompt}]
         if len(previous_trace) > 0:
-            history_memory = HistoryMemory(previous_trace=previous_trace)
-            trace_prompt = history_memory.construct_previous_trace_prompt()
+            # history_memory = HistoryMemory(previous_trace=previous_trace)
+            # trace_prompt = history_memory.construct_previous_trace_prompt()
+            trace_prompt = HistoryMemory(
+                previous_trace=previous_trace,reflection = status_description).construct_previous_trace_prompt()
             prompt_elements.append({"type": "text", "text": trace_prompt})
-            if status_description != "":
-                prompt_elements.append({"type": "text", "text": f"Task completion description is {status_description}"})
+            # if status_description != "":
+            #     prompt_elements.append({"type": "text", "text": f"Task completion description is {status_description}"})
             if feedback != "":
                 prompt_elements.append(
                     {"type": "text", "text": f"An invalid action description is below:\n {feedback}\n"})
@@ -271,11 +273,13 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
             user_request=user_request)
         prompt_elements = [{"type": "text", "text": rendered_prompt}]
         if len(previous_trace) > 0:
-            history_memory = HistoryMemory(previous_trace=previous_trace)
-            trace_prompt = history_memory.construct_previous_trace_prompt()
+            # history_memory = HistoryMemory(previous_trace=previous_trace)
+            trace_prompt = HistoryMemory(
+                previous_trace=previous_trace,reflection = status_description).construct_previous_trace_prompt()
+            # trace_prompt = history_memory.construct_previous_trace_prompt()
             prompt_elements.append({"type": "text", "text": trace_prompt})
-            if status_description != "":
-                prompt_elements.append({"type": "text", "text": f"Task completion description is {status_description}"})
+            # if status_description != "":
+            #     prompt_elements.append({"type": "text", "text": f"Task completion description is {status_description}"})
             if feedback != "":
                 prompt_elements.append(
                     {"type": "text", "text": f"There an invalid action description is below:\n {feedback}\n"})

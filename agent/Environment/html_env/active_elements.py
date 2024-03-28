@@ -95,7 +95,7 @@ class ActiveElements:
 
     @staticmethod
     def is_valid_element(element: ElementNode) -> bool:
-        return ActiveElements.is_interactive(element) & ActiveElements.is_visiable(element)
+        return ActiveElements.is_interactive(element) and ActiveElements.is_visiable(element)
 
     @staticmethod
     def get_element_value(element: ElementNode) -> str:

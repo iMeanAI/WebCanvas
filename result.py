@@ -8,8 +8,9 @@ import re
 def write_result_to_excel(
     task_name,
     task_id,
+    task_name_id,
     task_finished,
-    error_occ,
+    task_global_status,
     step_index_list,
     score_list,
     step_reward_list,
@@ -20,6 +21,8 @@ def write_result_to_excel(
     selector_list,
     action_list,
     match_func_result_list,
+    element_value_list,
+    error_message_list,
     file_path="",
 ):
 
@@ -36,28 +39,27 @@ def write_result_to_excel(
     print("previous_trace_list len: ", len(previous_trace_list))
     print("selector_list len: ", len(selector_list))
     print("action_list len: ", len(action_list))
+    print("element_value_list len",len(element_value_list))
+    print("error_message_list len",len(error_message_list))
 
     if task_finished:
         url_list.append("finished")
         step_reward_list.append("finished")
         previous_trace_list.append("finished")
 
-    cleaned_task_name = re.sub(r'[\\/:*?"<>|]', '', task_name)
+    # cleaned_task_name = re.sub(r'[\\/:*?"<>|]', '', task_name)
 
     csv_path = ""
 
     if task_finished:
         csv_path = file_path + "/" +\
-            str(task_id) + "_" + str(cleaned_task_name) + \
-            "_" + "finished" + "_" + ".csv"
+            str(task_id) + "_" + task_name_id + "_" + "finished" + "_" + ".csv"
     else:
         csv_path = file_path + "/" +\
-            str(task_id) + "_" + str(cleaned_task_name) + \
-            "_" + "step_limit" + "_" + ".csv"
-        if error_occ:
+            str(task_id) + "_" + task_name_id + "_" + "step_limit" + "_" + ".csv"
+        if task_global_status == "finished":
             csv_path = file_path + "/" +\
-                str(task_id) + "_" + str(cleaned_task_name) + \
-                "_" + "error" + "_" + ".csv"
+                str(task_id) + "_" + task_name_id + "_" + "llm_finished" + "_" + ".csv"
 
     df = pd.DataFrame({
         "step_index": step_index_list,
@@ -69,9 +71,9 @@ def write_result_to_excel(
         "previous_trace": previous_trace_list,
         "selector": selector_list,
         "action": action_list,
-        "match_result":match_func_result_list
+        "match_result": match_func_result_list,
+        "element_value":element_value_list,
+        "error":error_message_list
     })
 
     df.to_csv(csv_path)
-
-
