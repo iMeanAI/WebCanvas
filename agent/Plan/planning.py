@@ -24,7 +24,7 @@ class InteractionMode:
                     user_request, stringfy_thought_and_action_output, observation)
             elif ground_truth_mode == "true":
                 for item in ground_truth_data:
-                    if item.get("id") == task_name_id:
+                    if item.get("index") == task_name_id:
                         instruction = item["instruction"]
                         reward_request = RewardWithGroundTruthPromptConstructor().construct(
                             user_request=user_request,
