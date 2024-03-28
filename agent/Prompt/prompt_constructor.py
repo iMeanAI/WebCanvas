@@ -364,6 +364,22 @@ class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的pr
         return messages
 
 
+class RewardWithGroundTruthPromptConstructor(BasePromptConstructor):
+    def __init__(self):
+        super().__init__()
+        self.prompt_system = BasePrompts.global_reward_with_GroundTruth_prompt_system
+        self.prompt_user = BasePrompts.global_reward_with_GroundTruth_prompt_user
+
+    def construct(self, user_request: str, stringfy_thought_and_action_output: str, observation: str = "", observationV: str = "", instruction: str = "") -> list:
+        self.prompt_user = Template(self.prompt_user).render(
+            user_request=user_request, stringfy_thought_and_action_output=stringfy_thought_and_action_output)
+        self.prompt_user += f"Here is the current accessibility tree that you should refer to:\n{observation}"
+        self.prompt_user += f"\n\nHere is the Reference Guide for the target task:\n\n{instruction}"
+        messages = [{"role": "system", "content": self.prompt_system},
+                    {"role": "user", "content": self.prompt_user}]
+        return messages
+
+
 # 类：构建reward的prompt
 class CurrentRewardPromptConstructor(BasePromptConstructor):
     def __init__(self):
