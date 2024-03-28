@@ -124,6 +124,7 @@ class AsyncHTMLEnvironment:
                            "element_name": label})
             selector, xpath = self.tree.get_selector_and_xpath(
                 action["element_id"])
+            print("raw_selecotr:\n",repr(selector))
         except Exception as e:
             error_message = f"selector:{selector},label_name:{label},element_id: {element_id}"
             print(error_message)
@@ -427,76 +428,77 @@ class AsyncHTMLEnvironment:
             print('tree.nodeDict[action["element_id"]]:',
                   self.tree.nodeDict[action["element_id"]])
             action["element_id"] = self.tree.nodeDict[action["element_id"]]
+            element_value = self.tree.get_element_value(action["element_id"])
         # try:
         match action["action_type"]:
             case ActionTypes.CLICK:
                 try:
                     await self.click(action)
                 except Exception as e:
-                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    error_message = f"can't execute click [{action['element_id']}, {element_value}] action. Because an error({e}) will occur"
                     print(error_message)
                     raise ActionExecutionError(action['action_type'], error_message) from e
             case ActionTypes.GOTO:
                 try:
                     await self.goto(action)
                 except Exception as e:
-                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    error_message = f"can't execute goto [{action['url']}] action. Because an error({e}) will occur."
                     print(error_message)
                     raise ActionExecutionError(action['action_type'], error_message) from e
             case ActionTypes.FILL_SEARCH:
                 try:
                     await self.fill_search(action)
                 except Exception as e:
-                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    error_message = f"can't execute fill_form [{action['element_id']},{action['fill_text']}] action. Because an error({e}) will occur."
                     print(error_message)
                     raise ActionExecutionError(action['action_type'], error_message) from e
             case ActionTypes.FILL_FORM:
                 try:
                     await self.fill_form(action)
                 except Exception as e:
-                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    error_message = f"can't execute fill_form [{action['element_id']},{action['fill_text']}] action. Because an error({e}) will occur."
                     print(error_message)
                     raise ActionExecutionError(action['action_type'], error_message) from e
             case ActionTypes.GOOGLE_SEARCH:
                 try:
                     await self.search(action)
                 except Exception as e:
-                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    error_message = f"can't execute google_search[{action['fill_text']}] action. Because an error({e}) will occur."
                     print(error_message)
                     raise ActionExecutionError(action['action_type'], error_message) from e
             case ActionTypes.GO_BACK:
                 try:
                     await self.go_back_last_page(action)
                 except Exception as e:
-                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    error_message = f"can't execute go_back action. Because an error({e}) will occur."
                     print(error_message)
                     raise ActionExecutionError(action['action_type'], error_message) from e
             case ActionTypes.SELECT_OPTION:
                 try:
                     await self.select_option(action)
                 except Exception as e:
-                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    error_message = f"can't execute select_option [{action['element_id']},{action['fill_text']}] action. Because an error({e}) will occur."
                     print(error_message)
                     raise ActionExecutionError(action['action_type'], error_message) from e
             case ActionTypes.HOVER:
                 try:
                     await self.hover(action)
                 except Exception as e:
-                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    error_message = f"can't execute hover [{action['element_id']},{element_value}] action. Because an error({e}) will occur"
                     print(error_message)
                     raise ActionExecutionError(action['action_type'], error_message) from e
             case ActionTypes.SCROLL_DOWN:
                 try:
                     await self.scroll_down()
                 except Exception as e:
-                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    error_message = f"can't execute scroll_down action. Because an error({e}) will occur"
                     print(error_message)
                     raise ActionExecutionError(action['action_type'], error_message) from e
             case ActionTypes.SCROLL_UP:
                 try:
                     await self.scroll_up()
                 except Exception as e:
-                    error_message = f"can't execute {action['action_type']} action: {e}"
+                    error_message = f"can't execute scroll_up action. Because an error({e}) will occur"
                     print(error_message)
                     raise ActionExecutionError(action['action_type'], error_message) from e
             case ActionTypes.NONE:
@@ -504,7 +506,7 @@ class AsyncHTMLEnvironment:
                     await self.page.wait_for_load_state('load')
                     self.html_content = await self.page.content()
                 except:
-                    error_message = f"can't execute {action['action_type']} action:"
+                    error_message = f"can't execute none action. Because an error({e}) will occur"
                     print(error_message)
                     raise ActionExecutionError(action['action_type'], error_message) from e
             case _:

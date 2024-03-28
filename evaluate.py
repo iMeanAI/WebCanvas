@@ -34,7 +34,7 @@ interaction_mode = args.mode
 raw_data_index = args.index
 run_mode = "test"
 
-def read_file(file_path="./data/group_sample_20240325.json"):
+def read_file(file_path="./data/group_sample_update_20240325.json"):
     '''读取标签数据'''
     return_list = []
     with open(file_path, encoding='utf-8') as f:
@@ -236,9 +236,11 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
     action_type = response['action_type']
     acton_input = response['value']
     action = response["description"].get("action")
-    current_trace = {"thought": thought, "action": action}
+    reflection = response["description"].get("reward") if response["description"].get("reward") else ""
+    current_trace = {"thought": thought, "action": action,"reflection":reflection}
     element_value = ""
     selector = None
+    
     try:
         element_id = int(response['id'])
     except:
@@ -298,9 +300,9 @@ async def main(num_steps=0, mode="dom"):
     print(raw_data_start_index, raw_data_end_index)
 
     # start_index = 1
-    # score_dif = [44,45]
-    # for task_index in score_dif:
-    for task_index in range(raw_data_start_index, raw_data_end_index):
+    score_dif = [38]
+    for task_index in score_dif:
+    # for task_index in range(raw_data_start_index, raw_data_end_index):
         task = file[task_index]
 
         task_name, reference_task_length, reference_evaluate_steps = task
@@ -382,7 +384,7 @@ async def main(num_steps=0, mode="dom"):
         #     observation = await env.reset("about:blank")
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
-        last_action_description = ""
+        error_description = ""
         dict_to_write = None
         step_index_list = []
         score_list = []
@@ -423,7 +425,7 @@ async def main(num_steps=0, mode="dom"):
 
                     dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
                                                         previous_trace=previous_trace, observation=observation,
-                                                        feedback=last_action_description, mode=mode,
+                                                        feedback=error_description, mode=mode,
                                                         observation_VforD=observation_VforD)
                     if dict_to_write is not None:
                         break
@@ -462,9 +464,11 @@ async def main(num_steps=0, mode="dom"):
                     try:
                         await env.execute_action(execute_action)
                         previous_trace.append(current_trace)
+                        error_description = ""
                     except ActionExecutionError as ee:
                         print(ee.message)
                         error_message = ee.message
+                        error_description = error_message
                         execute_action.update(
                             {"element_id": 0, "action_type": ActionTypes.GO_BACK})
                         await env.execute_action(execute_action)
@@ -475,14 +479,16 @@ async def main(num_steps=0, mode="dom"):
                     try:
                         await env.execute_action(execute_action)
                         previous_trace.append(current_trace)
+                        error_description = ""
                     except ActionExecutionError as ee:
                         print(ee.message)
                         error_message = ee.message
+                        error_description = error_message
                         execute_action.update(
                             {"element_id": 0, "action_type": ActionTypes.GO_BACK})
                         await env.execute_action(execute_action)
                     observation = await env.get_obs()
-                
+                print("error_description:\n",error_description)
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
                 error_message_list.append(error_message)
@@ -545,9 +551,9 @@ async def main(num_steps=0, mode="dom"):
             if num_steps >= 25 or task_global_status == "finished":  # 防止无限循环
                 break
 
-            # a = input("回车继续下一个Action，按q退出")
-            # if a == "q" or step_error_count > 3:
-            #     break
+            a = input("回车继续下一个Action，按q退出")
+            if a == "q" or step_error_count > 3:
+                break
             # if step_error_count > 3:
             #     task_error = True
             #     break
