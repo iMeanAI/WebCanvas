@@ -85,7 +85,7 @@ TypeList = [
 
 
 def stringfy_selector(string: str):
-    special_chars = '#.>+~[]():*^$|=@'
+    special_chars = '#.>+~[]():*^$|=@\''
     string = string.replace("\t", " ").replace("\n", " ").lstrip().rstrip()
     string = ' '.join(string.split())
     for char in special_chars:
