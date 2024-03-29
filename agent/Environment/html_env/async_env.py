@@ -62,16 +62,15 @@ class AsyncHTMLEnvironment:
         self.browser = None
 
     async def setup(self, start_url: str) -> None:
-        if self.mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
-            self.playwright = await async_playwright().start()
-            self.browser = await self.playwright.chromium.launch(
-                headless=self.headless, slow_mo=self.slow_mo
-            )
-            self.context = await self.browser.new_context(
-                viewport=self.viewport_size,
-                device_scale_factor=1,
-                locale=self.locale
-            )
+        self.playwright = await async_playwright().start()
+        self.browser = await self.playwright.chromium.launch(
+            headless=self.headless, slow_mo=self.slow_mo
+        )
+        self.context = await self.browser.new_context(
+            viewport=self.viewport_size,
+            device_scale_factor=1,
+            locale=self.locale
+        )
         if start_url:
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
@@ -88,7 +87,6 @@ class AsyncHTMLEnvironment:
         observation = ""
         observation_VforD = ""
         try:
-            # if self.mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
             print("async_env.py now in _get_obs method")
             self.tree.fetch_html_content(self.html_content)
             print(
@@ -109,12 +107,6 @@ class AsyncHTMLEnvironment:
 
     async def reset(self, start_url: str = ""):
         await self.setup(start_url)
-        # if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-        #     observation, observation_VforD = await self.get_obs()
-        #     return observation, observation_VforD
-        # else:
-        #     observation = await self.get_obs()
-        #     return observation
 
     async def click(self, action):
         try:

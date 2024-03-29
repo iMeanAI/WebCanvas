@@ -370,9 +370,13 @@ class RewardWithGroundTruthPromptConstructor(BasePromptConstructor):
         self.prompt_system = BasePrompts.global_reward_with_GroundTruth_prompt_system
         self.prompt_user = BasePrompts.global_reward_with_GroundTruth_prompt_user
 
-    def construct(self, user_request: str, stringfy_thought_and_action_output: str, observation: str = "", observationV: str = "", instruction: str = "") -> list:
+    def construct(self, user_request: str, stringfy_thought_and_action_output: str, observation: str = "",
+                  current_info=None, observationV: str = "", instruction: str = "") -> list:
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request, stringfy_thought_and_action_output=stringfy_thought_and_action_output)
+        if current_info:
+            current_url = current_info.get('current_url', 'not available')
+        self.prompt_user += f"The current url is {current_url}\n"
         self.prompt_user += f"Here is the current accessibility tree that you should refer to:\n{observation}"
         self.prompt_user += f"\n\nHere is the Reference Guide for the target task:\n\n{instruction}"
         messages = [{"role": "system", "content": self.prompt_system},
