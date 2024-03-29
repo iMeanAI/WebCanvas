@@ -408,11 +408,10 @@ async def main(num_steps=0, mode="dom"):
         observation = ""
         observation_VforD = ""
         await env.reset("about:blank")
-        # if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-        #     observation, observation_VforD = await env.reset("about:blank")
-        #     await env.reset("about:blank")
-        # else:
-        #     observation = await env.reset("about:blank")
+        current_info = {
+            "URL": env.page.url
+        }
+
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
         last_action_description = ""
@@ -459,7 +458,8 @@ async def main(num_steps=0, mode="dom"):
                                                         observation_VforD=observation_VforD,
                                                         ground_truth_mode=ground_truth_mode,
                                                         ground_truth_data=ground_truth_data,
-                                                        task_name_id=task_name_id)
+                                                        task_name_id=task_name_id,
+                                                        current_info=current_info)
                     if dict_to_write is not None:
                         break
                 except Exception as e:
@@ -508,8 +508,11 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace.append(current_trace)
                     except ActionExecutionError as ee:
                         print(ee.message)
-                    
-                
+
+
+                current_info = {
+                    "URL": env.page.url
+                }
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
 
@@ -563,7 +566,6 @@ async def main(num_steps=0, mode="dom"):
 
             print(
                 f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
-            current_info = {"URL": env.page.url}
             step_increase, encountered_errors = await adjust_max_action_step(
                 conditions, current_info, encountered_errors, increase_step)
             additional_steps += step_increase

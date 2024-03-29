@@ -14,7 +14,7 @@ class InteractionMode:
     def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         pass
 
-    async def get_global_reward(self, user_request, previous_trace, observation, ground_truth_mode, ground_truth_data=None, task_name_id=None):
+    async def get_global_reward(self, user_request, previous_trace, observation, current_info, ground_truth_mode, ground_truth_data=None, task_name_id=None):
         status_and_description = None
         if len(previous_trace) > 0:
             stringfy_thought_and_action_output = ObservationPromptConstructor().stringfy_thought_and_action(
@@ -30,6 +30,7 @@ class InteractionMode:
                             user_request=user_request,
                             stringfy_thought_and_action_output=stringfy_thought_and_action_output,
                             observation=observation,
+                            current_info=current_info,
                             instruction=instruction)
                         break
                 else:
@@ -209,7 +210,7 @@ class VisionMode(InteractionMode):
 
 class Planning:
     @staticmethod
-    async def plan(uuid, user_request, previous_trace, observation, feedback, mode, observation_VforD, ground_truth_mode, ground_truth_data, task_name_id, global_reward: bool = True):  # TODO
+    async def plan(uuid, user_request, previous_trace, observation, feedback, mode, observation_VforD, ground_truth_mode, ground_truth_data, task_name_id, current_info, global_reward: bool = True):  # TODO
         start_time = time.time()
 
         # 创建GPT查询类
@@ -220,7 +221,8 @@ class Planning:
         # get global reward
         reward_response, status_and_description = await InteractionMode(text_model=gpt4).get_global_reward(
                 user_request=user_request, previous_trace=previous_trace, observation=observation,
-                ground_truth_mode=ground_truth_mode, ground_truth_data=ground_truth_data, task_name_id=task_name_id)
+                current_info=current_info, ground_truth_mode=ground_truth_mode, ground_truth_data=ground_truth_data,
+                task_name_id=task_name_id)
 
         # 构建planning prompt及查询
         status_description = ""
