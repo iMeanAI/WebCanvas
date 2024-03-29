@@ -46,6 +46,7 @@ def write_result_to_excel(
         url_list.append("finished")
         step_reward_list.append("finished")
         previous_trace_list.append("finished")
+        error_message_list.append(" ")
 
     # cleaned_task_name = re.sub(r'[\\/:*?"<>|]', '', task_name)
 
