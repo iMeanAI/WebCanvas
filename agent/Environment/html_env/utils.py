@@ -95,6 +95,11 @@ def stringfy_selector(string: str):
         string = f"\\{'{:X}'.format(ord(string[0]))}" + " " + string[1:]
     return string
 
+def stringfy_value(string):
+    special_chars = '#.>+~[]():*^$|=@\''
+    for char in special_chars:
+        string = string.replace(char, '\\' + char)
+    return rf"{string}"
 
 __all__ = [
     "ElementNode",
@@ -102,5 +107,6 @@ __all__ = [
     "DelTagNameList",
     "ConditionTagNameList",
     "TypeList",
-    "stringfy_selector"
+    "stringfy_selector",
+    "stringfy_value"
 ]

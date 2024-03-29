@@ -14,6 +14,7 @@ import re
 
 from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
+from .utils import stringfy_value
 import time
 
 from agent.Prompt import *
@@ -207,11 +208,12 @@ class AsyncHTMLEnvironment:
             try:
                 self.last_page = self.page
                 selector = rf"{selector}"
+                value = stringfy_value(action['fill_text'])
                 await self.page.evaluate(f'''
                     (selector) => {{
                         var element = document.querySelector(selector);
                         if (element) {{
-                            element.value = '{action['fill_text']}';
+                            element.value = '{value}';
                             element.dispatchEvent(new Event('input', {{ bubbles: true }}));
                             element.dispatchEvent(new KeyboardEvent('keydown', {{ key: 'Enter' }}));
                         }}
@@ -243,10 +245,11 @@ class AsyncHTMLEnvironment:
             try:
                 self.last_page = self.page
                 selector = rf"{selector}"
+                value = stringfy_value(action['fill_text'])
                 await self.page.evaluate(f'''(selector) => {{
                         var element = document.querySelector(selector);
                         if (element) {{
-                            element.value = '{action['fill_text']}';
+                            element.value = '{value}';
                             element.dispatchEvent(new Event('input', {{ bubbles: true }}));
                         }}
                     }}
