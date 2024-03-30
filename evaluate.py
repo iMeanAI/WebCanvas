@@ -41,10 +41,10 @@ task_mode = "experiment_tasks"  # "experiment_tasks" or "single_task"
 single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
 ground_truth_mode = args.ground_truth_mode
 # - setting: file path of experiment_tasks reference data
-ground_truth_file_path = "./data/ground_truth/sample.json"
+ground_truth_file_path = "data/ground_truth/GTR_tasks_instructions_0329_FOR_sample_all_data_0327.json"
 
 
-def read_file(file_path="./data/data_0328/all_data_0328.json"):
+def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json"):
     '''读取标签数据'''
     return_list = []
     with open(file_path, encoding='utf-8') as f:
@@ -323,8 +323,8 @@ async def main(num_steps=0, mode="dom"):
     # for task_index in range(raw_data_start_index, raw_data_end_index):
 
     if task_mode == "experiment_tasks":
-        task_range1 = range(raw_data_start_index, raw_data_end_index)
-        task_range = score_dif
+        task_range = range(raw_data_start_index, raw_data_end_index)
+        task_range1 = score_dif
     elif task_mode == "single_task":
         task_range = [1]
 
