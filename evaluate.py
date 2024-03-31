@@ -37,6 +37,7 @@ args = parser.parse_args()
 interaction_mode = args.mode
 raw_data_index = args.index
 # setting is below
+global_reward_mode = "dom_vision_reward"  # "dom_vision_reward" or "dom_reward" or "vision_reward"
 task_mode = "experiment_tasks"  # "experiment_tasks" or "single_task"
 single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
 ground_truth_mode = args.ground_truth_mode
@@ -410,6 +411,7 @@ async def main(num_steps=0, mode="dom"):
 
         observation = ""
         observation_VforD = ""
+        vision_reward = None
         await env.reset("about:blank")
         current_info = {
             "URL": env.page.url
@@ -466,6 +468,7 @@ async def main(num_steps=0, mode="dom"):
                                                         ground_truth_mode=ground_truth_mode,
                                                         ground_truth_data=ground_truth_data,
                                                         task_name_id=task_name_id,
+                                                        global_reward_mode=global_reward_mode,
                                                         current_info=current_info)
                     if dict_to_write is not None:
                         break
@@ -519,9 +522,6 @@ async def main(num_steps=0, mode="dom"):
                 else:
                     observation = await env.get_obs()
 
-                current_info = {
-                    "URL": env.page.url
-                }
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
                 error_message_list.append(error_message)
@@ -574,9 +574,21 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace.append(current_trace)
             previoust_trace_list.append(previous_trace)
 
-            print(
-                f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
-            current_info = {"URL": env.page.url}
+            if "vision" in global_reward_mode:
+                vision_reward = await env.capture()
+                save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
+                                step_number=num_steps, description="reward",
+                                screenshot_base64=vision_reward, task_name_id=task_name_id)
+                print(f"{global_reward_mode} mode's vision_reward finished!")
+            # GlobalReward(ground truth) 和 增加error 共用
+            current_info = {
+                "URL": env.page.url
+            }
+            if vision_reward:
+                current_info.update({"vision_reward": vision_reward})
+
+            print(f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
+
             step_increase, encountered_errors = await adjust_max_action_step(
                 conditions, current_info, encountered_errors, increase_step)
             additional_steps += step_increase
