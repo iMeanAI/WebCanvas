@@ -113,7 +113,7 @@ class BasePrompts:
         **Key Information**:
             - Previous trace: all thoughts, actions and reflections you have made historically.
             - Accessibility tree: characteristic expression of the current web page.
-            - Screenshot: visual information of the current web page.
+            - Screenshot: visual information of the current web page (may include).
         
         You also need to combine the previous trace to give the completion status of the current task.
         **Status Of Task Completion**
@@ -167,7 +167,7 @@ class BasePrompts:
             - Previous trace: all thoughts, actions and reflections you have made historically.
             - Current Webpage Information:
                 - Accessibility tree: characteristic expression of the current web page.
-                - Screenshot: visual information of the current web page.
+                - Screenshot: visual information of the current web page. (may include)
             - Reference Guide: detailed and step-by-step reference guide for completing the target task, serving as a benchmark for evaluating progress and strategizing the necessary actions.
 
         **Notes to Reference Guide**:
