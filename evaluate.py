@@ -30,14 +30,16 @@ parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vi
                          "'vision_to_dom' for vision-to-dom interaction, "
                          "'vision' for vision-based interaction, "
                          "'d_v' for DOM-based and vision-based interaction.")
-parser.add_argument("--ground_truth_mode", choices=["true", "false"], default="false",
-                    help="Choose whether to use ground truth data.")
+parser.add_argument("--ground_truth_mode", choices=["true", "false"],
+                    default="true", help="Choose whether to use ground truth data.")
+parser.add_argument("--global_reward_mode", choices=["dom_vision_reward", "dom_reward", "vision_reward"],
+                    default="dom_vision_reward", help="Choose the mode of global reward.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
 interaction_mode = args.mode
 raw_data_index = args.index
 # setting is below
-global_reward_mode = "dom_vision_reward"  # "dom_vision_reward" or "dom_reward" or "vision_reward"
+global_reward_mode = args.global_reward_mode
 task_mode = "experiment_tasks"  # "experiment_tasks" or "single_task"
 single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
 ground_truth_mode = args.ground_truth_mode
