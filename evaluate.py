@@ -435,6 +435,7 @@ async def main(num_steps=0, mode="dom"):
         match_func_result_list = []
         element_value_list = []
         error_message_list = []
+        invalid_vision_reward_num = 0
 
         task_finished = False
         step_error_count = 0
@@ -581,7 +582,10 @@ async def main(num_steps=0, mode="dom"):
                 save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
                                 step_number=num_steps, description="reward",
                                 screenshot_base64=vision_reward, task_name_id=task_name_id)
-                print(f"{global_reward_mode} mode's vision_reward finished!")
+                is_valid, message = is_valid_base64(vision_reward)
+                if not is_valid:
+                    invalid_vision_reward_num += 1
+                print(f"evaluate.py vision reward of {global_reward_mode} mode:", message)
             # GlobalReward(ground truth) 和 增加error 共用
             current_info = {
                 "URL": env.page.url
