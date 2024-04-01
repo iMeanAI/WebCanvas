@@ -633,6 +633,7 @@ async def main(num_steps=0, mode="dom"):
                 match_func_result_list=match_func_result_list,
                 element_value_list=element_value_list,
                 error_message_list=error_message_list,
+                invalid_vision_reward_num=invalid_vision_reward_num,
                 file_path=write_result_file_path
             )
 
