@@ -88,7 +88,7 @@ def is_valid_base64(s):
              and the second element is a message indicating the result or the type of error.
 
     Usage:  is_valid, message = is_valid_base64(s)
-    本函数仅用于判断图片是否是base64编码
+    This function is only used to determine whether the picture is base64 encoded.
     """
     if s is None:
         return False, "The string is None."
