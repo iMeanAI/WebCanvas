@@ -91,7 +91,7 @@ class ObservationPromptConstructor(BasePromptConstructor):
             #         f"Task completion description is {status_description}"
             if feedback != "":
                 self.prompt_user += f"Here are some other things you need to know:\n {feedback}\n"
-            self.prompt_user += observation #TODO：描述此处observation
+            self.prompt_user += f"\nHere is the accessibility tree that you should refer to for this task:\n{observation}"
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
@@ -171,7 +171,7 @@ class ObservationVisionDiscPromptConstructor(BasePromptConstructor):
             #         f"Task completion description is {status_description}"
             if feedback != "":
                 self.prompt_user += f"An invalid action description is below:\n {feedback}\n"
-            self.prompt_user += "\n" + observation
+            self.prompt_user += f"\nHere is the accessibility tree that you should refer to for this task:\n{observation}"
             if vision_disc_response:
                 self.prompt_user += "\n\nHere is a visual analysis of the webpage's screenshot:\n" + vision_disc_response
         messages = [{"role": "system", "content": self.prompt_system},
@@ -254,6 +254,7 @@ class VisionToDomPromptConstructor(BasePromptConstructor):
 
 class D_VObservationPromptConstructor(BasePromptConstructor):
     def __init__(self):
+        super().__init__()
         self.prompt_system = DomVisionPrompts.d_v_planning_prompt_system
         self.prompt_user = DomVisionPrompts.d_v_planning_prompt_user
 
@@ -284,16 +285,13 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
                 prompt_elements.append(
                     {"type": "text", "text": f"There an invalid action description is below:\n {feedback}\n"})
             prompt_elements.append(
-                {"type": "text", "text": f"current observation or Dom tree is {observation}"})
-            prompt_elements.append(
-                {"type": "text", "text": "current screenshot is:"})
+                {"type": "text", "text": f"\nHere is the accessibility tree that you should refer to for this task:\n{observation}"})
+            prompt_elements.append({"type": "text", "text": "current screenshot is:"})
             print("len of prompt_elements before observation_VforD:",
                   len(prompt_elements))
             prompt_elements_str = json5.dumps(prompt_elements)
-            print("len of prompt_elements_str before observation_VforD:", len(
-                prompt_elements_str))  # 这将打印出转换为JSON字符串的prompt_elements的长度
-            print("len of about gpt token of prompt_elements_str before observation_VforD:", len(
-                prompt_elements_str) / 5.42, "\n")
+            print("len of prompt_elements_str before observation_VforD:", len(prompt_elements_str))  # 这将打印出转换为JSON字符串的prompt_elements的长度
+            print("len of about gpt token of prompt_elements_str before observation_VforD:", len(prompt_elements_str) / 5.42, "\n")
             prompt_elements.append(
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{observation_VforD}"}})
         # 构造最终的消息负载
@@ -330,7 +328,7 @@ class VisionObservationPromptConstructor(BasePromptConstructor):
             prompt_elements.append({"type": "text", "text": trace_prompt})
 
             # 添加当前观察（图像数据）
-            prompt_elements.append({"type": "text", "text": "current observation is:"})
+            prompt_elements.append({"type": "text", "text": "The current observation is:"})
             prompt_elements.append(
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}})
 
@@ -401,7 +399,7 @@ class CurrentRewardPromptConstructor(BasePromptConstructor):
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request, stringfy_previous_trace_output=stringfy_previous_trace_output,
             stringfy_current_trace_output=stringfy_current_trace_output)
-        self.prompt_user += f"current accessibility tree is {observation}"
+        self.prompt_user += f"\nHere is the accessibility tree that you should refer to:\n{observation}"
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
