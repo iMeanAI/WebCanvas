@@ -220,11 +220,7 @@ class BasePrompts:
     ''')
 
     global_reward_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
-        "The previous trajectories(thoughts, actions and reflections) are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"\
-        "Accessibility tree here is:"
-
-    global_reward_with_GroundTruth_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
-        "The previous trajectories(thoughts, actions and reflections) are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"\
+        "The previous trajectories(thoughts, actions and reflections) are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"
 
 
     # current_reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain task.\n"\
