@@ -91,7 +91,7 @@ class ObservationPromptConstructor(BasePromptConstructor):
             #         f"Task completion description is {status_description}"
             if feedback != "":
                 self.prompt_user += f"Here are some other things you need to know:\n {feedback}\n"
-            self.prompt_user += observation #TODO：描述此处observation
+            self.prompt_user += f"\nHere is the accessibility tree that you should refer to for this task:\n{observation}"
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
@@ -171,7 +171,7 @@ class ObservationVisionDiscPromptConstructor(BasePromptConstructor):
             #         f"Task completion description is {status_description}"
             if feedback != "":
                 self.prompt_user += f"An invalid action description is below:\n {feedback}\n"
-            self.prompt_user += "\n" + observation
+            self.prompt_user += f"\nHere is the accessibility tree that you should refer to for this task:\n{observation}"
             if vision_disc_response:
                 self.prompt_user += "\n\nHere is a visual analysis of the webpage's screenshot:\n" + vision_disc_response
         messages = [{"role": "system", "content": self.prompt_system},
@@ -254,6 +254,7 @@ class VisionToDomPromptConstructor(BasePromptConstructor):
 
 class D_VObservationPromptConstructor(BasePromptConstructor):
     def __init__(self):
+        super().__init__()
         self.prompt_system = DomVisionPrompts.d_v_planning_prompt_system
         self.prompt_user = DomVisionPrompts.d_v_planning_prompt_user
 
@@ -284,16 +285,13 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
                 prompt_elements.append(
                     {"type": "text", "text": f"There an invalid action description is below:\n {feedback}\n"})
             prompt_elements.append(
-                {"type": "text", "text": f"current observation or Dom tree is {observation}"})
-            prompt_elements.append(
-                {"type": "text", "text": "current screenshot is:"})
+                {"type": "text", "text": f"\nHere is the accessibility tree that you should refer to for this task:\n{observation}"})
+            prompt_elements.append({"type": "text", "text": "current screenshot is:"})
             print("len of prompt_elements before observation_VforD:",
                   len(prompt_elements))
             prompt_elements_str = json5.dumps(prompt_elements)
-            print("len of prompt_elements_str before observation_VforD:", len(
-                prompt_elements_str))  # 这将打印出转换为JSON字符串的prompt_elements的长度
-            print("len of about gpt token of prompt_elements_str before observation_VforD:", len(
-                prompt_elements_str) / 5.42, "\n")
+            print("len of prompt_elements_str before observation_VforD:", len(prompt_elements_str))  # 这将打印出转换为JSON字符串的prompt_elements的长度
+            print("len of about gpt token of prompt_elements_str before observation_VforD:", len(prompt_elements_str) / 5.42, "\n")
             prompt_elements.append(
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{observation_VforD}"}})
         # 构造最终的消息负载
@@ -330,7 +328,7 @@ class VisionObservationPromptConstructor(BasePromptConstructor):
             prompt_elements.append({"type": "text", "text": trace_prompt})
 
             # 添加当前观察（图像数据）
-            prompt_elements.append({"type": "text", "text": "current observation is:"})
+            prompt_elements.append({"type": "text", "text": "The current observation is:"})
             prompt_elements.append(
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}})
 
@@ -349,38 +347,46 @@ class VisionObservationPromptConstructor(BasePromptConstructor):
         return str_output
 
 
-class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的prompt
+class RewardPromptConstructor(BasePromptConstructor):
     def __init__(self):
+        super().__init__()
         self.prompt_system = BasePrompts.global_reward_prompt_system
         self.prompt_user = BasePrompts.global_reward_prompt_user
 
-    # 构建reward的prompt，输出openai可解析的格式
-    def construct(self, user_request: str, stringfy_thought_and_action_output: str, observation: str = "",observationV: str = "") -> list:
-        self.prompt_user = Template(self.prompt_user).render(
+    def construct(
+            self,
+            ground_truth_mode: str,
+            global_reward_mode: str,
+            user_request: str,
+            stringfy_thought_and_action_output: str,
+            observation: str,
+            current_info=None,
+            instruction: str = ""
+    ) -> list:
+        if ground_truth_mode == "true":
+            self.prompt_system = BasePrompts.global_reward_with_GroundTruth_prompt_system
+        rendered_prompt = Template(self.prompt_user).render(
             user_request=user_request, stringfy_thought_and_action_output=stringfy_thought_and_action_output)
-        self.prompt_user += observation
-        messages = [{"role": "system", "content": self.prompt_system}, {
-            "role": "user", "content": self.prompt_user}]
-        return messages
-
-
-class RewardWithGroundTruthPromptConstructor(BasePromptConstructor):
-    def __init__(self):
-        super().__init__()
-        self.prompt_system = BasePrompts.global_reward_with_GroundTruth_prompt_system
-        self.prompt_user = BasePrompts.global_reward_with_GroundTruth_prompt_user
-
-    def construct(self, user_request: str, stringfy_thought_and_action_output: str, observation: str = "",
-                  current_info=None, observationV: str = "", instruction: str = "") -> list:
-        self.prompt_user = Template(self.prompt_user).render(
-            user_request=user_request, stringfy_thought_and_action_output=stringfy_thought_and_action_output)
-        if current_info:
+        prompt_elements = [{"type": "text", "text": rendered_prompt}]
+        if 'current_url' in current_info:
             current_url = current_info.get('current_url', 'not available')
-        self.prompt_user += f"The current url is {current_url}\n"
-        self.prompt_user += f"Here is the current accessibility tree that you should refer to:\n{observation}"
-        self.prompt_user += f"\n\nHere is the Reference Guide for the target task:\n\n{instruction}"
+            prompt_elements.append({"type": "text", "text": f"The current url is {current_url}"})
+        prompt_elements.append(
+            {"type": "text", "text": f"Here is the current accessibility tree that you should refer to:\n{observation}"})
+        if "vision" in global_reward_mode:
+            if "vision_reward" in current_info and current_info['vision_reward']:
+                prompt_elements.append(
+                    {"type": "text", "text": "The current screenshot is:"})
+                prompt_elements.append(
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{current_info['vision_reward']}"}})
+            else:
+                prompt_elements.append({"type": "text", "text": "The current screenshot is not available."})
+                print("The current screenshot for vision reward is not available.")
+        if ground_truth_mode == "true":
+            prompt_elements.append(
+                {"type": "text", "text": f"Here is the Reference Guide for the target task:\n\n{instruction}"})
         messages = [{"role": "system", "content": self.prompt_system},
-                    {"role": "user", "content": self.prompt_user}]
+                    {"role": "user", "content": prompt_elements}]
         return messages
 
 
@@ -401,7 +407,7 @@ class CurrentRewardPromptConstructor(BasePromptConstructor):
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request, stringfy_previous_trace_output=stringfy_previous_trace_output,
             stringfy_current_trace_output=stringfy_current_trace_output)
-        self.prompt_user += f"current accessibility tree is {observation}"
+        self.prompt_user += f"\nHere is the accessibility tree that you should refer to:\n{observation}"
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages

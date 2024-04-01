@@ -113,7 +113,7 @@ class BasePrompts:
         **Key Information**:
             - Previous trace: all thoughts, actions and reflections you have made historically.
             - Accessibility tree: characteristic expression of the current web page.
-            - Screenshot: visual information of the current web page.
+            - Screenshot: visual information of the current web page (may include).
         
         You also need to combine the previous trace to give the completion status of the current task.
         **Status Of Task Completion**
@@ -167,7 +167,7 @@ class BasePrompts:
             - Previous trace: all thoughts, actions and reflections you have made historically.
             - Current Webpage Information:
                 - Accessibility tree: characteristic expression of the current web page.
-                - Screenshot: visual information of the current web page.
+                - Screenshot: visual information of the current web page. (may include)
             - Reference Guide: detailed and step-by-step reference guide for completing the target task, serving as a benchmark for evaluating progress and strategizing the necessary actions.
 
         **Notes to Reference Guide**:
@@ -220,11 +220,7 @@ class BasePrompts:
     ''')
 
     global_reward_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
-        "The previous trajectories(thoughts, actions and reflections) are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"\
-        "Accessibility tree here is:"
-
-    global_reward_with_GroundTruth_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
-        "The previous trajectories(thoughts, actions and reflections) are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"\
+        "The previous trajectories(thoughts, actions and reflections) are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"
 
 
     # current_reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain task.\n"\

@@ -30,21 +30,24 @@ parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vi
                          "'vision_to_dom' for vision-to-dom interaction, "
                          "'vision' for vision-based interaction, "
                          "'d_v' for DOM-based and vision-based interaction.")
-parser.add_argument("--ground_truth_mode", choices=["true", "false"], default="false",
-                    help="Choose whether to use ground truth data.")
+parser.add_argument("--ground_truth_mode", choices=["true", "false"],
+                    default="true", help="Choose whether to use ground truth data.")
+parser.add_argument("--global_reward_mode", choices=["dom_vision_reward", "dom_reward", "vision_reward"],
+                    default="dom_vision_reward", help="Choose the mode of global reward.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
 interaction_mode = args.mode
 raw_data_index = args.index
 # setting is below
+global_reward_mode = args.global_reward_mode
 task_mode = "experiment_tasks"  # "experiment_tasks" or "single_task"
 single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
 ground_truth_mode = args.ground_truth_mode
 # - setting: file path of experiment_tasks reference data
-ground_truth_file_path = "./data/ground_truth/sample.json"
+ground_truth_file_path = "data/ground_truth/GTR_tasks_instructions_0329_FOR_sample_all_data_0327.json"
 
 
-def read_file(file_path="./data/data_0328/all_data_0328.json"):
+def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json"):
     '''读取标签数据'''
     return_list = []
     with open(file_path, encoding='utf-8') as f:
@@ -323,8 +326,8 @@ async def main(num_steps=0, mode="dom"):
     # for task_index in range(raw_data_start_index, raw_data_end_index):
 
     if task_mode == "experiment_tasks":
-        task_range1 = range(raw_data_start_index, raw_data_end_index)
-        task_range = score_dif
+        task_range = range(raw_data_start_index, raw_data_end_index)
+        task_range1 = score_dif
     elif task_mode == "single_task":
         task_range = [1]
 
@@ -410,6 +413,7 @@ async def main(num_steps=0, mode="dom"):
 
         observation = ""
         observation_VforD = ""
+        vision_reward = None
         await env.reset("about:blank")
         current_info = {
             "URL": env.page.url
@@ -431,6 +435,7 @@ async def main(num_steps=0, mode="dom"):
         match_func_result_list = []
         element_value_list = []
         error_message_list = []
+        invalid_vision_reward_num = 0
 
         task_finished = False
         step_error_count = 0
@@ -466,6 +471,7 @@ async def main(num_steps=0, mode="dom"):
                                                         ground_truth_mode=ground_truth_mode,
                                                         ground_truth_data=ground_truth_data,
                                                         task_name_id=task_name_id,
+                                                        global_reward_mode=global_reward_mode,
                                                         current_info=current_info)
                     if dict_to_write is not None:
                         break
@@ -519,9 +525,6 @@ async def main(num_steps=0, mode="dom"):
                 else:
                     observation = await env.get_obs()
 
-                current_info = {
-                    "URL": env.page.url
-                }
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
                 error_message_list.append(error_message)
@@ -574,9 +577,24 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace.append(current_trace)
             previoust_trace_list.append(previous_trace)
 
-            print(
-                f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
-            current_info = {"URL": env.page.url}
+            if "vision" in global_reward_mode:
+                vision_reward = await env.capture()
+                save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
+                                step_number=num_steps, description="reward",
+                                screenshot_base64=vision_reward, task_name_id=task_name_id)
+                is_valid, message = is_valid_base64(vision_reward)
+                if not is_valid:
+                    invalid_vision_reward_num += 1
+                print(f"evaluate.py vision reward of {global_reward_mode} mode:", message)
+            # GlobalReward(ground truth) 和 增加error 共用
+            current_info = {
+                "URL": env.page.url
+            }
+            if vision_reward:
+                current_info.update({"vision_reward": vision_reward})
+
+            print(f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
+
             step_increase, encountered_errors = await adjust_max_action_step(
                 conditions, current_info, encountered_errors, increase_step)
             additional_steps += step_increase
@@ -621,6 +639,7 @@ async def main(num_steps=0, mode="dom"):
                 match_func_result_list=match_func_result_list,
                 element_value_list=element_value_list,
                 error_message_list=error_message_list,
+                invalid_vision_reward_num=invalid_vision_reward_num,
                 file_path=write_result_file_path
             )
 

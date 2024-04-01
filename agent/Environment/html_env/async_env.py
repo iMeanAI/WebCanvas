@@ -538,8 +538,6 @@ class AsyncHTMLEnvironment:
         if not self.page:
             raise ValueError("Page not initialized or loaded.")
 
-        # await self.page.wait_for_load_state("load")
-        # await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
         # 捕获屏幕截图
         screenshot_bytes = ""
         for i in range(6):
@@ -556,7 +554,7 @@ class AsyncHTMLEnvironment:
         # 接着，使用 convert("RGB") 方法将图像转换为 RGB 格式。
         screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGB")
         encoded_screenshot = self.encode_and_resize(screenshot)
-        # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+        # 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
         is_valid, message = is_valid_base64(
             encoded_screenshot)
         print("async_env.py encoded_screenshot:", message)
