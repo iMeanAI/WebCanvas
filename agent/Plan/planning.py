@@ -14,19 +14,27 @@ class InteractionMode:
     def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         pass
 
-    async def get_global_reward(self, user_request, previous_trace, observation, current_info, ground_truth_mode, ground_truth_data=None, task_name_id=None):
+    async def get_global_reward(self, user_request, previous_trace, observation, current_info, ground_truth_mode,
+                                global_reward_mode, ground_truth_data=None, task_name_id=None):
         status_and_description = None
         if len(previous_trace) > 0:
             stringfy_thought_and_action_output = ObservationPromptConstructor().stringfy_thought_and_action(
                 previous_trace)
             if ground_truth_mode == "false":
                 reward_request = RewardPromptConstructor().construct(
-                    user_request, stringfy_thought_and_action_output, observation)
+                    ground_truth_mode=ground_truth_mode,
+                    global_reward_mode=global_reward_mode,
+                    user_request=user_request,
+                    stringfy_thought_and_action_output=stringfy_thought_and_action_output,
+                    observation=observation,
+                    current_info=current_info)
             elif ground_truth_mode == "true":
                 for item in ground_truth_data:
                     if item.get("index") == task_name_id:
                         instruction = item["instruction"]
-                        reward_request = RewardWithGroundTruthPromptConstructor().construct(
+                        reward_request = RewardPromptConstructor().construct(
+                            ground_truth_mode=ground_truth_mode,
+                            global_reward_mode=global_reward_mode,
                             user_request=user_request,
                             stringfy_thought_and_action_output=stringfy_thought_and_action_output,
                             observation=observation,
@@ -36,14 +44,22 @@ class InteractionMode:
                 else:
                     print("No task found in the ground truth data.")
                     reward_request = RewardPromptConstructor().construct(
-                        user_request, stringfy_thought_and_action_output, observation)
+                        ground_truth_mode="false",
+                        global_reward_mode=global_reward_mode,
+                        user_request=user_request,
+                        stringfy_thought_and_action_output=stringfy_thought_and_action_output,
+                        observation=observation,
+                        current_info=current_info)
             # print(f"\033[32mGlobal_reward_Request{reward_request}")  # 绿色
             # print("\033[0m")
-            print_info(f"Global_Reward_Request:\n{reward_request}", "\033[32m")  # 绿色
+            print_info(f"Global_Reward_Request:\n{print_limited_json(reward_request, limit=1000)}", "\033[32m")  # 绿色
             reward_response = ""
             for i in range(3):
                 try:
-                    reward_response, error_message = await self.text_model.request(reward_request)
+                    if "vision" in global_reward_mode:
+                        reward_response, error_message = await self.visual_model.request(reward_request)
+                    else:
+                        reward_response, error_message = await self.text_model.request(reward_request)
                     status_and_description = ActionParser().extract_status_and_description(
                         reward_response)
                     break
