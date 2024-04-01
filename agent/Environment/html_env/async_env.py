@@ -1,6 +1,7 @@
 from typing import Tuple, Any, Union
 
 from playwright.async_api import async_playwright, Page
+from playwright.async_api import Error as PlaywrightError
 from playwright.sync_api import ViewportSize
 from urllib.parse import urlparse, urljoin
 from beartype import beartype
@@ -91,6 +92,8 @@ class AsyncHTMLEnvironment:
         try:
             # if self.mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
             print("async_env.py now in _get_obs method")
+            if not self.html_content.strip():
+                self.html_content = await self.retry_content() 
             self.tree.fetch_html_content(self.html_content)
             print(
                 "async_env.py _get_obs fetch_html_content(self.html_content) finished!")
@@ -590,6 +593,22 @@ class AsyncHTMLEnvironment:
                 return  # 成功加载页面，退出循环
             except TimeoutError:
                 print(f"页面加载超时，重试中 ({retry_count + 1}/{max_retries})")
+                retry_count += 1
+        print("达到最大重试次数，无法加载页面。")
+
+    async def retry_content(self, max_retries=3):
+        retry_count = 0
+        while retry_count < max_retries:
+            try:
+                await self.page.reload()
+                await self.page.wait_for_timeout(3000)
+                await self.page.wait_for_load_state('networkidle')
+                content = await self.page.content()
+                if not content.strip():
+                    raise ValueError("页面内容为空")
+                return content
+            except PlaywrightError as e:
+                print(f"页面加载超时或发生错误，重试中 ({retry_count + 1}/{max_retries}): {e}")
                 retry_count += 1
         print("达到最大重试次数，无法加载页面。")
     
