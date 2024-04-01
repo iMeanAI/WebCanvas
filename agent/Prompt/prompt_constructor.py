@@ -347,38 +347,46 @@ class VisionObservationPromptConstructor(BasePromptConstructor):
         return str_output
 
 
-class RewardPromptConstructor(BasePromptConstructor):  # 类：构建reward的prompt
+class RewardPromptConstructor(BasePromptConstructor):
     def __init__(self):
+        super().__init__()
         self.prompt_system = BasePrompts.global_reward_prompt_system
         self.prompt_user = BasePrompts.global_reward_prompt_user
 
-    # 构建reward的prompt，输出openai可解析的格式
-    def construct(self, user_request: str, stringfy_thought_and_action_output: str, observation: str = "",observationV: str = "") -> list:
-        self.prompt_user = Template(self.prompt_user).render(
+    def construct(
+            self,
+            ground_truth_mode: str,
+            global_reward_mode: str,
+            user_request: str,
+            stringfy_thought_and_action_output: str,
+            observation: str,
+            current_info=None,
+            instruction: str = ""
+    ) -> list:
+        if ground_truth_mode == "true":
+            self.prompt_system = BasePrompts.global_reward_with_GroundTruth_prompt_system
+        rendered_prompt = Template(self.prompt_user).render(
             user_request=user_request, stringfy_thought_and_action_output=stringfy_thought_and_action_output)
-        self.prompt_user += observation
-        messages = [{"role": "system", "content": self.prompt_system}, {
-            "role": "user", "content": self.prompt_user}]
-        return messages
-
-
-class RewardWithGroundTruthPromptConstructor(BasePromptConstructor):
-    def __init__(self):
-        super().__init__()
-        self.prompt_system = BasePrompts.global_reward_with_GroundTruth_prompt_system
-        self.prompt_user = BasePrompts.global_reward_with_GroundTruth_prompt_user
-
-    def construct(self, user_request: str, stringfy_thought_and_action_output: str, observation: str = "",
-                  current_info=None, observationV: str = "", instruction: str = "") -> list:
-        self.prompt_user = Template(self.prompt_user).render(
-            user_request=user_request, stringfy_thought_and_action_output=stringfy_thought_and_action_output)
-        if current_info:
+        prompt_elements = [{"type": "text", "text": rendered_prompt}]
+        if 'current_url' in current_info:
             current_url = current_info.get('current_url', 'not available')
-        self.prompt_user += f"The current url is {current_url}\n"
-        self.prompt_user += f"Here is the current accessibility tree that you should refer to:\n{observation}"
-        self.prompt_user += f"\n\nHere is the Reference Guide for the target task:\n\n{instruction}"
+            prompt_elements.append({"type": "text", "text": f"The current url is {current_url}"})
+        prompt_elements.append(
+            {"type": "text", "text": f"Here is the current accessibility tree that you should refer to:\n{observation}"})
+        if "vision" in global_reward_mode:
+            if "vision_reward" in current_info and current_info['vision_reward']:
+                prompt_elements.append(
+                    {"type": "text", "text": "The current screenshot is:"})
+                prompt_elements.append(
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{current_info['vision_reward']}"}})
+            else:
+                prompt_elements.append({"type": "text", "text": "The current screenshot is not available."})
+                print("The current screenshot for vision reward is not available.")
+        if ground_truth_mode == "true":
+            prompt_elements.append(
+                {"type": "text", "text": f"Here is the Reference Guide for the target task:\n\n{instruction}"})
         messages = [{"role": "system", "content": self.prompt_system},
-                    {"role": "user", "content": self.prompt_user}]
+                    {"role": "user", "content": prompt_elements}]
         return messages
 
 
