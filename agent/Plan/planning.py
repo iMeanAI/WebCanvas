@@ -70,6 +70,7 @@ class InteractionMode:
                     # logger.error(f"Error in reward_response: {e}")
                     continue
             print(f"\033[34mGlobal_Reward_Response:\n{reward_response}")  # 蓝色
+
             print("\033[0m")
         else:
             reward_response = ""
@@ -199,12 +200,8 @@ class DVMode(InteractionMode):
         # d_v模式的代码
         planning_request = D_VObservationPromptConstructor().construct(
             user_request, previous_trace, observation, observation_VforD, feedback, status_description)
-        # print(f"\033[32m{planning_request}")  # 绿色 涉及到图片
-        # display_string = planning_request[:100] # 截取字符串的前 max_length 个字符
-        # print(f"\033[32m{display_string}")
 
-        print(
-            f"\033[32mplanning_request:\n{print_limited_json(planning_request, limit=1000)}")
+        print(f"\033[32mplanning_request:\n{print_limited_json(planning_request, limit=1000)}")
         print("\033[0m")
         planning_response, error_message = await self.visual_model.request(planning_request)
         return planning_response, error_message, None, None
