@@ -577,21 +577,21 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace.append(current_trace)
             previoust_trace_list.append(previous_trace)
 
-            if "vision" in global_reward_mode:
-                vision_reward = await env.capture()
-                save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
-                                step_number=num_steps, description="reward",
-                                screenshot_base64=vision_reward, task_name_id=task_name_id)
-                is_valid, message = is_valid_base64(vision_reward)
-                if not is_valid:
-                    invalid_vision_reward_num += 1
-                print(f"evaluate.py vision reward of {global_reward_mode} mode:", message)
             # GlobalReward(ground truth) 和 增加error 共用
             current_info = {
                 "URL": env.page.url
             }
-            if vision_reward:
-                current_info.update({"vision_reward": vision_reward})
+            if "vision" in global_reward_mode:
+                vision_reward = await env.capture()
+                vision_reward_is_valid, message = is_valid_base64(vision_reward)
+                if vision_reward_is_valid:
+                    save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
+                                    step_number=num_steps, description="reward",
+                                    screenshot_base64=vision_reward, task_name_id=task_name_id)
+                    current_info.update({"vision_reward": vision_reward})
+                else:
+                    invalid_vision_reward_num += 1
+                print(f"evaluate.py vision reward of {global_reward_mode} mode:", message)
 
             print(f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
 
