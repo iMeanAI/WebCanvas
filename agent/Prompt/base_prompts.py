@@ -52,11 +52,14 @@ class BasePrompts:
             - Under the following conditions, you are restricted to using the `google_search` or `goto` tools exclusively: 
                 1. In the initial step of a process or when there's no preceding interaction history (i.e., the previous trace is empty). 
                 2. In situations where the accessibility tree is absent or not provided.
-            - When performing a search on a website, if you find the search results do not display sufficient content, consider simplifying or modifying your search query. Reducing the complexity of your search query or altering keywords may yield more comprehensive results.
             - Your action should not be the same as last step's action.
             - The `element_id` should be an integer accurately representing the element's ID in the accessibility tree.
             - AVOID using the provided example's element_id as your output.
             - The output JSON blob must be valid; otherwise, it cannot be recognized.
+        
+        **Special Circumstances Guidelines**:
+            - When performing a search on a website, if you find the search results do not display sufficient content, consider simplifying or modifying your search query. Reducing the complexity of your search query or altering keywords may yield more comprehensive results.
+        
         Please ensure the accuracy of your output, as we will execute subsequent steps based on the `action`, `action_input` and `element_id` you provide.
         
         **Output Requirements**:
@@ -103,13 +106,14 @@ class BasePrompts:
     #TODO: previous trace里面包含了reward，需描述一下
     #TODO: 调整一下global reward的例子，给个3分的样例 @sida
     #TODO：在有ground truth实验时，加入url的设计
-    global_reward_prompt_system = '''You are an assistant to help navigate and operate the web page to achieve certain task.
+    global_reward_prompt_system = ('''\
+        You are an assistant to help navigate and operate the web page to achieve certain task.
         Your goal is to evaluate the previous series of traces(thoughts and actions) and think about what key steps are needed to complete the task in the future.
-        There are key information you will get:"
+        There are key information you will get:
         **Key Information**:
             - Previous trace: all thoughts, actions and reflections you have made historically.
             - Accessibility tree: characteristic expression of the current web page.
-            - Screenshot: screenshot information of the current web page.
+            - Screenshot: visual information of the current web page (may include).
         
         You also need to combine the previous trace to give the completion status of the current task.
         **Status Of Task Completion**
@@ -144,7 +148,7 @@ class BasePrompts:
                 "description": "ACTUAL_DESCRIPTION"
             }
             ```
-         - A VALID JSON BLOB EXAMPLE AS FELLOWS:
+        - A VALID JSON BLOB EXAMPLE AS FELLOWS:
             ```
             {
                 "status": "doing",
@@ -153,11 +157,71 @@ class BasePrompts:
                 "description": "According to the current web page information, you can know that this is the homepage of a tent product, which is not very consistent with the purpose of the target task. The next overall plan to complete this task is to return to the previous page and select the sort by button."
             }
             ```
-    '''
+    ''')
+
+    global_reward_with_GroundTruth_prompt_system = ('''\
+        You are an assistant to help navigate and operate the web page to achieve certain task.
+        Your goal is to evaluate the previous series of traces(thoughts and actions) and think about what key steps are needed to complete the task in the future.
+        There are key information you will get:
+        **Key Information**:
+            - Previous trace: all thoughts, actions and reflections you have made historically.
+            - Current Webpage Information:
+                - Accessibility tree: characteristic expression of the current web page.
+                - Screenshot: visual information of the current web page. (may include)
+            - Reference Guide: detailed and step-by-step reference guide for completing the target task, serving as a benchmark for evaluating progress and strategizing the necessary actions.
+
+        **Notes to Reference Guide**:
+            - The Reference Guide plays a crucial role in aiding the evaluation of the current Status of Task Completion. The 'Completion Verification' section within the Reference Guide is instrumental in determining whether a task can be classified as 'finished.'
+            - Furthermore, for a task to be considered fully completed, all **key conditions** must be met as specified.
+
+
+        You also need to combine the previous trace to give the completion status of the current task.
+        **Status of Task Completion**
+            - doing: You have completed the intermediate steps of the target task but not entirely finish the target task.
+            - finished: You are entirely certain about completing the target task.
+            - loop: You find that the the last two steps of previous actions are the same, it is determined that the process is stuck in a local optimum solution.
+
+        You will judge and score the task completion and reasonableness of previous actions. The score ranges from 1-10, but the score you give can only be selected from [1, 3, 7, 9, 10].
+        **Judging and Scoring Criteria**:
+            - score = 1: You find that the status of the task is stuck in a loop by analyzing the previous trace.
+            - score = 3: You find that performing the previous trajectories(thoughts and actions) is not likely helpful in completing target task and you need to adjust the direction of your planning and action or start over from beginning.
+            - score = 7: You find that performing the previous trajectories(thoughts and actions) are helpful in completing the target task.
+            - score = 9: You find that performing the previous trajectories(thoughts and actions) are a very critical intermediate step to complete this task.
+            - score = 10: You find that performing the previous trajectories(thoughts and actions) have completed the task perfectly.
+        You need to provide an effective evidence of scoring for the series of the previous trace.
+            - Why do you give this score? 
+            - What is the reason?
+
+        You also need to provide an effective description or summary of the above requirements through key information and characteristics of the current web page.
+        **A proper description contains**:
+            - What is the current completion status of the task? (IMPORTNAT)
+            - What is your overall plan for completing your goal and target task in the future? (IMPORTNAT)
+            - REMEMBER DO NOT LEAVE THE DESCRIPTION EMPTY!
+
+        **Output Requirements**:
+        - Ensure your output strictly follows this format:
+            ```json
+            {
+                "status": "ACTUAL_STATUS",
+                "score": "ACTUAL_SCORE",
+                "reason": "ACTUAL_REASON",
+                "description": "ACTUAL_DESCRIPTION"
+            }
+            ```
+        - A VALID JSON BLOB EXAMPLE AS FELLOWS:
+            ```
+            {
+                "status": "doing",
+                "score": "3",
+                "reason": "You need to complete a search for camping tents that can accommodate 2 people and sort the results in rei by price from low to high. According to your previous trajectory, you navigated to the rei official website and clicked the 2-person button, which are correct actions. But when you complete the final step of sorting prices, you actually click on a link to a tent product. This is a completely unreasonable action. So I give it 3 points. Maybe you need to return to the previous interface to re-plan and select the 'sort by' button"
+                "description": "According to the current web page information, you can know that this is the homepage of a tent product, which is not very consistent with the purpose of the target task. The next overall plan to complete this task is to return to the previous page and select the sort by button."
+            }
+            ```
+    ''')
 
     global_reward_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
-        "The previous trajectories(thoughts, actions and reflections) are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"\
-        "Accessibility tree here is:"
+        "The previous trajectories(thoughts, actions and reflections) are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"
+
 
     # current_reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain task.\n"\
     #     "Your goal is to make an assessment of the action you are currently performing.\n There are key information you will get：\n"\

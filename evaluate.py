@@ -13,6 +13,8 @@ import asyncio
 import argparse
 import toml
 
+# universal tools
+from agent.Utils.utils import *
 # evaluate tools
 from evaluate_utils import *
 
@@ -28,13 +30,24 @@ parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vi
                          "'vision_to_dom' for vision-to-dom interaction, "
                          "'vision' for vision-based interaction, "
                          "'d_v' for DOM-based and vision-based interaction.")
+parser.add_argument("--ground_truth_mode", choices=["true", "false"],
+                    default="true", help="Choose whether to use ground truth data.")
+parser.add_argument("--global_reward_mode", choices=["dom_vision_reward", "dom_reward", "vision_reward"],
+                    default="dom_vision_reward", help="Choose the mode of global reward.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
 interaction_mode = args.mode
 raw_data_index = args.index
-run_mode = "test"
+# setting is below
+global_reward_mode = args.global_reward_mode
+task_mode = "experiment_tasks"  # "experiment_tasks" or "single_task"
+single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
+ground_truth_mode = args.ground_truth_mode
+# - setting: file path of experiment_tasks reference data
+ground_truth_file_path = "data/ground_truth/GTR_tasks_instructions_0329_FOR_sample_all_data_0327.json"
 
-def read_file(file_path="./data/data_0328/all_data_0328.json"):
+
+def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json"):
     '''读取标签数据'''
     return_list = []
     with open(file_path, encoding='utf-8') as f:
@@ -71,7 +84,7 @@ def read_file(file_path="./data/data_0328/all_data_0328.json"):
                                                      "reference_answer": reference_answer, "netloc": netloc,
                                                      "score": 0})
         return_list.append(
-            [task_name, task_name_id,reference_task_length, reference_evaluate_steps])
+            [task_name, task_name_id, reference_task_length, reference_evaluate_steps])
     # print(return_list)
     # return_list=return_list[1:]
     return return_list
@@ -238,10 +251,10 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
     acton_input = response['value']
     action = response["description"].get("action")
     reflection = response["description"].get("reward").get("description") if response["description"].get("reward") else ""
-    current_trace = {"thought": thought, "action": action,"reflection":reflection}
+    current_trace = {"thought": thought, "action": action,"reflection": reflection}
     element_value = ""
     selector = None
-    
+
     try:
         element_id = int(response['id'])
     except:
@@ -281,11 +294,18 @@ async def get_observation(mode: str, env: AsyncHTMLEnvironment, action: Action):
 
 
 async def main(num_steps=0, mode="dom"):
+    # result record for experiments_tasks
     record_time_short = time.strftime("%Y%m%d", time.localtime())
     record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
     write_result_file_path = f"./csv_results/group_sample_{record_time_short}/{mode}_{record_time}"
 
-    file = read_file()
+    # get reference data in experiment_tasks mode
+    file = None
+    ground_truth_data = None
+    if task_mode == "experiment_tasks":
+        file = read_file()
+    if ground_truth_mode == "true":
+        ground_truth_data = read_json_file(ground_truth_file_path)
 
     with open('./configs/dom.toml', 'r') as f:
         config = toml.load(f)
@@ -302,15 +322,31 @@ async def main(num_steps=0, mode="dom"):
 
     # start_index = 1
     score_dif = [31]
-    for task_index in score_dif:
+    # for task_index in score_dif:
     # for task_index in range(raw_data_start_index, raw_data_end_index):
-        task = file[task_index]
 
-        task_name, task_name_id,reference_task_length, reference_evaluate_steps = task
-        print("task index:", task_index)
-        print("task_name:", task_name)
-        print("reference_task_length:", reference_task_length)
-        print("raw data:\n", reference_evaluate_steps)
+    if task_mode == "experiment_tasks":
+        task_range = range(raw_data_start_index, raw_data_end_index)
+        task_range1 = score_dif
+    elif task_mode == "single_task":
+        task_range = [1]
+
+    for task_index in task_range:
+        task_name_id = None
+        if task_mode == "experiment_tasks":
+            task = file[task_index]
+
+            task_name, task_name_id, reference_task_length, reference_evaluate_steps = task
+            print("task index:", task_index)
+            print("task_name:", task_name)
+            print("reference_task_length:", reference_task_length)
+            print("raw data:\n", reference_evaluate_steps)
+        elif task_mode == "single_task":
+            task_name = single_task
+            reference_task_length = 10
+            reference_evaluate_steps = []
+            print("task_name:", task_name)
+
         # #! # 1. playwright
         # # 用playwright运行浏览器
         # async def run(playwright: Playwright) -> None:
@@ -377,12 +413,12 @@ async def main(num_steps=0, mode="dom"):
 
         observation = ""
         observation_VforD = ""
+        vision_reward = None
         await env.reset("about:blank")
-        # if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-        #     observation, observation_VforD = await env.reset("about:blank")
-        #     await env.reset("about:blank")
-        # else:
-        #     observation = await env.reset("about:blank")
+        current_info = {
+            "URL": env.page.url
+        }
+
         previous_trace = []
         evaluate_steps = reference_evaluate_steps
         error_description = ""
@@ -399,7 +435,8 @@ async def main(num_steps=0, mode="dom"):
         match_func_result_list = []
         element_value_list = []
         error_message_list = []
-        
+        invalid_vision_reward_num = 0
+
         task_finished = False
         step_error_count = 0
         task_error = False
@@ -424,10 +461,18 @@ async def main(num_steps=0, mode="dom"):
             for _ in range(3):
                 try:
 
-                    dict_to_write = await Planning.plan(uuid=1, user_request=task_name,
-                                                        previous_trace=previous_trace, observation=observation,
-                                                        feedback=error_description, mode=mode,
-                                                        observation_VforD=observation_VforD)
+                    dict_to_write = await Planning.plan(uuid=1,
+                                                        user_request=task_name,
+                                                        previous_trace=previous_trace,
+                                                        observation=observation,
+                                                        feedback=error_description,
+                                                        mode=mode,
+                                                        observation_VforD=observation_VforD,
+                                                        ground_truth_mode=ground_truth_mode,
+                                                        ground_truth_data=ground_truth_data,
+                                                        task_name_id=task_name_id,
+                                                        global_reward_mode=global_reward_mode,
+                                                        current_info=current_info)
                     if dict_to_write is not None:
                         break
                 except Exception as e:
@@ -461,35 +506,25 @@ async def main(num_steps=0, mode="dom"):
                     task_finished = True
                     break
                 # input()
+                try:
+                    await env.execute_action(execute_action)
+                    previous_trace.append(current_trace)
+                    error_description = ""
+                except ActionExecutionError as ee:
+                    print(ee.message)
+                    error_message = ee.message
+                    error_description = error_message
+                    execute_action.update(
+                        {"element_id": 0, "action_type": ActionTypes.GO_BACK})
+                    await env.execute_action(execute_action)
+                print("error_description:\n", error_description)
                 if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-                    try:
-                        await env.execute_action(execute_action)
-                        previous_trace.append(current_trace)
-                        error_description = ""
-                    except ActionExecutionError as ee:
-                        print(ee.message)
-                        error_message = ee.message
-                        error_description = error_message
-                        execute_action.update(
-                            {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                        await env.execute_action(execute_action)
                     observation, observation_VforD = await env.get_obs()
                     save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
                                     step_number=num_steps, description="obs", screenshot_base64=observation_VforD)
                 else:
-                    try:
-                        await env.execute_action(execute_action)
-                        previous_trace.append(current_trace)
-                        error_description = ""
-                    except ActionExecutionError as ee:
-                        print(ee.message)
-                        error_message = ee.message
-                        error_description = error_message
-                        execute_action.update(
-                            {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                        await env.execute_action(execute_action)
                     observation = await env.get_obs()
-                print("error_description:\n",error_description)
+
                 print("执行动作后的url", env.page.url)
                 url_list.append(env.page.url)
                 error_message_list.append(error_message)
@@ -542,9 +577,24 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace.append(current_trace)
             previoust_trace_list.append(previous_trace)
 
-            print(
-                f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
-            current_info = {"URL": env.page.url}
+            if "vision" in global_reward_mode:
+                vision_reward = await env.capture()
+                save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
+                                step_number=num_steps, description="reward",
+                                screenshot_base64=vision_reward, task_name_id=task_name_id)
+                is_valid, message = is_valid_base64(vision_reward)
+                if not is_valid:
+                    invalid_vision_reward_num += 1
+                print(f"evaluate.py vision reward of {global_reward_mode} mode:", message)
+            # GlobalReward(ground truth) 和 增加error 共用
+            current_info = {
+                "URL": env.page.url
+            }
+            if vision_reward:
+                current_info.update({"vision_reward": vision_reward})
+
+            print(f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
+
             step_increase, encountered_errors = await adjust_max_action_step(
                 conditions, current_info, encountered_errors, increase_step)
             additional_steps += step_increase
@@ -589,6 +639,7 @@ async def main(num_steps=0, mode="dom"):
                 match_func_result_list=match_func_result_list,
                 element_value_list=element_value_list,
                 error_message_list=error_message_list,
+                invalid_vision_reward_num=invalid_vision_reward_num,
                 file_path=write_result_file_path
             )
 

@@ -9,7 +9,28 @@ from datetime import datetime
 
 # class Utility:
 
-def save_screenshot(mode: str, record_time: str, task_name: str, step_number: int, description: str, screenshot_base64: str):
+# data utils
+def read_json_file(file_path):
+    """
+    Read and parse a JSON file.
+
+    Args:
+    - file_path: str, the path of the JSON file.
+
+    Returns:
+    - Returns the parsed data on success.
+    - Returns an error message on failure.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            data = json5.load(file)
+            return data
+    except FileNotFoundError:
+        return f"File not found: {file_path}"
+
+
+def save_screenshot(mode: str, record_time: str, task_name: str, step_number: int, description: str,
+                    screenshot_base64: str, task_name_id: str = None):
     # 获取当前时间戳，格式为年月日时分秒
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     # 替换路径中的非法字符
@@ -18,7 +39,10 @@ def save_screenshot(mode: str, record_time: str, task_name: str, step_number: in
         task_name = task_name.replace(char, '_')
 
     # 创建任务文件夹（如果不存在）
-    task_folder = f'results/screenshots/screenshots_{mode}_{record_time}/{task_name}'
+    if task_name_id is None:
+        task_folder = f'results/screenshots/screenshots_{mode}_{record_time}/{task_name}'
+    else:
+        task_folder = f'results/screenshots/screenshots_{mode}_{record_time}/{task_name_id}_{task_name}'
     if not os.path.exists(task_folder):
         os.makedirs(task_folder)
 
@@ -68,7 +92,7 @@ def is_valid_base64(s):
              and the second element is a message indicating the result or the type of error.
 
     Usage:  is_valid, message = is_valid_base64(s)
-    本函数仅用于判断图片是否是base64编码
+    This function is only used to determine whether the picture is base64 encoded.
     """
     if s is None:
         return False, "The string is None."

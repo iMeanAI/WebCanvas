@@ -64,16 +64,15 @@ class AsyncHTMLEnvironment:
         self.browser = None
 
     async def setup(self, start_url: str) -> None:
-        if self.mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
-            self.playwright = await async_playwright().start()
-            self.browser = await self.playwright.chromium.launch(
-                headless=self.headless, slow_mo=self.slow_mo
-            )
-            self.context = await self.browser.new_context(
-                viewport=self.viewport_size,
-                device_scale_factor=1,
-                locale=self.locale
-            )
+        self.playwright = await async_playwright().start()
+        self.browser = await self.playwright.chromium.launch(
+            headless=self.headless, slow_mo=self.slow_mo
+        )
+        self.context = await self.browser.new_context(
+            viewport=self.viewport_size,
+            device_scale_factor=1,
+            locale=self.locale
+        )
         if start_url:
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
@@ -90,7 +89,6 @@ class AsyncHTMLEnvironment:
         observation = ""
         observation_VforD = ""
         try:
-            # if self.mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
             print("async_env.py now in _get_obs method")
             if not self.html_content.strip():
                 self.html_content = await self.retry_content() 
@@ -113,12 +111,6 @@ class AsyncHTMLEnvironment:
 
     async def reset(self, start_url: str = ""):
         await self.setup(start_url)
-        # if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-        #     observation, observation_VforD = await self.get_obs()
-        #     return observation, observation_VforD
-        # else:
-        #     observation = await self.get_obs()
-        #     return observation
 
     async def click(self, action):
         try:
@@ -549,8 +541,6 @@ class AsyncHTMLEnvironment:
         if not self.page:
             raise ValueError("Page not initialized or loaded.")
 
-        # await self.page.wait_for_load_state("load")
-        # await asyncio.sleep(1)  # 不等待可能会出现 Invalid base64 image_url
         # 捕获屏幕截图
         screenshot_bytes = ""
         for i in range(6):
@@ -567,7 +557,7 @@ class AsyncHTMLEnvironment:
         # 接着，使用 convert("RGB") 方法将图像转换为 RGB 格式。
         screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGB")
         encoded_screenshot = self.encode_and_resize(screenshot)
-        # byCarl: 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
+        # 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
         is_valid, message = is_valid_base64(
             encoded_screenshot)
         print("async_env.py encoded_screenshot:", message)

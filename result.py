@@ -23,6 +23,7 @@ def write_result_to_excel(
     match_func_result_list,
     element_value_list,
     error_message_list,
+    invalid_vision_reward_num,
     file_path="",
 ):
 
@@ -39,8 +40,9 @@ def write_result_to_excel(
     print("previous_trace_list len: ", len(previous_trace_list))
     print("selector_list len: ", len(selector_list))
     print("action_list len: ", len(action_list))
-    print("element_value_list len",len(element_value_list))
-    print("error_message_list len",len(error_message_list))
+    print("element_value_list len", len(element_value_list))
+    print("error_message_list len", len(error_message_list))
+    print("invalid_vision_reward_num: ", invalid_vision_reward_num)
 
     if task_finished:
         url_list.append("finished")
@@ -73,8 +75,8 @@ def write_result_to_excel(
         "selector": selector_list,
         "action": action_list,
         "match_result": match_func_result_list,
-        "element_value":element_value_list,
-        "error":error_message_list
+        "element_value": element_value_list,
+        "error": error_message_list
     })
 
     df.to_csv(csv_path)
