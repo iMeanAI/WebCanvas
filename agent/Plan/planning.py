@@ -4,6 +4,7 @@ from agent.LLM import *
 from .action import *
 import time
 import json5
+from .action import ResponseError
 
 
 class InteractionMode:
@@ -264,8 +265,12 @@ class Planning:
         print("\033[0m")
         # 提取出planning thought(str)和planning action(dict), 其中planning action拥有action, element_id, action_input, description四个字段
         if mode != "vision_to_dom":
-            planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(
-                planning_response)
+            try:
+                planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(
+                    planning_response)
+            except ResponseError as e:
+                print("Response Error:",e.message)
+                raise 
 
         if planning_response_action.get('action') == "fill_form":
             JudgeSearchbarRequest = JudgeSearchbarPromptConstructor().construct(

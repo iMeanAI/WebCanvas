@@ -332,6 +332,8 @@ async def main(num_steps=0, mode="dom"):
         task_range = [1]
 
     for task_index in task_range:
+        response_error_count = 0
+        response_total_count = 0
         task_name_id = None
         if task_mode == "experiment_tasks":
             task = file[task_index]
@@ -459,6 +461,7 @@ async def main(num_steps=0, mode="dom"):
             print("planning前previous_trace：", previous_trace)
             print("planning前observation：", observation)
             for _ in range(3):
+                response_total_count += 1
                 try:
 
                     dict_to_write = await Planning.plan(uuid=1,
@@ -476,6 +479,7 @@ async def main(num_steps=0, mode="dom"):
                     if dict_to_write is not None:
                         break
                 except Exception as e:
+                    response_error_count += 1
                     traceback.print_exc()
                     continue
 
@@ -514,9 +518,9 @@ async def main(num_steps=0, mode="dom"):
                     print(ee.message)
                     error_message = ee.message
                     error_description = error_message
-                    execute_action.update(
-                        {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                    await env.execute_action(execute_action)
+                    # execute_action.update(
+                    #     {"element_id": 0, "action_type": ActionTypes.GO_BACK})
+                    # await env.execute_action(execute_action)
                 print("error_description:\n", error_description)
                 if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                     observation, observation_VforD = await env.get_obs()
@@ -648,6 +652,7 @@ async def main(num_steps=0, mode="dom"):
             task_length_score = task_evaluator.task_length_score(
                 reference_task_length, num_steps)
             print("task_length_score:", task_length_score)
+            print("response error rate:",response_error_count/response_total_count)
 
             # finish score
             finish_task_score = FinishTaskEvaluator.finish_task_score(
