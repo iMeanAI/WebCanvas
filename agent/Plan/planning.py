@@ -230,6 +230,12 @@ class Planning:
         gpt35 = GPTGenerator35()
         gpt4 = GPTGenerator4()
         gpt4v = GPTGenerator4V()
+        text_model = "gpt-4-turbo-preview"  # 临时指定模型
+        all_json_models = ["gpt-4-turbo-preview", "gpt-4-turbo-0125", "gpt-3.5-turbo-0125", "gpt-3.5-turbo-preview"]
+        if text_model in ["gpt-4-turbo-0125", "gpt-4-turbo-preview"]:
+            gpt4 = GPTGenerator4WithJSON()
+        elif text_model in ["gpt-3.5-turbo-0125", "gpt-3.5-turbo-preview"]:
+            gpt35 = GPTGenerator35WithJSON()
 
         # get global reward
         reward_response, status_and_description = await InteractionMode(text_model=gpt4, visual_model=gpt4v).get_global_reward(
