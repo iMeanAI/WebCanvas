@@ -646,8 +646,8 @@ async def main(num_steps=0, mode="dom"):
 if __name__ == "__main__":
     # 解析命令行参数
     parser = argparse.ArgumentParser(
-        description="Run the agent in different modes.")
-    parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"], default="dom",
+        description="Run the agent in different observation modes.")
+    parser.add_argument("--observation_mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"], default="dom",
                         help="Choose interaction mode: "
                              "'dom' for DOM-based interaction, "
                              "'dom_v_desc' for DOM-based interaction with vision description,"
@@ -660,7 +660,7 @@ if __name__ == "__main__":
                         default="dom_reward", help="Choose the mode of global reward.")
     parser.add_argument("--index", "--i", type=str, default=-1)
     args = parser.parse_args()
-    interaction_mode = args.mode
+    interaction_mode = args.observation_mode
     raw_data_index = args.index
     # setting is below
     global_reward_mode = args.global_reward_mode
@@ -668,6 +668,11 @@ if __name__ == "__main__":
     single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
     ground_truth_mode = args.ground_truth_mode
     # - setting: file path of experiment_tasks reference data
-    ground_truth_file_path = "data/ground_truth/GTR_tasks_instructions_0329_FOR_sample_all_data_0327.json"
+    if ground_truth_mode == "true":
+        ground_truth_file_path = "./data/ground_truth/GTR_tasks_instructions_0329_FOR_sample_all_data_0327.json"
+        # check if ground_truth_file_path exists
+        if not os.path.exists(ground_truth_file_path):
+            print("ground_truth_file_path not exist!")
+            exit()
 
     asyncio.run(main(mode=interaction_mode))

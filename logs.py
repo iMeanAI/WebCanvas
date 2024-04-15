@@ -74,7 +74,7 @@ file_formatter = ClearColorFormatter(
 
 
 # 创建文件处理器和控制台处理器
-file_handler = logging.FileHandler(log_file_name)
+file_handler = logging.FileHandler(log_file_name, encoding='utf-8')
 file_handler.setFormatter(file_formatter)
 stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setFormatter(stream_formatter)
