@@ -30,3 +30,7 @@ test_select_option.py
 results/
 merge_data.py
 get_experiment_data.py
+logs/
+out.json
+result_logs
+json_result
