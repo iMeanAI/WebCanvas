@@ -558,21 +558,20 @@ class AsyncHTMLEnvironment:
             raise ValueError("Page not initialized or loaded.")
 
         # 捕获屏幕截图
-        screenshot_bytes = ""
-        for i in range(6):
+        encoded_screenshot = ""
+        for i in range(5):
             try:
                 screenshot_bytes = await self.page.screenshot()
+                print("async_env.py screenshot_bytes finished!")
+                # 使用 PIL 库将截图转换为 RGB 格式的图像:
+                # 使用 Python 的 BytesIO 类来处理截图的二进制数据，并使用 PIL（Python Imaging Library）库的 Image.open() 方法将其转换成一个图像对象。
+                # 接着，使用 convert("RGB") 方法将图像转换为 RGB 格式。
+                screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGB")
+                encoded_screenshot = self.encode_and_resize(screenshot)
                 break
             except:
                 print("async_env.py capture screenshot_bytes failed for", i+1, "times")
-                await asyncio.sleep(1)
-
-        print("async_env.py screenshot_bytes finished!")
-        # 使用 PIL 库将截图转换为 RGB 格式的图像:
-        # 使用 Python 的 BytesIO 类来处理截图的二进制数据，并使用 PIL（Python Imaging Library）库的 Image.open() 方法将其转换成一个图像对象。
-        # 接着，使用 convert("RGB") 方法将图像转换为 RGB 格式。
-        screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGB")
-        encoded_screenshot = self.encode_and_resize(screenshot)
+                await asyncio.sleep(2 ** i)
         # 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
         is_valid, message = is_valid_base64(
             encoded_screenshot)
