@@ -32,8 +32,10 @@ class ActionParser():
         #         result_thought = "null"
         try:
             result_action = re.findall("```(.*?)```", message, re.S)[0]
+
         except:
-            result_action = message.split("Action:")[-1].strip()
+            result_action = message
+
         result_action = self.parse_action(result_action)
         if not result_action:
             raise ResponseError("OpenAI response is an invalid JSON blob")
@@ -55,21 +57,27 @@ class ActionParser():
         return decoded_result
 
     def extract_status_and_description(self, message) -> dict:
-        result_status = "null"
-        try:
-            result_status = re.findall(
-                "status:(.*?)description:", message, re.S)[0].strip()
-            print(result_status)
-        except:
-            try:
-                result_status = message.split("description:")[0].strip()
-            except:
-                result_status = "null"
+        # result_status = "null"
+        # try:
+        #     result_status = re.findall(
+        #         "status:(.*?)description:", message, re.S)[0].strip()
+        #     print(result_status)
+        # except:
+        #     try:
+        #         result_status = message.split("description:")[0].strip()
+        #     except:
+        #         result_status = "null"
         try:
             description = re.findall("```(.*?)```", message, re.S)[0]
+            status_description = self.parse_action(description)
         except:
-            description = message.split("description:")[-1].strip()
-        status_description = self.parse_action(description)
+            try:
+                description = message
+                status_description = self.parse_action(description)
+            except:
+                description = message.split("description:")[-1].strip()
+                status_description = self.parse_action(description)
+        
         return status_description
 
     def extract_score_and_description(self, message) -> dict:

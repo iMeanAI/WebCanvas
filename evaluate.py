@@ -20,31 +20,6 @@ from evaluate_utils import *
 
 from result import write_result_to_excel
 
-# 解析命令行参数
-parser = argparse.ArgumentParser(
-    description="Run the agent in different modes.")
-parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"], default="dom",
-                    help="Choose interaction mode: "
-                         "'dom' for DOM-based interaction, "
-                         "'dom_v_desc' for DOM-based interaction with vision description,"
-                         "'vision_to_dom' for vision-to-dom interaction, "
-                         "'vision' for vision-based interaction, "
-                         "'d_v' for DOM-based and vision-based interaction.")
-parser.add_argument("--ground_truth_mode", choices=["true", "false"],
-                    default="true", help="Choose whether to use ground truth data.")
-parser.add_argument("--global_reward_mode", choices=["dom_vision_reward", "dom_reward", "vision_reward"],
-                    default="dom_vision_reward", help="Choose the mode of global reward.")
-parser.add_argument("--index", "--i", type=str, default=-1)
-args = parser.parse_args()
-interaction_mode = args.mode
-raw_data_index = args.index
-# setting is below
-global_reward_mode = args.global_reward_mode
-task_mode = "experiment_tasks"  # "experiment_tasks" or "single_task"
-single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
-ground_truth_mode = args.ground_truth_mode
-# - setting: file path of experiment_tasks reference data
-ground_truth_file_path = "data/ground_truth/GTR_tasks_instructions_0329_FOR_sample_all_data_0327.json"
 
 
 def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json"):
@@ -580,21 +555,21 @@ async def main(num_steps=0, mode="dom"):
                         previous_trace.append(current_trace)
             previoust_trace_list.append(previous_trace)
 
-            if "vision" in global_reward_mode:
-                vision_reward = await env.capture()
-                save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
-                                step_number=num_steps, description="reward",
-                                screenshot_base64=vision_reward, task_name_id=task_name_id)
-                is_valid, message = is_valid_base64(vision_reward)
-                if not is_valid:
-                    invalid_vision_reward_num += 1
-                print(f"evaluate.py vision reward of {global_reward_mode} mode:", message)
             # GlobalReward(ground truth) 和 增加error 共用
             current_info = {
                 "URL": env.page.url
             }
-            if vision_reward:
-                current_info.update({"vision_reward": vision_reward})
+            if "vision" in global_reward_mode:
+                vision_reward = await env.capture()
+                vision_reward_is_valid, message = is_valid_base64(vision_reward)
+                if vision_reward_is_valid:
+                    save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
+                                    step_number=num_steps, description="reward",
+                                    screenshot_base64=vision_reward, task_name_id=task_name_id)
+                    current_info.update({"vision_reward": vision_reward})
+                else:
+                    invalid_vision_reward_num += 1
+                print(f"evaluate.py vision reward of {global_reward_mode} mode:", message)
 
             print(f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
 
@@ -669,4 +644,30 @@ async def main(num_steps=0, mode="dom"):
 
 
 if __name__ == "__main__":
+    # 解析命令行参数
+    parser = argparse.ArgumentParser(
+        description="Run the agent in different modes.")
+    parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"], default="dom",
+                        help="Choose interaction mode: "
+                             "'dom' for DOM-based interaction, "
+                             "'dom_v_desc' for DOM-based interaction with vision description,"
+                             "'vision_to_dom' for vision-to-dom interaction, "
+                             "'vision' for vision-based interaction, "
+                             "'d_v' for DOM-based and vision-based interaction.")
+    parser.add_argument("--ground_truth_mode", choices=["true", "false"],
+                        default="true", help="Choose whether to use ground truth data.")
+    parser.add_argument("--global_reward_mode", choices=["dom_vision_reward", "dom_reward", "vision_reward"],
+                        default="dom_reward", help="Choose the mode of global reward.")
+    parser.add_argument("--index", "--i", type=str, default=-1)
+    args = parser.parse_args()
+    interaction_mode = args.mode
+    raw_data_index = args.index
+    # setting is below
+    global_reward_mode = args.global_reward_mode
+    task_mode = "experiment_tasks"  # "experiment_tasks" or "single_task"
+    single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
+    ground_truth_mode = args.ground_truth_mode
+    # - setting: file path of experiment_tasks reference data
+    ground_truth_file_path = "data/ground_truth/GTR_tasks_instructions_0329_FOR_sample_all_data_0327.json"
+
     asyncio.run(main(mode=interaction_mode))
