@@ -4,6 +4,8 @@ from agent.LLM import *
 from .action import *
 import time
 import json5
+from .action import ResponseError
+from logs import logger
 
 
 class InteractionMode:
@@ -42,7 +44,7 @@ class InteractionMode:
                             instruction=instruction)
                         break
                 else:
-                    print("No task found in the ground truth data.")
+                    logger.info("No task found in the ground truth data.")
                     reward_request = RewardPromptConstructor().construct(
                         ground_truth_mode="false",
                         global_reward_mode=global_reward_mode,
@@ -52,7 +54,8 @@ class InteractionMode:
                         current_info=current_info)
             # print(f"\033[32mGlobal_reward_Request{reward_request}")  # 绿色
             # print("\033[0m")
-            print_info(f"Global_Reward_Request:\n{print_limited_json(reward_request, limit=1000)}", "\033[32m")  # 绿色
+            print_info(
+                f"Global_Reward_Request:\n{print_limited_json(reward_request, limit=1000)}", "\033[32m")  # 绿色
             reward_response = ""
             for i in range(3):
                 try:
@@ -64,14 +67,16 @@ class InteractionMode:
                         reward_response)
                     break
                 except Exception as e:
-                    traceback.print_exc()
-                    print(
+                    logger.error(traceback.format_exc())
+                    # traceback.print_exc()
+                    logger.info(
                         f"planning reward_response or status_and_description error for {i+1} times")
-                    # logger.error(f"Error in reward_response: {e}")
+                    # print(
+                    #     f"planning reward_response or status_and_description error for {i+1} times")
                     continue
-            print(f"\033[34mGlobal_Reward_Response:\n{reward_response}")  # 蓝色
-
-            print("\033[0m")
+            # print(f"\033[34mGlobal_Reward_Response:\n{reward_response}")  # 蓝色
+            logger.info(
+                f"\033[34mGlobal_Reward_Response:\n{reward_response}\033[34m")
         else:
             reward_response = ""
         return reward_response, status_and_description
@@ -84,8 +89,10 @@ class DomMode(InteractionMode):
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         planning_request = ObservationPromptConstructor().construct(
             user_request, previous_trace, observation, feedback, status_description)
-        print(f"\033[32m{planning_request}")  # 绿色
-        print("\033[0m")
+        # print(f"\033[32m{planning_request}")  # 绿色
+        # print("\033[0m")
+        logger.info(
+            f"\033[32mDOM_based_planning_request:\n{planning_request}\033[0m")
         planning_response, error_message = await self.text_model.request(planning_request)
         return planning_response, error_message, None, None
 
@@ -126,7 +133,8 @@ class VisionToDomMode(InteractionMode):
         max_retries = 3  # 设置最大重试次数为3
         for attempt in range(max_retries):
             vision_act_response, error_message = await self.visual_model.request(vision_act_request)
-            print(f"\033[36mvision_act_response:\n{vision_act_response}")  # 蓝色输出
+            # 蓝色输出
+            print(f"\033[36mvision_act_response:\n{vision_act_response}")
             print("\033[0m")  # 重置颜色
             planning_response_thought, planning_response_get = ActionParser().extract_thought_and_action(
                 vision_act_response)
@@ -168,7 +176,8 @@ class VisionToDomMode(InteractionMode):
 
                 # 发送请求并等待响应
                 planning_response_dom, error_message = await self.text_model.request(planning_request)
-                print(f"\033[34mVisionToDomplanning_response:\n{planning_response_dom}")
+                print(
+                    f"\033[34mVisionToDomplanning_response:\n{planning_response_dom}")
                 print("\033[0m")
                 # 解析元素ID
                 element_id = ActionParser().get_element_id(planning_response_dom)
@@ -183,7 +192,8 @@ class VisionToDomMode(InteractionMode):
                 # 如果找到了预定义的行为，则不需要重试，直接退出循环
                 break
 
-        planning_response_json_str = json5.dumps(planning_response_get, indent=2)
+        planning_response_json_str = json5.dumps(
+            planning_response_get, indent=2)
         planning_response = f'```\n{planning_response_json_str}\n```'
         # 检查是否达到最大重试次数
         if attempt == max_retries - 1:
@@ -201,7 +211,8 @@ class DVMode(InteractionMode):
         planning_request = D_VObservationPromptConstructor().construct(
             user_request, previous_trace, observation, observation_VforD, feedback, status_description)
 
-        print(f"\033[32mplanning_request:\n{print_limited_json(planning_request, limit=1000)}")
+        print(
+            f"\033[32mplanning_request:\n{print_limited_json(planning_request, limit=1000)}")
         print("\033[0m")
         planning_response, error_message = await self.visual_model.request(planning_request)
         return planning_response, error_message, None, None
@@ -217,6 +228,7 @@ class VisionMode(InteractionMode):
         ).construct(user_request, previous_trace, observation)
         print(f"\033[32m{planning_request}")  # 绿色
         print("\033[0m")
+        logger.info("\033[32m%s\033[0m", planning_request)
         planning_response, error_message = await self.visual_model.request(planning_request)
         return planning_response, error_message, None, None
 
@@ -233,9 +245,9 @@ class Planning:
 
         # get global reward
         reward_response, status_and_description = await InteractionMode(text_model=gpt4, visual_model=gpt4v).get_global_reward(
-                user_request=user_request, previous_trace=previous_trace, observation=observation,
-                current_info=current_info, ground_truth_mode=ground_truth_mode, global_reward_mode=global_reward_mode,
-                ground_truth_data=ground_truth_data, task_name_id=task_name_id)
+            user_request=user_request, previous_trace=previous_trace, observation=observation,
+            current_info=current_info, ground_truth_mode=ground_truth_mode, global_reward_mode=global_reward_mode,
+            ground_truth_data=ground_truth_data, task_name_id=task_name_id)
 
         # 构建planning prompt及查询
         status_description = ""
@@ -259,13 +271,18 @@ class Planning:
             observation=observation,
             feedback=feedback,
             observation_VforD=observation_VforD)
-
-        print(f"\033[34mOpenai_Planning_Response:\n{planning_response}")  # 蓝色
-        print("\033[0m")
+        # print(f"\033[34mOpenai_Planning_Response:\n{planning_response}")  # 蓝色
+        # print("\033[0m")
+        logger.info(
+            f"\033[34mOpenai_Planning_Response:\n{planning_response}\033[0m")
         # 提取出planning thought(str)和planning action(dict), 其中planning action拥有action, element_id, action_input, description四个字段
         if mode != "vision_to_dom":
-            planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(
-                planning_response)
+            try:
+                planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(
+                    planning_response)
+            except ResponseError as e:
+                logger.error(f"Response Error:{e.message}")
+                raise
 
         if planning_response_action.get('action') == "fill_form":
             JudgeSearchbarRequest = JudgeSearchbarPromptConstructor().construct(
@@ -293,7 +310,7 @@ class Planning:
                 element, "") for element in ["action", "description"]}
         execute_time = time.time() - start_time
         logger.info("****************")
-        logger.info(planning_response_action)
+        # logger.info(planning_response_action)
         dict_to_write = {}
         dict_to_write['uuid'] = uuid
         if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:

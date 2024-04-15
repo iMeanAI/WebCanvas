@@ -8,6 +8,12 @@ import traceback
 from agent.Prompt import *
 from ..Utils import *
 
+class ResponseError(Exception):
+    """自定义响应错误类型"""
+    def __init__(self,message):
+        self.message = message
+        super().__init__(self.message)
+
 
 class ActionParser():
     def __init__(self):
@@ -28,8 +34,11 @@ class ActionParser():
             result_action = re.findall("```(.*?)```", message, re.S)[0]
         except:
             result_action = message.split("Action:")[-1].strip()
-
         result_action = self.parse_action(result_action)
+        if not result_action:
+            raise ResponseError("OpenAI response is an invalid JSON blob")
+        elif result_action and result_action.get("action") == '':
+            raise ResponseError("OpenAI response action is Empty")
         result_thought = result_action.get("thought")
         return result_thought, result_action
 

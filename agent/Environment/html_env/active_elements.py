@@ -116,6 +116,8 @@ class ActiveElements:
         element_type = element["attributes"].get('type')
         if element_type in TypeList:
             return element_type
+        if element["tagName"] == "select":
+            return "Select an option value"
         # if element['tagName'] == 'input' and element["attributes"].get('name'):
         #     return element["attributes"].get('name')
         return ""

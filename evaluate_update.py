@@ -1,24 +1,29 @@
 import time
+import argparse
+import re
+
 import json5
 import requests
-from agent.Environment.html_env.async_env import AsyncHTMLEnvironment,ActionExecutionError
+import toml
+import asyncio
+import logging
+import sys
+
+from playwright.async_api import Playwright, async_playwright, expect, Page
+
+
+from agent.Environment.html_env.async_env import AsyncHTMLEnvironment, ActionExecutionError
 from agent.Environment.html_env.vision_async_env import VisionAsyncHTMLEnvironment
+from agent.Environment.html_env.actions import create_action, Action, ActionTypes
+from agent.Plan import Planning
+
+from agent.Utils.utils import *
+from evaluate_utils import *
+from result import write_result_to_excel
 from evaluate import *
 from agent.Plan import *
-from playwright.async_api import Playwright, async_playwright, expect, Page
-from agent.Environment.html_env.actions import create_action, Action, ActionTypes
+from logs import logger
 
-import re
-import asyncio
-import argparse
-import toml
-
-# universal tools
-from agent.Utils.utils import *
-# evaluate tools
-from evaluate_utils import *
-
-from result import write_result_to_excel
 
 # 解析命令行参数
 parser = argparse.ArgumentParser(
@@ -31,9 +36,9 @@ parser.add_argument("--mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vi
                          "'vision' for vision-based interaction, "
                          "'d_v' for DOM-based and vision-based interaction.")
 parser.add_argument("--ground_truth_mode", choices=["true", "false"],
-                    default="true", help="Choose whether to use ground truth data.")
+                    default="false", help="Choose whether to use ground truth data.")
 parser.add_argument("--global_reward_mode", choices=["dom_vision_reward", "dom_reward", "vision_reward"],
-                    default="dom_vision_reward", help="Choose the mode of global reward.")
+                    default="dom_reward", help="Choose the mode of global reward.")
 parser.add_argument("--index", "--i", type=str, default=-1)
 args = parser.parse_args()
 interaction_mode = args.mode
@@ -229,8 +234,8 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
             match_result.append(
                 {evaluate["match_function"]: evaluate["reference_answer"]})
         step_score += evaluate["score"]
-    print("current step score:", step_score, "/", len(evaluate_steps))
-    print("current step match result:", match_result)
+    # print("current step score:", step_score, "/", len(evaluate_steps))
+    # print("current step match result:", match_result)
     return evaluate_steps, match_result
     # print(evaluate_steps)
 
@@ -250,8 +255,10 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
     action_type = response['action_type']
     acton_input = response['value']
     action = response["description"].get("action")
-    reflection = response["description"].get("reward").get("description") if response["description"].get("reward") else ""
-    current_trace = {"thought": thought, "action": action,"reflection": reflection}
+    reflection = response["description"].get("reward").get(
+        "description") if response["description"].get("reward") else ""
+    current_trace = {"thought": thought,
+                     "action": action, "reflection": reflection}
     element_value = ""
     selector = None
 
@@ -337,129 +344,76 @@ async def main(num_steps=0, mode="dom"):
         task_name_id = None
         if task_mode == "experiment_tasks":
             task = file[task_index]
-
             task_name, task_name_id, reference_task_length, reference_evaluate_steps = task
-            print("task index:", task_index)
-            print("task_name:", task_name)
-            print("reference_task_length:", reference_task_length)
-            print("raw data:\n", reference_evaluate_steps)
+            logger.info(f"task index: {task_index}")
+            logger.info(f"task_name: {task_name}")
+            logger.info(f"reference_task_length: {reference_task_length}")
+            # logger.info("raw data: " +
+            #              json5.dumps(reference_evaluate_steps, indent=4))
+            logger.info(f"raw data:{reference_evaluate_steps}")
         elif task_mode == "single_task":
             task_name = single_task
             reference_task_length = 10
             reference_evaluate_steps = []
-            print("task_name:", task_name)
+            logger.info(f"task_name: {task_name}")
 
-        # #! # 1. playwright
-        # # 用playwright运行浏览器
-        # async def run(playwright: Playwright) -> None:
-        #     '''用playwright运行浏览器'''
-        #     evaluate_steps = reference_evaluate_steps
-        #     browser = await playwright.chromium.launch(headless=False)
-        #     context = await browser.new_context(locale="en-US")
-        #     page = await context.new_page()
-        #     replay_codes = open("./data/playwright/google_test.txt", "r", encoding="utf-8")
-        #     for num_steps, line in enumerate(replay_codes):
-        #         print("step:", num_steps, line)
-        #         selector = None
-        #         input_value = None
-        #         if "page.locator" in line:
-        #             # selector, action, action_value = re.findall('page.locator\("(.*?)"\).(*?)\((.*?)\)', line)
-        #             selector, action = re.findall('page.locator\("(.*?)"\).(.*?)\(.*?\)', line)[0]
-        #             print("selector:", selector)
-        #             print("action:", action)
-        #             if action == "fill":
-        #                 input_value = re.findall('page.locator\(".*?"\).*?\("(.*?)"\)', line)[0]
-        #                 print("input_value", input_value)
-        #             else:
-        #                 input_value = await get_element_content(page, selector)
-        #         line = "await "+line
-        #         print(line)
-        #         evaluate_steps = await step_evaluate(page=page, evaluate_steps=evaluate_steps, input_path=selector, element_value=input_value)
-        #         time.sleep(3)
-        #         await aexec_playwright(line, page)
-        #         time.sleep(2)
-        #     return num_steps, evaluate_steps
+        # 创建html环境
+        env = AsyncHTMLEnvironment(
+            mode=mode,
+            max_page_length=8192,
+            headless=False,
+            slow_mo=1000,
+            current_viewport_only=False,
+            viewport_size={"width": 1920, "height": 1280} if mode == "dom" else {
+                "width": 1080, "height": 720},
+            save_trace_enabled=False,
+            sleep_after_execution=0.0,
+            locale="en-US",
+            use_vimium_effect=True
+        )
 
-        # async with async_playwright() as playwright:
-        #     num_steps, evaluate_steps = await run(playwright)
+        await env.reset("about:blank")
 
-        # ! # 2. planning
-        if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
-            env = AsyncHTMLEnvironment(
-                mode=mode,
-                max_page_length=8192,
-                headless=False,
-                slow_mo=1000,
-                current_viewport_only=False,
-                viewport_size={"width": 1920, "height": 1280} if mode == "dom" else {
-                    "width": 1080, "height": 720},
-                # "width": 1080, "height": 720
-                save_trace_enabled=False,
-                sleep_after_execution=0.0,
-                locale="en-US",
-                use_vimium_effect=True
-            )
-        elif mode == "vision":
-            env = VisionAsyncHTMLEnvironment(
-                # mode=mode,
-                max_page_length=8192,
-                headless=False,
-                slow_mo=1000,
-                current_viewport_only=False,
-                viewport_size={"width": 1920, "height": 1280},
-                save_trace_enabled=False,
-                sleep_after_execution=0.0,
-                locale="en-US",
-                use_vimium_effect=True
-            )
+        vision_reward = None
 
+        # html 环境相关
         observation = ""
         observation_VforD = ""
-        vision_reward = None
-        await env.reset("about:blank")
-        current_info = {
-            "URL": env.page.url
-        }
-
-        previous_trace = []
-        evaluate_steps = reference_evaluate_steps
         error_description = ""
+        previous_trace = []
+
+        # response 相关
         dict_to_write = None
-        step_index_list = []
-        score_list = []
-        step_reward_list = []
-        dict_result_list = []
-        url_list = []
-        current_trace_list = []
-        selector_list = []
-        action_list = []
-        previoust_trace_list = []
-        match_func_result_list = []
-        element_value_list = []
-        error_message_list = []
         invalid_vision_reward_num = 0
 
+        # 如果都匹配到了，任务完成
         task_finished = False
-        step_error_count = 0
-        task_error = False
+        evaluate_steps = reference_evaluate_steps
+        task_global_status = ""
+
         # 控制步骤长度相关配置
         conditions = config["conditions"]
         increase_step = config["basic"]["Condition_Step_Increase"]
         encountered_errors = set()
-
-        # for num_steps in range(max(config['basic']['Max_Action_Step'], 1.5*reference_task_length)):
+        current_info = {"URL": env.page.url}
         num_steps = 0
         max_steps = int(
             max(config['basic']['Max_Action_Step'], 1.5*reference_task_length))
         additional_steps = 0
-        task_global_status = ""
+
+        # planning 后的结果信息保存
+        task_result = {}
+        task_result["task_name"] = task_name
+        task_result["id"] = task_name_id
+        task_result["reference_task_length"] = reference_task_length
+        task_result["evaluate_steps"] = reference_evaluate_steps
+        steps_list = []
+
         while num_steps < max_steps + additional_steps:
             error_message = ""
-            step_index_list.append(num_steps)
             total_step_score = 0
-            # break
-            print("planning前previous_trace：", previous_trace)
-            print("planning前observation：", observation)
+            logger.info(f"previous_trace before planning: {previous_trace}")
+            logger.info(f"observation before planning: {observation}")
             for _ in range(3):
                 response_total_count += 1
                 try:
@@ -478,49 +432,70 @@ async def main(num_steps=0, mode="dom"):
                     if dict_to_write is not None:
                         break
                 except Exception as e:
+                    dict_to_write = None
                     response_error_count += 1
                     traceback.print_exc()
                     continue
 
-            print("dict_to_write:", dict_to_write)
-            dict_result_list.append(str(dict_to_write))
-            if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
+            logger.info(f"dict_to_write: {dict_to_write}")
+
+            if dict_to_write:
+                each_step_dict = {}
+                each_step_dict["step_index"] = num_steps
+                each_step_dict["dict_result"] = dict_to_write
+
                 execute_action, current_trace, path, element_value = parse_current_trace(
                     dict_to_write, env)
                 selector, xpath = (
                     path[0], path[1]) if path is not None else (None, None)
-                print("current trace:\n", current_trace)
-                current_trace_list.append(str(current_trace))
-                element_value_list.append(element_value)
-                print("response:\n", execute_action)
-                action_list.append(str(execute_action))
-                print("selector:", selector)
-                selector_list.append(selector)
+
+                each_step_dict["current_trace"] = current_trace
+                each_step_dict["selector"] = selector
+                each_step_dict["xpath"] = xpath
+                each_step_dict["element_value"] = element_value
+
+                logger.info(f"current trace: {current_trace}")
+                logger.info(f"execute_action: {execute_action}")
+                logger.info(f"selector: {selector}")
+                logger.info(f"xpath: {xpath}")
+                logger.info(f"element_value: {element_value}")
+
                 evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
-                print("执行动作前的url", env.page.url)
                 for evaluate in evaluate_steps:
                     total_step_score += evaluate["score"]
-                print(total_step_score, "/", len(reference_evaluate_steps))
-                score_str = str(total_step_score) + " / " + \
-                    str(len(reference_evaluate_steps))
-                match_func_result_list.append(str(match_result))
-                score_list.append(score_str)
+
+                logger.info(
+                    f"current evaluate score: {total_step_score} / {len(reference_evaluate_steps)}")
+                each_step_dict["score"] = str(
+                    total_step_score) + " / " + str(len(reference_evaluate_steps))
+                each_step_dict["match_func_result"] = match_result
+
+                logger.info(f"current evaluate match result: {match_result}")
+
+                if dict_to_write["description"].get("reward"):
+                    each_step_dict["step_reward"] = dict_to_write["description"].get(
+                        "reward")
+                    task_global_status = dict_to_write["description"].get(
+                        "reward").get("status")
+                else:
+                    each_step_dict["step_reward"] = {}
+
                 if total_step_score == len(reference_evaluate_steps):
+                    steps_list.append(each_step_dict)
                     task_finished = True
                     break
-                # input()
+
+                # 动作执行
                 try:
                     await env.execute_action(execute_action)
                     previous_trace.append(current_trace)
                     error_description = ""
                 except ActionExecutionError as ee:
-                    print(ee.message)
                     error_message = ee.message
+                    logger.error(
+                        f"ActionExecutionError occurred,the error_message is {error_message}")
                     error_description = error_message
-                    # execute_action.update(
-                    #     {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                    # await env.execute_action(execute_action)
-                print("error_description:\n", error_description)
+
                 if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                     observation, observation_VforD = await env.get_obs()
                     save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
@@ -528,92 +503,42 @@ async def main(num_steps=0, mode="dom"):
                 else:
                     observation = await env.get_obs()
 
-                print("执行动作后的url", env.page.url)
-                url_list.append(env.page.url)
-                error_message_list.append(error_message)
+                # 执行动作后的url
+                each_step_dict["step_url"] = env.page.url
+                logger.info(
+                    f"The url after executing the action is: {env.page.url}")
+                each_step_dict["error_message"] = error_message
+                each_step_dict["previous_trace"] = previous_trace
 
-                step_reward_str = dict_to_write["description"].get(
-                    "reward") if dict_to_write["description"].get("reward") else "X"
-                step_reward_list.append(str(step_reward_str))
-                if dict_to_write["description"].get("reward"):
-                    task_global_status = dict_to_write["description"].get(
-                        "reward").get("status")
-
-                # current_trace = [current_trace]
-                # current_reward = await Planning.evaluate(user_request=task_name, previous_trace=previous_trace,
-                #                                          current_trace=current_trace, observation=observation)
-                # step_reward_str = current_reward if current_reward else "X"
-                # step_reward_list.append(str(step_reward_str))
-                # if current_reward and int(current_reward.get("score")) < config['basic']['Step_Score_Threshold']:
-                #     execute_action.update(
-                #         {"element_id": 0, "action_type": ActionTypes.GO_BACK})
-                #     if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-                #         await env.execute_action(execute_action)
-                #         observation, observation_VforD = await env.get_obs()
-                #     else:
-                #         await env.execute_action(execute_action)
-                #         observation = await env.get_obs()
-                #     last_action_description = current_reward.get("description")
-                # else:
-                #     last_action_description = ""
-                #     previous_trace.append(current_trace)
-                # if current_reward and int(current_reward.get("score")) < 4:
-                #     step_error_count += 1
-                # else:
-                #     step_error_count = 0
-
-            elif mode == "vision":
-                execute_action = dict_to_write["action"]
-                thought = dict_to_write["description"].get("thought")
-                action = dict_to_write["description"].get("action")
-                current_trace = {"thought": thought, "action": action}
-                print("执行动作前的url", env.page.url)
-                if await env.vision_execute_action(execute_action):
+                if "vision" in global_reward_mode:
+                    vision_reward = await env.capture()
+                    save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
+                                    step_number=num_steps, description="reward",
+                                    screenshot_base64=vision_reward, task_name_id=task_name_id)
+                    is_valid, message = is_valid_base64(vision_reward)
+                    if not is_valid:
+                        invalid_vision_reward_num += 1
+                    logger.info(
+                        f"evaluate.py vision reward of {global_reward_mode} mode: {message}")
+                # GlobalReward(ground truth) 和 增加error 共用
+                current_info = {
+                    "URL": env.page.url
+                }
+                if vision_reward:
+                    current_info.update({"vision_reward": vision_reward})
+                logger.info(
+                    f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
+                step_increase, encountered_errors = await adjust_max_action_step(
+                    conditions, current_info, encountered_errors, increase_step)
+                additional_steps += step_increase
+                num_steps += 1
+                steps_list.append(each_step_dict)
+                if num_steps >= 25 or task_global_status == "finished":  # 防止无限循环
                     break
-                print("vision_execute_action finished!")
-                observation = await env.get_obs()
-                print("执行动作后的url", env.page.url)
-                previous_trace.append(current_trace)
-                if dict_to_write["description"].get('reward'):
-                    if "loop" in dict_to_write["description"].get('reward').get("status"):
-                        previous_trace = []
-                        previous_trace.append(current_trace)
-            previoust_trace_list.append(previous_trace)
 
-            if "vision" in global_reward_mode:
-                vision_reward = await env.capture()
-                save_screenshot(mode=mode, record_time=record_time, task_name=task_name,
-                                step_number=num_steps, description="reward",
-                                screenshot_base64=vision_reward, task_name_id=task_name_id)
-                is_valid, message = is_valid_base64(vision_reward)
-                if not is_valid:
-                    invalid_vision_reward_num += 1
-                print(f"evaluate.py vision reward of {global_reward_mode} mode:", message)
-            # GlobalReward(ground truth) 和 增加error 共用
-            current_info = {
-                "URL": env.page.url
-            }
-            if vision_reward:
-                current_info.update({"vision_reward": vision_reward})
-
-            print(f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
-
-            step_increase, encountered_errors = await adjust_max_action_step(
-                conditions, current_info, encountered_errors, increase_step)
-            additional_steps += step_increase
-            num_steps += 1
-            if num_steps >= 25 or task_global_status == "finished":  # 防止无限循环
+            a = input("回车继续下一个Action，按q退出")
+            if a == "q":
                 break
-
-            # a = input("回车继续下一个Action，按q退出")
-            # if a == "q" or step_error_count > 3:
-            #     break
-            # if step_error_count > 3:
-            #     task_error = True
-            #     break
-        # a = await Planning.plan(uuid=1, user_request="Find Dota 2 game and add all DLC to cart in steam.")
-        # print(json5.dumps(a, indent=4))
-        # input()
 
         # ! 3.任务评测打分
         if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
@@ -621,44 +546,42 @@ async def main(num_steps=0, mode="dom"):
             total_step_score = 0
             for evaluate in evaluate_steps:
                 total_step_score += evaluate["score"]
-            print("\ntotal step score:", total_step_score,
-                  "/", len(reference_evaluate_steps))
-
-            write_result_to_excel(
-                task_name=task_name,
-                task_id=task_index,
-                task_name_id=task_name_id,
-                task_finished=task_finished,
-                task_global_status=task_global_status,
-                step_index_list=step_index_list,
-                score_list=score_list,
-                step_reward_list=step_reward_list,
-                dict_result_list=dict_result_list,
-                url_list=url_list,
-                current_trace_list=current_trace_list,
-                previous_trace_list=previoust_trace_list,
-                selector_list=selector_list,
-                action_list=action_list,
-                match_func_result_list=match_func_result_list,
-                element_value_list=element_value_list,
-                error_message_list=error_message_list,
-                invalid_vision_reward_num=invalid_vision_reward_num,
-                file_path=write_result_file_path
-            )
+            logger.info(
+                f"Total step score: {total_step_score} / {len(reference_evaluate_steps)}")
 
             # length score
             task_evaluator = TaskLengthEvaluator()
             task_length_score = task_evaluator.task_length_score(
                 reference_task_length, num_steps)
-            print("task_length_score:", task_length_score)
-            print("response error rate:",response_error_count/response_total_count)
+
+            logger.info(f"Task length score: {task_length_score}")
+            logger.info(
+                f"Response error rate: {response_error_count/response_total_count}")
 
             # finish score
             finish_task_score = FinishTaskEvaluator.finish_task_score(
                 len(reference_evaluate_steps), total_step_score)
-            print("finish_task_score:", finish_task_score)
+            logger.info(f"Finish task score: {finish_task_score}")
 
-        # a = input("回车继续，按q退出")
+            if task_finished:
+                task_result["status"] = "finished"
+
+            elif task_global_status == "finished":
+                task_result["status"] = "llm_finished"
+
+            else:
+                task_result["status"] = "step_limit"
+
+            task_result["step_list"] = steps_list
+
+            json_result_folder = "json_result"
+            if not os.path.exists(json_result_folder):
+                os.makedirs(json_result_folder)
+            json_out_file_path = os.path.join(
+                json_result_folder, task_result["id"] + ".json")
+            with open(json_out_file_path, 'w') as json_file:
+                json.dump(task_result, json_file)
+
         await env.close()
         del env
         # if a == "q":
