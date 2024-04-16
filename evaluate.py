@@ -268,7 +268,12 @@ async def get_observation(mode: str, env: AsyncHTMLEnvironment, action: Action):
         return observation
 
 
-async def main(num_steps=0, mode="dom"):
+async def main(num_steps=0,
+               text_model_name="gpt-4-turbo",
+               json_model_response=False,
+               mode="dom",
+               ground_truth_mode=False,
+               file_path=None):
     # result record for experiments_tasks
     record_time_short = time.strftime("%Y%m%d", time.localtime())
     record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
@@ -278,8 +283,8 @@ async def main(num_steps=0, mode="dom"):
     file = None
     ground_truth_data = None
     if task_mode == "experiment_tasks":
-        file = read_file()
-    if ground_truth_mode == "true":
+        file = read_file(file_path=file_path)
+    if ground_truth_mode:
         ground_truth_data = read_json_file(ground_truth_file_path)
 
     with open('./configs/dom.toml', 'r') as f:
@@ -440,6 +445,8 @@ async def main(num_steps=0, mode="dom"):
                 try:
                     dict_to_write = await Planning.plan(uuid=1,
                                                         user_request=task_name,
+                                                        text_model_name=text_model_name,
+                                                        json_model_response=json_model_response,
                                                         previous_trace=previous_trace,
                                                         observation=observation,
                                                         feedback=error_description,
@@ -647,17 +654,18 @@ if __name__ == "__main__":
     # 解析命令行参数
     parser = argparse.ArgumentParser(
         description="Run the agent in different observation modes.")
-    parser.add_argument("--observation_mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"], default="dom",
+    parser.add_argument("--observation_mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"],
+                        default="dom",
                         help="Choose interaction mode: "
                              "'dom' for DOM-based interaction, "
                              "'dom_v_desc' for DOM-based interaction with vision description,"
                              "'vision_to_dom' for vision-to-dom interaction, "
                              "'vision' for vision-based interaction, "
                              "'d_v' for DOM-based and vision-based interaction.")
-    parser.add_argument("--ground_truth_mode", choices=["true", "false"],
-                        default="true", help="Choose whether to use ground truth data.")
+    parser.add_argument("--ground_truth_mode", choices=[True, False],
+                        default=True, help="Choose whether to use ground truth data.")
     parser.add_argument("--global_reward_mode", choices=["dom_vision_reward", "dom_reward", "vision_reward"],
-                        default="dom_vision_reward", help="Choose the mode of global reward.")
+                        default="dom_reward", help="Choose the mode of global reward.")
     parser.add_argument("--index", "--i", type=str, default=-1)
     args = parser.parse_args()
     interaction_mode = args.observation_mode
@@ -668,11 +676,17 @@ if __name__ == "__main__":
     single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
     ground_truth_mode = args.ground_truth_mode
     # - setting: file path of experiment_tasks reference data
-    if ground_truth_mode == "true":
-        ground_truth_file_path = "./data/ground_truth/GTR_tasks_instructions_0329_FOR_sample_all_data_0327.json"
+    if ground_truth_mode:
+        # ground_truth_file_path = "./data/ground_truth/GTR_tasks_instructions_0329_FOR_sample_all_data_0327.json"
+        ground_truth_file_path = "./data/ground_truth/GT_instructions_202404161811_for_all_data_0328.json"
         # check if ground_truth_file_path exists
         if not os.path.exists(ground_truth_file_path):
             print("ground_truth_file_path not exist!")
             exit()
 
-    asyncio.run(main(mode=interaction_mode))
+    # "./data/data_update_0326/group_sample_all_data_0327.json"
+    asyncio.run(main(text_model_name="gpt-3.5-turbo",
+                     json_model_response=True,
+                     mode=interaction_mode,
+                     ground_truth_mode=ground_truth_mode,
+                     file_path="./data/data_0328/all_data_0328.json"))

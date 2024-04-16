@@ -22,7 +22,7 @@ class InteractionMode:
         if len(previous_trace) > 0:
             stringfy_thought_and_action_output = ObservationPromptConstructor().stringfy_thought_and_action(
                 previous_trace)
-            if ground_truth_mode == "false":
+            if not ground_truth_mode:
                 reward_request = RewardPromptConstructor().construct(
                     ground_truth_mode=ground_truth_mode,
                     global_reward_mode=global_reward_mode,
@@ -30,7 +30,7 @@ class InteractionMode:
                     stringfy_thought_and_action_output=stringfy_thought_and_action_output,
                     observation=observation,
                     current_info=current_info)
-            elif ground_truth_mode == "true":
+            elif ground_truth_mode:
                 for item in ground_truth_data:
                     if item.get("index") == task_name_id:
                         instruction = item["instruction"]
@@ -235,22 +235,33 @@ class VisionMode(InteractionMode):
 
 class Planning:
     @staticmethod
-    async def plan(uuid, user_request, previous_trace, observation, feedback, mode, observation_VforD, ground_truth_mode, ground_truth_data, task_name_id, global_reward_mode, current_info, global_reward: bool = True):  # TODO
+    async def plan(uuid, user_request, text_model_name, json_model_response, previous_trace, observation, feedback, mode, observation_VforD, ground_truth_mode, ground_truth_data, task_name_id, global_reward_mode, current_info, global_reward: bool = True):  # TODO
         start_time = time.time()
 
         # 创建GPT查询类
         gpt35 = GPTGenerator35()
         gpt4 = GPTGenerator4()
         gpt4v = GPTGenerator4V()
-        text_model = "gpt-4-turbo-preview"  # 临时指定模型
-        all_json_models = ["gpt-4-turbo-preview", "gpt-4-turbo-0125", "gpt-3.5-turbo-0125", "gpt-3.5-turbo-preview"]
-        if text_model in ["gpt-4-turbo-0125", "gpt-4-turbo-preview"]:
-            gpt4 = GPTGenerator4WithJSON()
-        elif text_model in ["gpt-3.5-turbo-0125", "gpt-3.5-turbo-preview"]:
-            gpt35 = GPTGenerator35WithJSON()
+        all_json_models = ["gpt-4-turbo",
+                           "gpt-4-turbo-2024-04-09",
+                           "gpt-4-turbo-preview",
+                           "gpt-4-0125-preview",
+                           "gpt-4-1106-preview",
+                           "gpt-3.5-turbo",
+                           "gpt-3.5-turbo-0125",
+                           "gpt-3.5-turbo-preview"]
+        if json_model_response:
+            if text_model_name in all_json_models:
+                gpt = GPTGeneratorWithJSON(model=text_model_name)
+            else:
+                gpt = GPTGenerator(model=text_model_name)
+                logger.info(
+                    "The text model does not support JSON mode.")
+        else:
+            gpt = GPTGenerator(model=text_model_name)
 
         # get global reward
-        reward_response, status_and_description = await InteractionMode(text_model=gpt4, visual_model=gpt4v).get_global_reward(
+        reward_response, status_and_description = await InteractionMode(text_model=gpt, visual_model=gpt4v).get_global_reward(
             user_request=user_request, previous_trace=previous_trace, observation=observation,
             current_info=current_info, ground_truth_mode=ground_truth_mode, global_reward_mode=global_reward_mode,
             ground_truth_data=ground_truth_data, task_name_id=task_name_id)
@@ -262,9 +273,9 @@ class Planning:
                 "description") if status_and_description and status_and_description.get("description") else ""
 
         modes = {
-            "dom": DomMode(text_model=gpt4),
-            "dom_v_desc": DomVDescMode(visual_model=gpt4v, text_model=gpt4),
-            "vision_to_dom": VisionToDomMode(visual_model=gpt4v, text_model=gpt4),
+            "dom": DomMode(text_model=gpt),
+            "dom_v_desc": DomVDescMode(visual_model=gpt4v, text_model=gpt),
+            "vision_to_dom": VisionToDomMode(visual_model=gpt4v, text_model=gpt),
             "d_v": DVMode(visual_model=gpt4v),
             "vision": VisionMode(visual_model=gpt4v)
         }

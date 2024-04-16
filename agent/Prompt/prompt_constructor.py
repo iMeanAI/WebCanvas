@@ -363,7 +363,7 @@ class RewardPromptConstructor(BasePromptConstructor):
             current_info=None,
             instruction: str = ""
     ) -> list:
-        if ground_truth_mode == "true":
+        if ground_truth_mode:
             self.prompt_system = BasePrompts.global_reward_with_GroundTruth_prompt_system
         rendered_prompt = Template(self.prompt_user).render(
             user_request=user_request, stringfy_thought_and_action_output=stringfy_thought_and_action_output)
@@ -382,7 +382,7 @@ class RewardPromptConstructor(BasePromptConstructor):
             else:
                 prompt_elements.append({"type": "text", "text": "The current screenshot is not available."})
                 print("The current screenshot for vision reward is not available.")
-        if ground_truth_mode == "true":
+        if ground_truth_mode:
             prompt_elements.append(
                 {"type": "text", "text": f"Here is the Reference Guide for the target task:\n\n{instruction}"})
         messages = [{"role": "system", "content": self.prompt_system},
