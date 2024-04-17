@@ -16,6 +16,7 @@ def parse_thought_action(dict_str):
     thought_action = {"thought": thought, "action": action}
     return thought_action
 
+
 def to_dict(input_string):
     # 正则表达式模式
     # pattern = r"('action_type'|'element_id'|'url'|'fill_text'):\s*(<[^>]+>|\d+|'[^']+')"
@@ -34,23 +35,30 @@ def to_dict(input_string):
         action = "google_search" + "[" + extracted_fields["fill_text"] + "]"
     elif "fill_search" in extracted_fields["action_type"].lower():
         action = "fill_search" + \
-            "[" + str(extracted_fields["element_id"]) + "," + \
-            extracted_fields["fill_text"] + "]"
+                 "[" + str(extracted_fields["element_id"]) + "," + \
+                 extracted_fields["fill_text"] + "]"
     elif "fill_form" in extracted_fields["action_type"].lower():
         action = "fill_search" + \
-            "[" + str(extracted_fields["element_id"]) + "," + \
-            extracted_fields["fill_text"] + "]"
+                 "[" + str(extracted_fields["element_id"]) + "," + \
+                 extracted_fields["fill_text"] + "]"
     elif "goto" in extracted_fields["action_type"].lower():
-        action = "goto" + "[" + extracted_fields["url"] + "]"
+        # action = "goto" + "[" + extracted_fields["url"] + "]"
+        if "url" in extracted_fields:
+            action = "goto" + "[" + extracted_fields["url"] + "]"
+        else:
+            action = "No URL provided"
+            print("No URL provided, the content is: ", input_string)
     elif "click" in extracted_fields["action_type"].lower():
         action = "click" + "[" + str(extracted_fields["element_id"]) + "]"
     elif "none" in extracted_fields["action_type"].lower():
         action = "None"
     return action
 
+
 def score_rate(score):
     first, second = score.split("/")
     return float(first) / float(second)
+
 
 def parse_step_reward(dict_str):
     score_description = {}
@@ -110,6 +118,7 @@ def write_to_json(file_path):
             "url": x["step url"] if x["step url"] != "finished" else ""
         }
         return dic
+
     step_list = []
     df_copy.apply(lambda x: step_list.append(summary(x)), axis=1)
     return step_list
@@ -125,12 +134,15 @@ def read_file(file_path):
         return_list.append(task_name)
     return return_list
 
+
 # --------------------------------------------
+# data_0328/all_data_0328.json
+# ./data/data_update_0326/group_sample_all_data_0327.json
+task_name_list = read_file(file_path="./data/data_0328/all_data_0328.json.json")
+# print(task_name_list)
 
-task_name_list = read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json")
-print(task_name_list)
-
-folder_path = './csv_results/group_sample_20240415/dom_20240415-170153'
+folder_path_part = 'group_sample_20240415/dom_20240415-170153'
+folder_path = f'./csv_results/{folder_path_part}'
 task_list = []
 for _, filename in enumerate(os.listdir(folder_path)):
     out_json = {}
@@ -145,15 +157,15 @@ for _, filename in enumerate(os.listdir(folder_path)):
         task_list.append(out_json)
 print(task_list)
 task_list = sorted(task_list, key=lambda x: x['task_id'])
-if not os.path.exists("./results/group_sample_20240415/dom_20240415-170153"):
-    os.makedirs("./results/group_sample_20240415/dom_20240415-170153")
-out_json_file_path = './results/group_sample_20240415/dom_20240415-170153/out.json'
+if not os.path.exists(f"./results/{folder_path_part}"):
+    os.makedirs(f"./results/{folder_path_part}")
+out_json_file_path = f'./results/{folder_path_part}/out.json'
 with open(out_json_file_path, 'w') as json_file:
     json.dump(task_list, json_file)
 
 
 def read_csv_result():
-    with open('./results/group_sample_20240415/dom_20240415-170153/out.json') as f:
+    with open(f'./results/{folder_path_part}/out.json') as f:
         data = json.load(f)
     last_action_result_list = []
     for items in data:
@@ -184,6 +196,11 @@ df_score_limit = df[df["status"].apply(lambda x: x) == "limit"]
 # df_score_limit
 print("df_score_limit.shape[0] :", df_score_limit.shape[0])
 print("df_score_limit.shape[0] / df.shape[0] :", df_score_limit.shape[0] / df.shape[0])
+
+df_score_finished = df[df["status"].apply(lambda x: x) == "finished"]
+# df_score_finished
+print("df_score_finished.shape[0] :", df_score_finished.shape[0])
+print("df_score_finished.shape[0] / df.shape[0] :", df_score_finished.shape[0] / df.shape[0])
 
 
 # Split the 'task_score' into two columns 'numerator' and 'denominator'
