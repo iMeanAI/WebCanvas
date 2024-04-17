@@ -270,6 +270,7 @@ async def get_observation(mode: str, env: AsyncHTMLEnvironment, action: Action):
 
 async def main(num_steps=0,
                text_model_name="gpt-4-turbo",
+               global_reward_text_model_name="gpt-4-turbo",
                json_model_response=False,
                mode="dom",
                ground_truth_mode=False,
@@ -439,13 +440,14 @@ async def main(num_steps=0,
             total_step_score = 0
             # break
             print("planning前previous_trace：", previous_trace)
-            print("planning前observation：", observation)
+            print("planning前observation：", print_limited_json(observation, limit=2000))
             for _ in range(3):
                 response_total_count += 1
                 try:
                     dict_to_write = await Planning.plan(uuid=1,
                                                         user_request=task_name,
                                                         text_model_name=text_model_name,
+                                                        global_reward_text_model_name=global_reward_text_model_name,
                                                         json_model_response=json_model_response,
                                                         previous_trace=previous_trace,
                                                         observation=observation,
@@ -686,6 +688,7 @@ if __name__ == "__main__":
 
     # "./data/data_update_0326/group_sample_all_data_0327.json"
     asyncio.run(main(text_model_name="gpt-3.5-turbo",
+                     global_reward_text_model_name="gpt-4-turbo",
                      json_model_response=True,
                      mode=interaction_mode,
                      ground_truth_mode=ground_truth_mode,

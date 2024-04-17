@@ -80,8 +80,28 @@ def print_limited_json(obj, limit=500, indent=0):
 
 def print_info(info, color):
     # 打印带有颜色的信息
-    print(f"{color}{info}\033[0m")  # \033[0m 用于重置颜色
-
+    if color == 'yellow':
+        print(f"\033[33m{info}\033[0m")
+    elif color == 'red':
+        print(f"\033[31m{info}\033[0m")
+    elif color == 'green':
+        print(f"\033[32m{info}\033[0m")
+    elif color == 'cyan':
+        print(f"\033[36m{info}\033[0m")
+    elif color == 'blue':
+        print(f"\033[34m{info}\033[0m")
+    elif color == 'purple':
+        print(f"\033[35m{info}\033[0m")
+    elif color == 'white':
+        print(f"\033[37m{info}\033[0m")
+    elif color == 'black':
+        print(f"\033[30m{info}\033[0m")
+    elif color == 'bold':
+        print(f"\033[1m{info}\033[0m")
+    elif color == 'underline':
+        print(f"\033[4m{info}\033[0m")
+    else:
+        print(f"{color}{info}\033[0m")  # \033[0m 用于重置颜色
 
 def is_valid_base64(s):
     """
