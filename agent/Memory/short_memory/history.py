@@ -14,9 +14,6 @@ class HistoryMemory:
         str_output = ""
         if len(input_list) > 2:
             str_output = "["
-            # for idx, i in enumerate(input_list[:-1]):
-            #     str_output += f'Step{idx+1}:\"Thought: {i["thought"]}, Action: {i["action"]},Reflection: {i["reflection"]}\";\n'
-            # str_output += "]"
             for idx in range(len(input_list)-1):
                 str_output += f'Step{idx+1}:\"Thought: {input_list[idx]["thought"]}, Action: {input_list[idx]["action"]}, Reflection: {input_list[idx+1]["reflection"]}\";\n'
             str_output += "]"
@@ -30,7 +27,7 @@ class HistoryMemory:
     def construct_previous_trace_prompt(self) -> str:
         stringfy_thought_and_action_output = self.stringfy_thought_and_action()
         previous_trace_prompt = f"The previous thoughts, actions and reflections are as follows: \
-            {stringfy_thought_and_action_output}.\n\nYou have done the things above.\n\n" #TODO：对reward的描述
+            {stringfy_thought_and_action_output}.\n\nYou have done the things above.\n\n" 
         return previous_trace_prompt
 
     def construct_cache_trace(self):

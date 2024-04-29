@@ -569,6 +569,7 @@ async def main(num_steps=0,
                 os.makedirs(json_result_folder)
             json_out_file_path = os.path.join(
                 json_result_folder, str(task_index) + "_" + task_result["id"] + ".json")
+            logger.info(f"Write results to json file: {json_out_file_path}")
             with open(json_out_file_path, 'w') as json_file:
                 json.dump(task_result, json_file)
 

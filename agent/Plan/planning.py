@@ -52,8 +52,6 @@ class InteractionMode:
                         stringfy_thought_and_action_output=stringfy_thought_and_action_output,
                         observation=observation,
                         current_info=current_info)
-            # print(f"\033[32mGlobal_reward_Request{reward_request}")  # 绿色
-            # print("\033[0m")
             print_info(
                 f"Global_Reward_Request:\n{print_limited_json(reward_request, limit=1000)}", "\033[32m")  # 绿色
             reward_response = ""
