@@ -16,7 +16,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 stream_formatter = colorlog.ColoredFormatter(
-    "%(asctime)s**[%(log_color)s%(levelname)s%(reset)s]**|| %(message)s\n",
+    "%(asctime)s**[%(log_color)s%(levelname)s%(reset)s]**|| %(message)s",
     datefmt=None,
     reset=True,
     log_colors={
@@ -46,7 +46,7 @@ stream_formatter = colorlog.ColoredFormatter(
 # )
 
 
-class ClearColorFormatter(colorlog.ColoredFormatter):
+class Formatter(colorlog.ColoredFormatter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.color_pattern = re.compile(r'\x1b\[[0-9;]*m')
@@ -57,7 +57,7 @@ class ClearColorFormatter(colorlog.ColoredFormatter):
         return clean_record
 
 
-file_formatter = ClearColorFormatter(
+file_formatter = Formatter(
     "%(asctime)s**[%(levelname)s]**|| %(message)s\n",
     datefmt=None,
     reset=True,

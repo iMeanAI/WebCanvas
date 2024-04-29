@@ -92,24 +92,23 @@ class AsyncHTMLEnvironment:
         observation = ""
         observation_VforD = ""
         try:
-            logger.info("async_env.py now in _get_obs method")
             if not self.html_content.strip():
                 self.html_content = await self.retry_content()
             self.tree.fetch_html_content(self.html_content)
-            logger.info(
-                "async_env.py _get_obs fetch_html_content(self.html_content) finished!")
+            logger.info("Successfully fetch html content!")
             tab_name = await self.page.title()
             dom_tree = self.tree.build_dom_tree()
             observation = f"current web tab name is \'{tab_name}\'\n" + dom_tree
             if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                 observation_VforD = await self.capture()
         except Exception as e:
-            logger.error(f"Error in get_obs: {e}")
+            logger.error(f"Failed to fetch html content,error occur {e}")
         if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
             # byCarl: 仅用于判断图片是否是base64编码
             is_valid, message = is_valid_base64(
                 observation_VforD)
-            logger.info("async_env.py _get_obs observation_VforD:", message)
+            logger.info(
+                "Successfully fetch html content with observation_VforD:", message)
         return (observation, observation_VforD) if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"] else observation
 
     async def reset(self, start_url: str = ""):
@@ -137,7 +136,7 @@ class AsyncHTMLEnvironment:
                 self.last_page = self.page
                 self.page = await self.context.new_page()
                 await self.page.goto(url, timeout=10000)
-                await self.page.wait_for_load_state('load')
+                await self.page.wait_for_timeout(1000)
                 self.html_content = await self.page.content()
             except:
                 try:
@@ -145,30 +144,25 @@ class AsyncHTMLEnvironment:
                     selector = rf"{selector}"
                     await self.page.evaluate(f'''(selector) => {{
                         var element = document.querySelector(selector);
-                        // 如果找到了元素，则执行点击操作
                         if (element) {{
                             element.click();   
                         }} 
                     }}''', selector)
-                    await self.page.wait_for_load_state('load')
                     self.html_content = await self.page.content()
                 except Exception as e:
                     raise e
         else:
             try:
-                self.last_page = self.page
                 try:
                     await self.page.locator(selector).click()
                 except:
                     selector = rf"{selector}"
                     await self.page.evaluate(f'''(selector) => {{
                         var element = document.querySelector(selector);
-                        // 如果找到了元素，则执行点击操作
                         if (element) {{
                             element.click();   
                         }} 
                     }}''', selector)
-                await self.page.wait_for_load_state('load')
                 self.html_content = await self.page.content()
             except Exception as e:
                 raise e
@@ -181,7 +175,6 @@ class AsyncHTMLEnvironment:
 
     async def fill_search(self, action):
         try:
-            self.last_page = self.page
             label, element_id = self.tree.get_tag_name(
                 self.tree.elementNodes[action["element_id"]])
             action.update({"element_id": element_id,
@@ -193,14 +186,11 @@ class AsyncHTMLEnvironment:
             logger.error(
                 f"selector:{selector},label_name:{label},element_id: {element_id},error ({e}) in fill_search action.")
         try:
-            self.last_page = self.page
             await self.page.locator(selector).fill(action["fill_text"])
             await self.page.locator(selector).press("Enter")
-            await self.page.wait_for_load_state('load')
             self.html_content = await self.page.content()
         except:
             try:
-                self.last_page = self.page
                 selector = rf"{selector}"
                 value = stringfy_value(action['fill_text'])
                 await self.page.evaluate(f'''
@@ -213,14 +203,12 @@ class AsyncHTMLEnvironment:
                         }}
                     }}
                 ''', selector)
-                await self.page.wait_for_load_state('load')
                 self.html_content = await self.page.content()
             except Exception as e:
                 raise e
 
     async def fill_form(self, action):
         try:
-            self.last_page = self.page
             label, element_id = self.tree.get_tag_name(
                 self.tree.elementNodes[action["element_id"]])
             action.update({"element_id": element_id,
@@ -233,13 +221,10 @@ class AsyncHTMLEnvironment:
             logger.error(
                 f"selector:{selector},label_name:{label},element_id: {element_id},error ({e}) in fill_form action.")
         try:
-            self.last_page = self.page
             await self.page.locator(selector).fill(action["fill_text"])
-            await self.page.wait_for_load_state('load')
             self.html_content = await self.page.content()
         except:
             try:
-                self.last_page = self.page
                 selector = rf"{selector}"
                 value = stringfy_value(action['fill_text'])
                 await self.page.evaluate(f'''(selector) => {{
@@ -250,7 +235,6 @@ class AsyncHTMLEnvironment:
                         }}
                     }}
                 ''', selector)
-                await self.page.wait_for_load_state('load')
                 self.html_content = await self.page.content()
             except Exception as e:
                 raise e
@@ -260,18 +244,15 @@ class AsyncHTMLEnvironment:
         self.page = await self.context.new_page()
         await self.page.goto("https://www.google.com/search?q="+action["fill_text"], timeout=30000)
         await self.page.wait_for_timeout(2000)
-        await self.page.wait_for_load_state('load')
         self.html_content = await self.page.content()
 
     async def go_back_last_page(self, action):
         self.page = self.last_page
         self.last_page = self.page
-        await self.page.wait_for_load_state('load')
         self.html_content = await self.page.content()
 
     async def select_option(self, action):
         try:
-            self.last_page = self.page
             label, element_id = self.tree.get_tag_name(
                 self.tree.elementNodes[action["element_id"]])
             action.update({"element_id": element_id,
@@ -337,7 +318,6 @@ class AsyncHTMLEnvironment:
 
     async def hover(self, action):
         try:
-            self.last_page = self.page
             label, element_id = self.tree.get_tag_name(
                 self.tree.elementNodes[action["element_id"]])
             action.update({"element_id": element_id,
@@ -350,12 +330,9 @@ class AsyncHTMLEnvironment:
             logger.error(
                 f"selector:{selector},label_name:{label},element_id: {element_id},error ({e}) in hover action.")
         try:
-            self.last_page = self.page
             await self.page.hover(selector)
-            # await self.page.wait_for_load_state('load')
             self.html_content = await self.page.content()
         except:
-            self.last_page = self.page
             hover = '''() => {
                         var element = document.querySelector('%s');
                         if (element) {
@@ -368,24 +345,16 @@ class AsyncHTMLEnvironment:
 
     async def scroll_down(self):
         try:
-            self.last_page = self.page
-            # 获取页面的总高度
             total_height = await self.page.evaluate("document.body.scrollHeight")
-            # 获取视窗的高度 720
             viewport_height = await self.page.evaluate("window.innerHeight")
-            # self.viewport_size['height']
-            # viewport_height = self.page.viewport_size['height']
             print("total_height:", total_height)
             print("viewport_height:", viewport_height)
             if total_height < viewport_height:
                 await self.page.evaluate("window.scrollBy(0, 500)")
                 print("scroll_down: By(0, 500)")
                 self.html_content = await self.page.content()
-            # 获取当前滚动位置
             current_scroll = await self.page.evaluate("window.pageYOffset")
-            # 计算剩余高度
             remaining_height = total_height - current_scroll - viewport_height
-            # 如果剩余高度小于或等于视窗高度，则滚动到页面底部
             if remaining_height <= viewport_height:
                 await self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                 print(f"scroll_down: scrollTo(0, {total_height})")
@@ -396,14 +365,12 @@ class AsyncHTMLEnvironment:
                 print(f"scroll_down: scrollTo(0, {scroll_amount})")
             self.html_content = await self.page.content()
         except:
-            self.last_page = self.page
             await self.page.mouse.wheel(0, 100)
             print("scroll_down: mouse.wheel(0, 100)")
             self.html_content = await self.page.content()
 
     async def scroll_up(self):
         try:
-            self.last_page = self.page
             # 获取视窗的高度
             viewport_height = await self.page.evaluate("window.innerHeight")
             # 获取当前滚动位置
@@ -417,7 +384,6 @@ class AsyncHTMLEnvironment:
                 await self.page.evaluate(f"window.scrollTo(0, {scroll_amount})")
             self.html_content = await self.page.content()
         except:
-            self.last_page = self.page
             await self.page.mouse.wheel(0, -100)
             self.html_content = await self.page.content()
 
@@ -436,63 +402,56 @@ class AsyncHTMLEnvironment:
                 try:
                     await self.click(action)
                 except Exception as e:
-                    error_message = f"can't execute click [{action['element_id']}, {element_value}] action. Because an error({e}) will occur"
-                    # print(error_message)
+                    error_message = f"Failed to execute click [{action['element_id']}, {element_value}] action. An error({e}) will occur"
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
             case ActionTypes.GOTO:
                 try:
                     await self.goto(action)
                 except Exception as e:
-                    error_message = f"can't execute goto [{action['url']}] action. Because an error({e}) will occur."
-                    # print(error_message)
+                    error_message = f"Failed to execute goto [{action['url']}] action. An error({e}) will occur."
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
             case ActionTypes.FILL_SEARCH:
                 try:
                     await self.fill_search(action)
                 except Exception as e:
-                    error_message = f"can't execute fill_form [{action['element_id']},{action['fill_text']}] action. Because an error({e}) will occur."
-                    # print(error_message)
+                    error_message = f"Failed to execute fill_form [{action['element_id']},{action['fill_text']}] action. An error({e}) will occur."
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
             case ActionTypes.FILL_FORM:
                 try:
                     await self.fill_form(action)
                 except Exception as e:
-                    error_message = f"can't execute fill_form [{action['element_id']},{action['fill_text']}] action. Because an error({e}) will occur."
-                    # print(error_message)
+                    error_message = f"Failed to execute fill_form [{action['element_id']},{action['fill_text']}] action. An error({e}) will occur."
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
             case ActionTypes.GOOGLE_SEARCH:
                 try:
                     await self.search(action)
                 except Exception as e:
-                    error_message = f"can't execute google_search[{action['fill_text']}] action. Because an error({e}) will occur."
-                    # print(error_message)
+                    error_message = f"Failed to execute google_search[{action['fill_text']}] action. An error({e}) will occur."
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
             case ActionTypes.GO_BACK:
                 try:
                     await self.go_back_last_page(action)
                 except Exception as e:
-                    error_message = f"can't execute go_back action. Because an error({e}) will occur."
-                    # print(error_message)
+                    error_message = f"Failed to execute go_back action. An error({e}) will occur."
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
             case ActionTypes.SELECT_OPTION:
                 try:
                     await self.select_option(action)
                 except Exception as e:
-                    error_message = f"can't execute select_option [{action['element_id']},{action['fill_text']}] action. Because an error({e}) will occur."
-                    # print(error_message)
+                    error_message = f"Failed to execute select_option [{action['element_id']},{action['fill_text']}] action. An error({e}) will occur."
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
             case ActionTypes.HOVER:
                 try:
                     await self.hover(action)
                 except Exception as e:
-                    error_message = f"can't execute hover [{action['element_id']},{element_value}] action. Because an error({e}) will occur"
+                    error_message = f"Failed to execute hover [{action['element_id']},{element_value}] action. An error({e}) will occur"
                     # print(error_message)
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
@@ -500,7 +459,7 @@ class AsyncHTMLEnvironment:
                 try:
                     await self.scroll_down()
                 except Exception as e:
-                    error_message = f"can't execute scroll_down action. Because an error({e}) will occur"
+                    error_message = f"Failed to execute scroll_down action. An error({e}) will occur"
                     # print(error_message)
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
@@ -508,16 +467,15 @@ class AsyncHTMLEnvironment:
                 try:
                     await self.scroll_up()
                 except Exception as e:
-                    error_message = f"can't execute scroll_up action. Because an error({e}) will occur"
+                    error_message = f"Failed to execute scroll_up action. An error({e}) will occur"
                     # print(error_message)
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
             case ActionTypes.NONE:
                 try:
-                    await self.page.wait_for_load_state('load')
                     self.html_content = await self.page.content()
                 except:
-                    error_message = f"can't execute none action. Because an error({e}) will occur"
+                    error_message = f"An error({e}) will occur"
                     # print(error_message)
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
@@ -558,20 +516,21 @@ class AsyncHTMLEnvironment:
             raise ValueError("Page not initialized or loaded.")
 
         # 捕获屏幕截图
-        encoded_screenshot = ""
-        for i in range(5):
+        screenshot_bytes = ""
+        for i in range(6):
             try:
                 screenshot_bytes = await self.page.screenshot()
-                print("async_env.py screenshot_bytes finished!")
-                # 使用 PIL 库将截图转换为 RGB 格式的图像:
-                # 使用 Python 的 BytesIO 类来处理截图的二进制数据，并使用 PIL（Python Imaging Library）库的 Image.open() 方法将其转换成一个图像对象。
-                # 接着，使用 convert("RGB") 方法将图像转换为 RGB 格式。
-                screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGB")
-                encoded_screenshot = self.encode_and_resize(screenshot)
                 break
             except:
                 print("async_env.py capture screenshot_bytes failed for", i+1, "times")
-                await asyncio.sleep(2 ** i)
+                await asyncio.sleep(1)
+
+        print("async_env.py screenshot_bytes finished!")
+        # 使用 PIL 库将截图转换为 RGB 格式的图像:
+        # 使用 Python 的 BytesIO 类来处理截图的二进制数据，并使用 PIL（Python Imaging Library）库的 Image.open() 方法将其转换成一个图像对象。
+        # 接着，使用 convert("RGB") 方法将图像转换为 RGB 格式。
+        screenshot = Image.open(BytesIO(screenshot_bytes)).convert("RGB")
+        encoded_screenshot = self.encode_and_resize(screenshot)
         # 仅用于判断图片是否是base64编码，后期程序稳定时可以考虑删除
         is_valid, message = is_valid_base64(
             encoded_screenshot)
@@ -594,8 +553,7 @@ class AsyncHTMLEnvironment:
         for attempt in range(retries):
             try:
                 await self.page.goto(url, timeout=20000)
-                await self.page.wait_for_timeout(2000*attempt)
-                await self.page.wait_for_load_state('networkidle')
+                await self.page.wait_for_timeout(2000)
                 return
             except Exception as e:
                 if "Timeout" in str(e):
@@ -605,7 +563,7 @@ class AsyncHTMLEnvironment:
                         await asyncio.sleep(delay * (attempt + 1))
                     else:
                         logger.error(
-                            f"Max retries{retries} reached, giving up.")
+                            f"Max retries {retries} reached, giving up.")
                         raise
 
     async def retry_content(self, max_retries=3):
@@ -614,7 +572,6 @@ class AsyncHTMLEnvironment:
             try:
                 await self.page.reload()
                 await self.page.wait_for_timeout(3000)
-                await self.page.wait_for_load_state('networkidle')
                 content = await self.page.content()
                 if not content.strip():
                     raise ValueError("Page content is empty")

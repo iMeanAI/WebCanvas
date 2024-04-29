@@ -30,13 +30,13 @@ class URLEvaluator(StepEvaluator):
         input_answer = unquote(input_answer)
         result_score = MatchFunction.exact_match(
             input_answer, reference_answer)
-        if result_score == 1:
-            print("url_exactly_match:", input_answer)
+        # if result_score == 1:
+        #     print("url_exactly_match:", input_answer)
         return result_score
 
     @staticmethod
     def url_include_match(input_url, reference_answer, key=None):
-        print(input_url, reference_answer)
+        # print(input_url, reference_answer)
         if key:
             try:
                 parsed_url = urlparse(input_url)
@@ -55,7 +55,7 @@ class URLEvaluator(StepEvaluator):
         input_answer = unquote(input_answer)
         result_score = MatchFunction.include_match(
             input_answer, reference_answer)
-        print("score:", result_score, input_answer)
+        # print("score:", result_score, input_answer)
         return result_score
 
     @staticmethod
@@ -81,8 +81,8 @@ class ElementEvaluator(StepEvaluator):
         score = 0
         if method == "xpath":
             if reference_netloc != input_netloc:
-                print("reference_netloc:", reference_netloc,
-                      "input_netloc:", input_netloc)
+                # print("reference_netloc:", reference_netloc,
+                #       "input_netloc:", input_netloc)
                 return 0
             try:
                 tree = html.fromstring(html_content)
@@ -100,15 +100,15 @@ class ElementEvaluator(StepEvaluator):
                             trace_up_count += 1
                             current_element = current_element.getparent()
                             score_parent = input_elements[0] is current_element
-                            score = max(score, score_parent)     
+                            score = max(score, score_parent)
                 except:
                     pass
             else:
                 score = 0
         elif method == "selector":
             if reference_netloc != input_netloc:
-                print("reference_netloc:", reference_netloc,
-                      "input_netloc:", input_netloc)
+                # print("reference_netloc:", reference_netloc,
+                #       "input_netloc:", input_netloc)
                 return 0
             try:
                 soup = BeautifulSoup(html_content, 'html.parser')
@@ -128,7 +128,7 @@ class ElementEvaluator(StepEvaluator):
                                 trace_up_count += 1
                                 current_element = current_element.parent
                                 score_parent = input_element is current_element
-                                score = max(score, score_parent) 
+                                score = max(score, score_parent)
                     except:
                         pass
             except:
@@ -147,8 +147,8 @@ class ElementEvaluator(StepEvaluator):
     @staticmethod
     def element_value_exact_match(input_answer, reference_answer, input_netloc, reference_netloc):
         if reference_netloc != input_netloc:
-            print("reference_netloc:", reference_netloc,
-                  "input_netloc:", input_netloc)
+            # print("reference_netloc:", reference_netloc,
+            #       "input_netloc:", input_netloc)
             return 0
         result_score = MatchFunction.exact_match(
             input_answer, reference_answer)
@@ -157,8 +157,8 @@ class ElementEvaluator(StepEvaluator):
     @staticmethod
     def element_value_include_match(input_answer, reference_answer, input_netloc, reference_netloc):
         if reference_netloc != input_netloc:
-            print("reference_netloc:", reference_netloc,
-                  "input_netloc:", input_netloc)
+            # print("reference_netloc:", reference_netloc,
+            #       "input_netloc:", input_netloc)
             return 0
         result_score = MatchFunction.include_match(
             input_answer, reference_answer)
@@ -167,8 +167,8 @@ class ElementEvaluator(StepEvaluator):
     @staticmethod
     async def element_value_semantic_match(input_answer, semantic_method, input_netloc, reference_netloc=0):
         if reference_netloc != input_netloc:
-            print("reference_netloc:", reference_netloc,
-                  "input_netloc:", input_netloc)
+            # print("reference_netloc:", reference_netloc,
+            #       "input_netloc:", input_netloc)
             return 0
         if len(input_answer) == 0:
             return 0
@@ -214,24 +214,26 @@ class MatchFunction():
         GPT35 = GPTGenerator35()
         semantic_request = SemanticMatchPromptConstructor(
         ).construct(input_answer, semantic_method)
-        # print(f"\033[32m{semantic_request}")  # 绿色
-        try:  # 重试两次
-            response, _ = await GPT35.request(semantic_request)
-            print(response)
-            score = re.findall("```(.*?)```", response, re.S)[0]
-            score = eval(score)
-            score = max(0, min(1, score))  # 将数字限定在0,1之间
-        except:
-            response, _ = await GPT35.request(semantic_request)
-            print(response)
-            score = re.findall("```(.*?)```", response, re.S)[0]
-            score = eval(score)
-            score = max(0, min(1, score))  # 将数字限定在0,1之间
+
+        score = None
+        Max_Semantic_Match_Count = 3
+        for i in range(Max_Semantic_Match_Count):
+            try:
+                response, _ = await GPT35.request(semantic_request)
+                score = re.findall("```(.*?)```", response, re.S)[0]
+                score = eval(score)
+                score = max(0, min(1, score))  # 将数字限定在0,1之间
+                if score != None:
+                    break
+            except:
+                score = None
+        if score == None:
+            score = 0
         if score != 0 and score != 1:
-            print("semantic_method:", semantic_method,
-                  "input_answer:", input_answer, score)
+            # print("semantic_method:", semantic_method,
+            #       "input_answer:", input_answer, score)
             return round(score, 2)
         else:
-            print("semantic_method:", semantic_method,
-                  "input_answer:", input_answer, score)
+            # print("semantic_method:", semantic_method,
+            #       "input_answer:", input_answer, score)
             return score

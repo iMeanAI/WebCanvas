@@ -450,6 +450,7 @@ async def main(num_steps=0, mode="dom"):
                     path[0], path[1]) if path is not None else (None, None)
 
                 each_step_dict["current_trace"] = current_trace
+                each_step_dict["action"] = execute_action
                 each_step_dict["selector"] = selector
                 each_step_dict["xpath"] = xpath
                 each_step_dict["element_value"] = element_value
@@ -481,9 +482,9 @@ async def main(num_steps=0, mode="dom"):
                     each_step_dict["step_reward"] = {}
 
                 if total_step_score == len(reference_evaluate_steps):
-                    steps_list.append(each_step_dict)
+                    # steps_list.append(each_step_dict)
                     task_finished = True
-                    break
+                    # break
 
                 # 动作执行
                 try:
@@ -533,7 +534,7 @@ async def main(num_steps=0, mode="dom"):
                 additional_steps += step_increase
                 num_steps += 1
                 steps_list.append(each_step_dict)
-                if num_steps >= 25 or task_global_status == "finished":  # 防止无限循环
+                if num_steps >= 25 or task_global_status == "finished" or task_finished:  # 防止无限循环
                     break
 
             a = input("回车继续下一个Action，按q退出")
