@@ -242,7 +242,7 @@ class Planning:
                    user_request,
                    text_model_name,
                    global_reward_text_model_name,
-                   json_model_response, previous_trace, observation, feedback, mode, observation_VforD, ground_truth_mode, ground_truth_data, task_name_id, global_reward_mode, current_info, global_reward: bool = True):  # TODO
+                   json_model_response, previous_trace, observation, feedback, mode, observation_VforD, ground_truth_mode, ground_truth_data, task_name_id, global_reward_mode, current_info):
         start_time = time.time()
 
         # 创建GPT查询类
@@ -271,14 +271,15 @@ class Planning:
             gpt_global_reward_text = GPTGenerator(model=global_reward_text_model_name)
 
         # get global reward
-        reward_response, status_and_description = await InteractionMode(text_model=gpt_global_reward_text, visual_model=gpt4v).get_global_reward(
-            user_request=user_request, previous_trace=previous_trace, observation=observation,
-            current_info=current_info, ground_truth_mode=ground_truth_mode, global_reward_mode=global_reward_mode,
-            ground_truth_data=ground_truth_data, task_name_id=task_name_id)
-
-        # 构建planning prompt及查询
+        reward_response = ""
+        status_and_description = ""
         status_description = ""
-        if global_reward:
+        if global_reward_mode != "no_global_reward":
+            reward_response, status_and_description = await InteractionMode(text_model=gpt_global_reward_text, visual_model=gpt4v).get_global_reward(
+                user_request=user_request, previous_trace=previous_trace, observation=observation,
+                current_info=current_info, ground_truth_mode=ground_truth_mode, global_reward_mode=global_reward_mode,
+                ground_truth_data=ground_truth_data, task_name_id=task_name_id)
+            # 构建planning prompt及查询
             status_description = status_and_description.get(
                 "description") if status_and_description and status_and_description.get("description") else ""
 

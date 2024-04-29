@@ -41,11 +41,22 @@ def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json
                 reference_evaluate_steps.append({"match_function": match_function,
                                                  "key": key, "reference_answer": reference_answer, "score": 0})
             elif "element_path" in match_function:  # TODO
+                # content = evaluation.get("content")  # 使用 get 避免 KeyError
+                # if content:
+                #     key = content.get("key", "")  # 同样使用 get，并提供默认值
+                #     reference_answer = content.get("reference_answer", "")  # 提供默认值
+                #     method = content.get("method", "")
+                #     netloc = content.get("netloc", "")
+                #     reference_evaluate_steps.append({"match_function": match_function, "method": method,
+                #                                      "reference_answer": reference_answer, "netloc": netloc,
+                #                                      "score": 0})
                 reference_answer = evaluation["content"]["reference_answer"]
                 method = evaluation["method"]
                 netloc = evaluation["content"]["netloc"]
                 reference_evaluate_steps.append({"match_function": match_function, "method": method,
-                                                 "reference_answer": reference_answer, "netloc": netloc, "score": 0})
+                                                 "reference_answer": reference_answer, "netloc": netloc,
+                                                 "score": 0})
+
             elif "element_value" in match_function:
                 reference_answer = evaluation["content"]["reference_answer"]
                 netloc = evaluation["content"]["netloc"]
@@ -269,6 +280,7 @@ async def get_observation(mode: str, env: AsyncHTMLEnvironment, action: Action):
 
 
 async def main(num_steps=0,
+               global_reward_mode="no_global_reward",
                text_model_name="gpt-4-turbo",
                global_reward_text_model_name="gpt-4-turbo",
                json_model_response=False,
@@ -278,7 +290,7 @@ async def main(num_steps=0,
     # result record for experiments_tasks
     record_time_short = time.strftime("%Y%m%d", time.localtime())
     record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-    write_result_file_path = f"./csv_results/group_sample_{record_time_short}/{mode}_{record_time}"
+    write_result_file_path = f"./csv_results/group_sample_{record_time_short}/{record_time}_{mode}_{text_model_name}_{global_reward_mode}_{ground_truth_mode}"
 
     # get reference data in experiment_tasks mode
     file = None
@@ -310,7 +322,7 @@ async def main(num_steps=0,
         task_range = range(raw_data_start_index, raw_data_end_index)
         task_range1 = score_dif
     elif task_mode == "single_task":
-        task_range = [1]
+        task_range = range(0, 1)
 
     for task_index in task_range:
         response_error_count = 0
@@ -372,9 +384,8 @@ async def main(num_steps=0,
                 headless=False,
                 slow_mo=1000,
                 current_viewport_only=False,
-                viewport_size={"width": 1920, "height": 1280} if mode == "dom" else {
-                    "width": 1080, "height": 720},
-                # "width": 1080, "height": 720
+                viewport_size={"width": 1080, "height": 720},
+                # "width": 1080, "height": 720; "width": 1080, "height": 720
                 save_trace_enabled=False,
                 sleep_after_execution=0.0,
                 locale="en-US",
@@ -665,20 +676,22 @@ if __name__ == "__main__":
                              "'vision' for vision-based interaction, "
                              "'d_v' for DOM-based and vision-based interaction.")
     parser.add_argument("--ground_truth_mode", choices=[True, False],
-                        default=True, help="Choose whether to use ground truth data.")
-    parser.add_argument("--global_reward_mode", choices=["dom_vision_reward", "dom_reward", "vision_reward"],
+                        default=False, help="Choose whether to use ground truth data.")
+    parser.add_argument("--global_reward_mode",
+                        choices=["dom_vision_reward",
+                                 "dom_reward",
+                                 "vision_reward",
+                                 "no_global_reward"],
                         default="dom_reward", help="Choose the mode of global reward.")
     parser.add_argument("--index", "--i", type=str, default=-1)
     args = parser.parse_args()
     interaction_mode = args.observation_mode
     raw_data_index = args.index
     # setting is below
-    global_reward_mode = args.global_reward_mode
     task_mode = "experiment_tasks"  # "experiment_tasks" or "single_task"
     single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
-    ground_truth_mode = args.ground_truth_mode
     # - setting: file path of experiment_tasks reference data
-    if ground_truth_mode:
+    if args.ground_truth_mode:
         # ground_truth_file_path = "./data/ground_truth/GTR_tasks_instructions_0329_FOR_sample_all_data_0327.json"
         ground_truth_file_path = "./data/ground_truth/GT_instructions_202404161811_for_all_data_0328.json"
         # check if ground_truth_file_path exists
@@ -687,9 +700,10 @@ if __name__ == "__main__":
             exit()
 
     # "./data/data_update_0326/group_sample_all_data_0327.json"
-    asyncio.run(main(text_model_name="gpt-3.5-turbo",
-                     global_reward_text_model_name="gpt-4-turbo",
+    asyncio.run(main(global_reward_mode=args.global_reward_mode,
+                     text_model_name="gpt-3.5-turbo",
+                     global_reward_text_model_name="gpt-3.5-turbo",
                      json_model_response=True,
                      mode=interaction_mode,
-                     ground_truth_mode=ground_truth_mode,
+                     ground_truth_mode=args.ground_truth_mode,
                      file_path="./data/data_0328/all_data_0328.json"))
