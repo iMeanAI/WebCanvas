@@ -66,20 +66,6 @@ class HTMLTree:
         self.nodeCounts = node_id
         self.valid = self.valid[:self.nodeCounts + 1]
 
-    def pre_trav_tree(self) -> None:
-        root = self.elementNodes[0]
-        stack = [root]
-        while stack:
-            node = stack.pop()
-            if node["tagName"] == 'input':
-                print("yes")
-                print(node["nodeId"])
-                self.get_node_info(node["parentId"], False)
-            children = []
-            for child_id in node["childIds"]:
-                children.append(self.elementNodes[child_id])
-            stack.extend(reversed(children))
-
     def build_html_tree(self, root) -> None:
         node_queue = deque([root])
         root_id = self.rawNode2id[root]
@@ -102,24 +88,6 @@ class HTMLTree:
                 node_queue.append(child)
                 sibling_id += 1
         self.pruningTreeNode = copy.deepcopy(self.elementNodes)
-
-    def get_node_info(self, idx: int, pruning: bool = True) -> None:
-        if pruning is True:
-            elementNode = self.pruningTreeNode[idx]
-        else:
-            elementNode = self.elementNodes[idx]
-        print("*" * 10)
-        print("nodeId: ", elementNode["nodeId"])
-        print("childIds: ", elementNode["childIds"])
-        print("parentId:", elementNode["parentId"])
-        print("siblingId:", elementNode["siblingId"])
-        print("depth:", elementNode["depth"])
-        print("tagName: ", elementNode["tagName"])
-        print("text: ", elementNode["text"])
-        print("attributes: ", elementNode["attributes"])
-        print("htmlcontents:", elementNode["htmlContents"])
-        print("*" * 10)
-        print(" " * 10)
 
     def get_xpath(self, idx: int) -> str:
         locator_str = ""
@@ -146,9 +114,6 @@ class HTMLTree:
             tag_name = current_node["tagName"]
             siblingId = str(current_node["siblingId"])
             if current_node["attributes"].get('id'):
-                # current_node["attributes"].get('id').replace(
-                #     "[", "\\[").replace("]", "\\]")
-                # return "#" + current_node["attributes"].get('id') + selector_str
                 current_selector = stringfy_selector(
                     current_node["attributes"].get('id'))
                 return "#" + current_selector + selector_str
@@ -176,32 +141,11 @@ class HTMLTree:
             current_node = self.elementNodes[current_node["parentId"]]
         return current_node["tagName"] + selector_str
 
-    def xpath_element(self, locator_str: str) -> None:
-        try:
-            elements = self.copy_tree.xpath(locator_str)
-            element = elements[0]
-            if element is not None:
-                print(element.tag, element.attrib, element.text)
-        except Exception as e:
-            print(
-                f"error occur {e}")
-
-    def select_element(self, locator_str: str) -> None:
-        try:
-            elements = self.copy_tree.getroot().cssselect(locator_str)
-            element = elements[0]
-            if element is not None:
-                print(element.tag, element.attrib, element.text)
-        except Exception as e:
-            print(
-                f"error occur {e}")
-
     def is_valid(self, idx: int) -> bool:
         node = self.pruningTreeNode[idx]
         if node["tagName"] in TagNameList:
             return ActiveElements.is_valid_element(node)
 
-    # 通过后序遍历判断是否是有效tag
     def prune_tree(self) -> str:
         """遍历每个元素判断是否有效并剪枝"""
         result_list = []
@@ -254,14 +198,7 @@ class HTMLTree:
             tag_idx = element["nodeId"]
             # TODO 添加更多映射关系
             if tag_name in MapTagNameList:
-                # 从兄弟节点获得可交互元素且优先级高于父节点
                 parent_element = self.pruningTreeNode[element["parentId"]]
-                # for broId in parent_element["childIds"]:
-                #     if broId != tag_idx:
-                #         bro_element = self.pruningTreeNode[broId]
-                #         bro_element_tag_name = ActiveElements.get_element_tagName(bro_element)
-                #         if bro_element_tag_name != "unknown":
-                #             return (bro_element_tag_name,broId)
                 return self.get_tag_name(parent_element)
             else:
                 return ("statictext", tag_idx)
@@ -274,7 +211,6 @@ class HTMLTree:
         num = 0
         while stack:
             node = stack.pop()
-            # if len(node["childIds"]) == 0 and self.valid[node["nodeId"]] is True:
             if self.valid[node["nodeId"]] is True:
                 content_text = HTMLTree().process_element_contents(node)
                 if content_text != "":
@@ -291,27 +227,6 @@ class HTMLTree:
                 children.append(self.pruningTreeNode[child_id])
             stack.extend(reversed(children))
         return contents
-
-    def get_parents_id(self, idx: int) -> (str, str, str):  # type: ignore
-        parentid_str = ""
-        parent_tag_str = ""
-        current_node = self.elementNodes[idx]
-        nodeId = current_node["nodeId"]
-        tagName = current_node["tagName"]
-        twinId = current_node["twinId"]
-        parent_tag_str += tagName + "->"
-        parentid_str += str(nodeId) + "->"
-        twinId_str = str(twinId) + "->"
-        while current_node["parentId"] != -1:
-            nodeId = current_node["parentId"]
-            current_node = self.elementNodes[nodeId]
-            tagName = current_node["tagName"]
-            twinId = current_node["twinId"]
-            parent_tag_str += tagName + "->"
-            parentid_str += str(nodeId) + "->"
-            twinId_str += str(twinId) + "->"
-        parentid_str += "-1"
-        return parentid_str, parent_tag_str, twinId_str
 
     def get_selector_and_xpath(self, idx: int) -> (str, str):  # type: ignore
         try:

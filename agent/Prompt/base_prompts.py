@@ -3,8 +3,6 @@ class BasePrompts:
     example_output = '\n```\n{\n  "action": "click",\n  "action_input": "button",\n  "element_id": "236",\n  "description": "Now I\'m on Google\'s main page. I\'m now clicking the button with element_id [236] to see more information."\n}\n```'
     score_output = '\n```\n{\n "score": "10"\n,"description": "According to the previous trajectory, the current thought and the action performed are an important part of completing the target task, so it is very important, so I give 10 points"}\n```'
 
-    #TODO: Thought space改为分析当前这步的规划，确认一下REACT有没有做过多步推理的实验
-    #TODO：planning加入go back动作，并实现动作执行
     planning_prompt_system = '''You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best as you can.
         There are key information you will get:
         **Key Information**:
@@ -89,23 +87,6 @@ class BasePrompts:
 
     planning_prompt_user = "The question here is described as \"{{user_request}}\".\n\n"
 
-    # global_reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain task."\
-    #     "Your objective is to assess the completion status of the target task by analyzing the preceding trajectory and assigning an appropriate score ranging from 0% to 10"\
-    #     "This entails acquiring crucial details, including the score from the most recent task accomplishment and the distinctive features of the new web page, represented through an accessibility tree or screenshot."\
-    #     "If you are entirely certain about completing the target task, just return 'finished'(without quotation marks);\n"\
-    #     "If you believe you have completed the intermediate steps of the target task but not entirely finish the target task,you should return 'doing'(without quotation marks);\n"\
-    #     "If you find that the target task is too difficult to complete, you should return 'hard'(without quotation marks);\n"\
-    #     "If you find that the the last two steps of previous actions are the same, it is determined that the process is stuck in a local optimum solution and you should return 'loop'(without quotation marks);\n"\
-    #     "Also, you should have description for completing the target task base on the score\n"\
-    #     "Above all,you should return the status of completing the targe task and description of task completion"\
-    #     "Here is an example of a valid $JSON_BLOB:\n\n```\n{\n  \"status\": $finished,\n  \"description\": $description,\n }\n```\n\n"\
-
-    # "Tools are goto(jump to url), fill_form(fill in the blank), google_search, switch_tab(switch window tab) and click. You should only use tools above!\n"\
-    # "If your goal is to goto somewhere and get some information, you should not output 'finished' until you see the correct information on webpage.\n"\
-    # "For example, if your goal is to set up a calendar or meeting or send an e-mail, you should not output 'finished' until you click send/submit/save button;"\
-    #TODO: previous trace里面包含了reward，需描述一下
-    #TODO: 调整一下global reward的例子，给个3分的样例 @sida
-    #TODO：在有ground truth实验时，加入url的设计
     global_reward_prompt_system = ('''\
         You are an assistant to help navigate and operate the web page to achieve certain task.
         Your goal is to evaluate the previous series of traces(thoughts and actions) and think about what key steps are needed to complete the task in the future.
@@ -221,16 +202,6 @@ class BasePrompts:
 
     global_reward_prompt_user = "The target task here is described as \"{{user_request}}\".\n\n"\
         "The previous trajectories(thoughts, actions and reflections) are: {{stringfy_thought_and_action_output}}.\n\nYou have done the things above.\n\n"
-
-
-    # current_reward_prompt_system = "You are an assistant to help navigate and operate the web page to achieve certain task.\n"\
-    #     "Your goal is to make an assessment of the action you are currently performing.\n There are key information you will get：\n"\
-    #     "1. You will get all previous trace including thoughts and actions for achieving the task.\n"\
-    #     "2. You will get current thought and action.\n"\
-    #     "3. You will get key information from current web page,such as accessibility tree.\n"\
-    #     "Please judge whether executing this action is helpful for finishing the target task,and give this action a rating, range from [1,3,7,9,10]. Give your score.\n"\
-    #     "Also, you should give the reason or description for giving this score.\n"\
-    #     f"Example output:{str(score_output)}\n"
 
     current_reward_prompt_system = '''You are an assistant to help navigate and operate the web page to achieve certain task.
         Your goal is to make an assessment of the action you are currently performing.

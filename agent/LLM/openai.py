@@ -9,8 +9,8 @@ from agent.Utils import *
 
 
 class GPTGenerator:
-    def __init__(self):
-        self.model = ""
+    def __init__(self, model=None):
+        self.model = model
 
     async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7
                       ) -> (str, str):
@@ -70,8 +70,8 @@ class JSONModeMixin(GPTGenerator):
     A mixin to add JSON mode support to GPTGenerator classes.
     """
 
-    def __init__(self):
-        super().__init__()  # Ensure initialization from base class
+    def __init__(self, model=None):
+        super().__init__(model=model)  # Ensure initialization from base class
         self.response_format = {"type": "json_object"}  # Set response format to JSON object
 
     @staticmethod
@@ -88,31 +88,31 @@ class JSONModeMixin(GPTGenerator):
 
 # Example subclass with JSON mode support
 class GPTGenerator35WithJSON(JSONModeMixin):
-    def __init__(self):
-        super().__init__()
-        self.model = "gpt-3.5-turbo-0125"
+    def __init__(self, model=None):
+        super().__init__(model=model if model is not None else "gpt-3.5-turbo")
 
 
 class GPTGenerator4WithJSON(JSONModeMixin):
-    def __init__(self):
-        super().__init__()
-        self.model = "gpt-4-turbo-preview"
+    def __init__(self, model=None):
+        super().__init__(model=model if model is not None else "gpt-4-turbo")
+
+
+class GPTGeneratorWithJSON(JSONModeMixin):
+    def __init__(self, model=None):
+        super().__init__(model=model if model is not None else "gpt-4-turbo")
 
 
 # Subclass without JSON mode
 class GPTGenerator35(GPTGenerator):
-    def __init__(self):
-        super().__init__()
-        self.model = "gpt-3.5-turbo-0125"
+    def __init__(self, model=None):
+        super().__init__(model=model if model is not None else "gpt-3.5-turbo")
 
 
 class GPTGenerator4(GPTGenerator):
-    def __init__(self):
-        super().__init__()
-        self.model = "gpt-4-turbo-preview"
+    def __init__(self, model=None):
+        super().__init__(model=model if model is not None else "gpt-4-turbo")
 
 
 class GPTGenerator4V(GPTGenerator):
-    def __init__(self):
-        super().__init__()
-        self.model = "gpt-4-vision-preview"  # 指定模型为GPT-4 Vision
+    def __init__(self, model=None):
+        super().__init__(model=model if model is not None else "gpt-4-turbo")

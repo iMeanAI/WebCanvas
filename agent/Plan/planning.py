@@ -20,9 +20,9 @@ class InteractionMode:
                                 global_reward_mode, ground_truth_data=None, task_name_id=None):
         status_and_description = None
         if len(previous_trace) > 0:
-            stringfy_thought_and_action_output = ObservationPromptConstructor().stringfy_thought_and_action(
+            stringfy_thought_and_action_output = PlanningPromptConstructor().stringfy_thought_and_action(
                 previous_trace)
-            if ground_truth_mode == "false":
+            if not ground_truth_mode:
                 reward_request = RewardPromptConstructor().construct(
                     ground_truth_mode=ground_truth_mode,
                     global_reward_mode=global_reward_mode,
@@ -30,7 +30,7 @@ class InteractionMode:
                     stringfy_thought_and_action_output=stringfy_thought_and_action_output,
                     observation=observation,
                     current_info=current_info)
-            elif ground_truth_mode == "true":
+            elif ground_truth_mode:
                 for item in ground_truth_data:
                     if item.get("index") == task_name_id:
                         instruction = item["instruction"]
@@ -52,16 +52,16 @@ class InteractionMode:
                         stringfy_thought_and_action_output=stringfy_thought_and_action_output,
                         observation=observation,
                         current_info=current_info)
-            # print(f"\033[32mGlobal_reward_Request{reward_request}")  # 绿色
-            # print("\033[0m")
             print_info(
                 f"Global_Reward_Request:\n{print_limited_json(reward_request, limit=1000)}", "\033[32m")  # 绿色
             reward_response = ""
             for i in range(3):
                 try:
                     if "vision" in global_reward_mode:
+                        # TODO
                         reward_response, error_message = await self.visual_model.request(reward_request)
                     else:
+                        print_info(f"using gpt_global_reward_text: {self.text_model.model}", "purple")
                         reward_response, error_message = await self.text_model.request(reward_request)
                     status_and_description = ActionParser().extract_status_and_description(
                         reward_response)
@@ -87,12 +87,13 @@ class DomMode(InteractionMode):
         super().__init__(text_model, visual_model)
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
-        planning_request = ObservationPromptConstructor().construct(
+        planning_request = PlanningPromptConstructor().construct(
             user_request, previous_trace, observation, feedback, status_description)
         # print(f"\033[32m{planning_request}")  # 绿色
         # print("\033[0m")
         logger.info(
             f"\033[32mDOM_based_planning_request:\n{planning_request}\033[0m")
+        print_info(f"gpt_planning_text_model: {self.text_model.model}", "purple")
         planning_response, error_message = await self.text_model.request(planning_request)
         return planning_response, error_message, None, None
 
@@ -208,7 +209,7 @@ class DVMode(InteractionMode):
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         # d_v模式的代码
-        planning_request = D_VObservationPromptConstructor().construct(
+        planning_request = D_VPlanningPromptConstructor().construct(
             user_request, previous_trace, observation, observation_VforD, feedback, status_description)
 
         print(
@@ -224,7 +225,7 @@ class VisionMode(InteractionMode):
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         # vision模式的代码
-        planning_request = VisionObservationPromptConstructor(
+        planning_request = VisionPlanningPromptConstructor(
         ).construct(user_request, previous_trace, observation)
         print(f"\033[32m{planning_request}")  # 绿色
         print("\033[0m")
@@ -235,36 +236,53 @@ class VisionMode(InteractionMode):
 
 class Planning:
     @staticmethod
-    async def plan(uuid, user_request, previous_trace, observation, feedback, mode, observation_VforD, ground_truth_mode, ground_truth_data, task_name_id, global_reward_mode, current_info, global_reward: bool = True):  # TODO
-        start_time = time.time()
+    async def plan(user_request,
+                   text_model_name,
+                   global_reward_text_model_name,
+                   json_model_response, previous_trace, observation, feedback, mode, observation_VforD, ground_truth_mode, ground_truth_data, task_name_id, global_reward_mode, current_info):
 
         # 创建GPT查询类
         gpt35 = GPTGenerator35()
         gpt4 = GPTGenerator4()
         gpt4v = GPTGenerator4V()
-        text_model = "gpt-4-turbo-preview"  # 临时指定模型
-        all_json_models = ["gpt-4-turbo-preview", "gpt-4-turbo-0125", "gpt-3.5-turbo-0125", "gpt-3.5-turbo-preview"]
-        if text_model in ["gpt-4-turbo-0125", "gpt-4-turbo-preview"]:
-            gpt4 = GPTGenerator4WithJSON()
-        elif text_model in ["gpt-3.5-turbo-0125", "gpt-3.5-turbo-preview"]:
-            gpt35 = GPTGenerator35WithJSON()
+        all_json_models = ["gpt-4-turbo",
+                           "gpt-4-turbo-2024-04-09",
+                           "gpt-4-turbo-preview",
+                           "gpt-4-0125-preview",
+                           "gpt-4-1106-preview",
+                           "gpt-3.5-turbo",
+                           "gpt-3.5-turbo-0125",
+                           "gpt-3.5-turbo-preview"]
+        if json_model_response:
+            if text_model_name in all_json_models:
+                gpt_planning_text = GPTGeneratorWithJSON(model=text_model_name)
+                gpt_global_reward_text = GPTGeneratorWithJSON(model=global_reward_text_model_name)
+            else:
+                gpt_planning_text = GPTGenerator(model=text_model_name)
+                gpt_global_reward_text = GPTGenerator(model=global_reward_text_model_name)
+                logger.info(
+                    "The text model does not support JSON mode.")
+        else:
+            gpt_planning_text = GPTGenerator(model=text_model_name)
+            gpt_global_reward_text = GPTGenerator(model=global_reward_text_model_name)
 
         # get global reward
-        reward_response, status_and_description = await InteractionMode(text_model=gpt4, visual_model=gpt4v).get_global_reward(
-            user_request=user_request, previous_trace=previous_trace, observation=observation,
-            current_info=current_info, ground_truth_mode=ground_truth_mode, global_reward_mode=global_reward_mode,
-            ground_truth_data=ground_truth_data, task_name_id=task_name_id)
-
-        # 构建planning prompt及查询
+        reward_response = ""
+        status_and_description = ""
         status_description = ""
-        if global_reward:
+        if global_reward_mode != "no_global_reward":
+            reward_response, status_and_description = await InteractionMode(text_model=gpt_global_reward_text, visual_model=gpt4v).get_global_reward(
+                user_request=user_request, previous_trace=previous_trace, observation=observation,
+                current_info=current_info, ground_truth_mode=ground_truth_mode, global_reward_mode=global_reward_mode,
+                ground_truth_data=ground_truth_data, task_name_id=task_name_id)
+            # 构建planning prompt及查询
             status_description = status_and_description.get(
                 "description") if status_and_description and status_and_description.get("description") else ""
 
         modes = {
-            "dom": DomMode(text_model=gpt4),
-            "dom_v_desc": DomVDescMode(visual_model=gpt4v, text_model=gpt4),
-            "vision_to_dom": VisionToDomMode(visual_model=gpt4v, text_model=gpt4),
+            "dom": DomMode(text_model=gpt_planning_text),
+            "dom_v_desc": DomVDescMode(visual_model=gpt4v, text_model=gpt_planning_text),
+            "vision_to_dom": VisionToDomMode(visual_model=gpt4v, text_model=gpt_planning_text),
             "d_v": DVMode(visual_model=gpt4v),
             "vision": VisionMode(visual_model=gpt4v)
         }
@@ -277,18 +295,15 @@ class Planning:
             observation=observation,
             feedback=feedback,
             observation_VforD=observation_VforD)
-        # print(f"\033[34mOpenai_Planning_Response:\n{planning_response}")  # 蓝色
-        # print("\033[0m")
-        logger.info(
-            f"\033[34mOpenai_Planning_Response:\n{planning_response}\033[0m")
-        # 提取出planning thought(str)和planning action(dict), 其中planning action拥有action, element_id, action_input, description四个字段
+
+        logger.info(f"\033[34mOpenai_Planning_Response:\n{planning_response}\033[0m")
         if mode != "vision_to_dom":
             try:
                 planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(
                     planning_response)
             except ResponseError as e:
                 logger.error(f"Response Error:{e.message}")
-                raise
+                raise 
 
         if planning_response_action.get('action') == "fill_form":
             JudgeSearchbarRequest = JudgeSearchbarPromptConstructor().construct(
@@ -314,11 +329,9 @@ class Planning:
         elif mode == "vision":
             planning_response_action = {element: planning_response_action.get(
                 element, "") for element in ["action", "description"]}
-        execute_time = time.time() - start_time
         logger.info("****************")
         # logger.info(planning_response_action)
         dict_to_write = {}
-        dict_to_write['uuid'] = uuid
         if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
             dict_to_write['id'] = planning_response_action['element_id']
             dict_to_write['action_type'] = planning_response_action['action']
@@ -326,47 +339,8 @@ class Planning:
         elif mode == "vision":
             dict_to_write['action'] = planning_response_action['action']
         dict_to_write['description'] = planning_response_action['description']
-        dict_to_write['execute_time'] = execute_time
         dict_to_write['error_message'] = error_message
-        dict_to_write['openai_response'] = planning_response
 
         return dict_to_write
 
-    @staticmethod
-    async def evaluate(user_request, previous_trace, current_trace, observation, observation_VforD=""):  # TODO
-        GPT4 = GPTGenerator4()
-        GPT4V = GPTGenerator4V()
-        GPT35 = GPTGenerator35()
-        # current_trace = [current_trace]
-        if len(previous_trace) > 0:
-            stringfy_previous_trace_output = ObservationPromptConstructor(
-            ).stringfy_thought_and_action(previous_trace)
-            # current_trace = json5.loads(current_trace, encoding="utf-8")[0]
-            stringfy_current_trace_output = f'Current Step:\"Thought: {current_trace["thought"]}, Action: {current_trace["action"]}\";\n'
-            if observation_VforD == "":
-                current_reward_resquest = CurrentRewardPromptConstructor().construct(
-                    user_request, stringfy_previous_trace_output, stringfy_current_trace_output, observation)
-                print(f"\033[32m{current_reward_resquest}")  # 绿色
-                print("\033[0m")
-                evaluate_response, error_message = await GPT35.request(current_reward_resquest)
-                score_description = ActionParser().extract_score_and_description(
-                    evaluate_response)
-                # 蓝色
-                print(f"\033[34mCurrent_reward_Response:\n{score_description}")
-                print("\033[0m")
-                return score_description
-            else:
-                vision_reward_resquest = VisionRewardPromptConstructor().construct(user_request,
-                                                                                   stringfy_previous_trace_output,
-                                                                                   stringfy_current_trace_output,
-                                                                                   observation, observation_VforD)
-                print(f"\033[32m{vision_reward_resquest}")  # 绿色
-                print("\033[0m")
-                evaluate_response, error_message = await GPT4V.request(vision_reward_resquest)
-                score_description = ActionParser().extract_score_and_description(
-                    evaluate_response)
-                # 蓝色
-                print(f"\033[34mVision_reward_Response:\n{score_description}")
-                print("\033[0m")
-                return score_description
-        return ""
+ 

@@ -6,7 +6,7 @@ gymnasium
 playwright==1.32.1
 Pillow
 evaluate
-openai==0.27.0
+openai
 types-tqdm
 tiktoken
 aiolimiter
@@ -17,3 +17,4 @@ text-generation
 transformers==4.33.2
 bs4
 lxml
+colorlog
