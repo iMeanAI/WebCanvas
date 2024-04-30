@@ -66,20 +66,6 @@ class HTMLTree:
         self.nodeCounts = node_id
         self.valid = self.valid[:self.nodeCounts + 1]
 
-    def pre_trav_tree(self) -> None:
-        root = self.elementNodes[0]
-        stack = [root]
-        while stack:
-            node = stack.pop()
-            if node["tagName"] == 'input':
-                print("yes")
-                print(node["nodeId"])
-                self.get_node_info(node["parentId"], False)
-            children = []
-            for child_id in node["childIds"]:
-                children.append(self.elementNodes[child_id])
-            stack.extend(reversed(children))
-
     def build_html_tree(self, root) -> None:
         node_queue = deque([root])
         root_id = self.rawNode2id[root]
@@ -102,24 +88,6 @@ class HTMLTree:
                 node_queue.append(child)
                 sibling_id += 1
         self.pruningTreeNode = copy.deepcopy(self.elementNodes)
-
-    def get_node_info(self, idx: int, pruning: bool = True) -> None:
-        if pruning is True:
-            elementNode = self.pruningTreeNode[idx]
-        else:
-            elementNode = self.elementNodes[idx]
-        print("*" * 10)
-        print("nodeId: ", elementNode["nodeId"])
-        print("childIds: ", elementNode["childIds"])
-        print("parentId:", elementNode["parentId"])
-        print("siblingId:", elementNode["siblingId"])
-        print("depth:", elementNode["depth"])
-        print("tagName: ", elementNode["tagName"])
-        print("text: ", elementNode["text"])
-        print("attributes: ", elementNode["attributes"])
-        print("htmlcontents:", elementNode["htmlContents"])
-        print("*" * 10)
-        print(" " * 10)
 
     def get_xpath(self, idx: int) -> str:
         locator_str = ""
@@ -146,9 +114,6 @@ class HTMLTree:
             tag_name = current_node["tagName"]
             siblingId = str(current_node["siblingId"])
             if current_node["attributes"].get('id'):
-                # current_node["attributes"].get('id').replace(
-                #     "[", "\\[").replace("]", "\\]")
-                # return "#" + current_node["attributes"].get('id') + selector_str
                 current_selector = stringfy_selector(
                     current_node["attributes"].get('id'))
                 return "#" + current_selector + selector_str
@@ -181,7 +146,6 @@ class HTMLTree:
         if node["tagName"] in TagNameList:
             return ActiveElements.is_valid_element(node)
 
-    # 通过后序遍历判断是否是有效tag
     def prune_tree(self) -> str:
         """遍历每个元素判断是否有效并剪枝"""
         result_list = []

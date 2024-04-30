@@ -2,7 +2,6 @@ import time
 import json5
 import requests
 from agent.Environment.html_env.async_env import AsyncHTMLEnvironment, ActionExecutionError
-from agent.Environment.html_env.vision_async_env import VisionAsyncHTMLEnvironment
 from evaluate import *
 from agent.Plan import *
 from playwright.async_api import Playwright, async_playwright, expect, Page
@@ -17,8 +16,6 @@ import toml
 from agent.Utils.utils import *
 # evaluate tools
 from evaluate_utils import *
-
-from result import write_result_to_excel
 
 
 def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json"):
@@ -40,15 +37,6 @@ def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json
                 reference_evaluate_steps.append({"match_function": match_function,
                                                  "key": key, "reference_answer": reference_answer, "score": 0})
             elif "element_path" in match_function:  # TODO
-                # content = evaluation.get("content")  # 使用 get 避免 KeyError
-                # if content:
-                #     key = content.get("key", "")  # 同样使用 get，并提供默认值
-                #     reference_answer = content.get("reference_answer", "")  # 提供默认值
-                #     method = content.get("method", "")
-                #     netloc = content.get("netloc", "")
-                #     reference_evaluate_steps.append({"match_function": match_function, "method": method,
-                #                                      "reference_answer": reference_answer, "netloc": netloc,
-                #                                      "score": 0})
                 reference_answer = evaluation["content"]["reference_answer"]
                 method = evaluation["method"]
                 netloc = evaluation["content"]["netloc"]
@@ -91,14 +79,10 @@ def get_netloc(url: str) -> str:
 async def get_element_content(page: Page, selector):
     '''获取元素内容'''
     try:
-        # 获取元素的标签名
         tag_name = await page.eval_on_selector(selector, "element => element.tagName.toLowerCase()")
-
         if tag_name in ["input", "textarea"]:
-            # 对于 input 或 textarea 元素
             return await page.input_value(selector)
         else:
-            # 对于其他元素
             return await page.text_content(selector)
     except:
         return ""
@@ -106,10 +90,6 @@ async def get_element_content(page: Page, selector):
 
 async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_value=None):
     '''评测步骤打分'''
-    # reference_evaluate_steps, num_steps
-    # num_steps += 1
-    # page_url = html_env.page.url
-    # page_url = page.url
     step_score = 0
     match_result = []
     for evaluate in evaluate_steps:
@@ -520,11 +500,11 @@ async def main(num_steps=0,
                 if num_steps >= 25 or task_global_status == "finished" or task_finished:  # 防止无限循环
                     break
 
-            a = input(
-                "Press Enter to proceed to the next action, or type 'q' to quit")
-            if a == "q":
-                human_interaction_stop_status = True
-                break
+            # a = input(
+            #     "Press Enter to proceed to the next action, or type 'q' to quit")
+            # if a == "q":
+            #     human_interaction_stop_status = True
+            #     break
 
         # ! 3.任务评测打分
         if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:

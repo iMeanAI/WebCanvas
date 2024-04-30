@@ -10,8 +10,7 @@ import re
 log_folder = "result_logs"
 if not os.path.exists(log_folder):
     os.makedirs(log_folder)
-log_file_name = os.path.join(
-    log_folder, time.strftime("%Y-%m-%d_%H-%M-%S") + ".log")
+log_file_name = os.path.join(log_folder, time.strftime("%Y-%m-%d_%H-%M-%S") + ".log")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -29,21 +28,6 @@ stream_formatter = colorlog.ColoredFormatter(
     secondary_log_colors={},
     style='%'
 )
-
-# file_formatter = colorlog.ColoredFormatter(
-#     "%(asctime)s**[%(levelname)s]**|| %(message)s\n",
-#     datefmt=None,
-#     reset=True,
-#     log_colors={
-#         'DEBUG': 'cyan',
-#         'WARNING': 'yellow',
-#         'ERROR': 'red',
-#         'INFO': 'green',
-#         'CRITICAL': 'red,bg_white',
-#     },
-#     secondary_log_colors={},
-#     style='%'
-# )
 
 
 class Formatter(colorlog.ColoredFormatter):

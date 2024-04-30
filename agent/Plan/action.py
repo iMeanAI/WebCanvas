@@ -23,13 +23,15 @@ class ActionParser():
 
     # 将OpenAI返回的结果中提取Thought和Action，返回thought(str)和action(dict), 其中action拥有action, element_id, action_input, description四个字段
     def extract_thought_and_action(self, message) -> tuple[Any, Any]:
-
-        result_action = re.findall("```(.*?)```", message, re.S)[0]
+        try:
+            result_action = re.findall("```(.*?)```", message, re.S)[0]
+        except:
+            result_action = message.split("Action:")[-1].strip()
         result_action = self.parse_action(result_action)
         if not result_action:
-            raise ResponseError("OpenAI response is an invalid JSON blob")
+            raise ResponseError("OpenAI response is an invalid JSON blob or Empty, Please make sure you have access to OpenAI")
         elif result_action and result_action.get("action") == '':
-            raise ResponseError("OpenAI response action is Empty")
+            raise ResponseError("OpenAI response action is Empty, Please try again.")
         result_thought = result_action.get("thought")
         return result_thought, result_action
 

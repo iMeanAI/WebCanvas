@@ -9,7 +9,7 @@ from .dom_vision_prompts import DomVisionPrompts
 from .vision_prompts import VisionPrompts
 from jinja2 import Template
 
-from agent.Environment.environments import DomEnvironment
+
 from agent.Memory.short_memory.history import HistoryMemory
 
 
