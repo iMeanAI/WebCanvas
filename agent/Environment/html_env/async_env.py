@@ -95,16 +95,15 @@ class AsyncHTMLEnvironment:
             if not self.html_content.strip():
                 self.html_content = await self.retry_content()
             self.tree.fetch_html_content(self.html_content)
-            logger.info("Successfully fetch html content!")
+            logger.info("-- Successfully fetch html content")
             tab_name = await self.page.title()
             dom_tree = self.tree.build_dom_tree()
             observation = f"current web tab name is \'{tab_name}\'\n" + dom_tree
             if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
                 observation_VforD = await self.capture()
         except Exception as e:
-            logger.error(f"Failed to fetch html content,error occur {e}")
+            logger.error(f"-- Failed to fetch html content,error occur {e}")
         if self.mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
-            # byCarl: 仅用于判断图片是否是base64编码
             is_valid, message = is_valid_base64(
                 observation_VforD)
             logger.info(
@@ -162,6 +161,7 @@ class AsyncHTMLEnvironment:
                             element.click();   
                         }} 
                     }}''', selector)
+                await self.page.wait_for_timeout(1000)
                 self.html_content = await self.page.content()
             except Exception as e:
                 raise e
@@ -373,9 +373,9 @@ class AsyncHTMLEnvironment:
         """
         """
         if "element_id" in action and action["element_id"] != 0:
-            logger.info(f'action["element_id"]:{action["element_id"]}')
-            logger.info(
-                f'tree.nodeDict[action["element_id"]]:{self.tree.nodeDict[action["element_id"]]}')
+            # logger.info(f'action["element_id"]:{action["element_id"]}')
+            # logger.info(
+            #     f'tree.nodeDict[action["element_id"]]:{self.tree.nodeDict[action["element_id"]]}')
             action["element_id"] = self.tree.nodeDict[action["element_id"]]
             element_value = self.tree.get_element_value(action["element_id"])
         match action["action_type"]:
@@ -561,9 +561,9 @@ class AsyncHTMLEnvironment:
                     element.click();   
                 }} 
             }}''', selector)
-            print("Click Success")
+            logger.info("Click Success")
         except Exception as e:
-            print("Click Failed:", e)
+            logger.info("Click Failed:", e)
         await self.page.wait_for_timeout(20000)
 
     async def test_select_option_action(self, selector, value):

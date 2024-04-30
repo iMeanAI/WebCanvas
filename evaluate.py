@@ -298,7 +298,7 @@ async def main(num_steps=0,
     # for task_index in range(raw_data_start_index, raw_data_end_index):
 
     if task_mode == "experiment_tasks":
-        task_range = range(1, raw_data_end_index)
+        task_range = range(8, raw_data_end_index)
         task_range1 = score_dif
     elif task_mode == "single_task":
         task_range = range(0, 1)
@@ -313,9 +313,9 @@ async def main(num_steps=0,
             logger.info("*" * 100)
             logger.info(f"Start")
             logger.info(f"task index: {task_index}")
-            logger.info(f"task_name: {task_name}")
-            logger.info(f"reference_task_length: {reference_task_length}")
-            logger.info(f"raw data:{reference_evaluate_steps}")
+            logger.info(f"task name: {task_name}")
+            logger.info(f"task reference length: {reference_task_length}")
+            logger.info(f"raw data annotation: {reference_evaluate_steps}")
         elif task_mode == "single_task":
             task_name = single_task
             reference_task_length = 10
@@ -377,6 +377,8 @@ async def main(num_steps=0,
         while num_steps < max_steps + additional_steps:
             error_message = ""
             total_step_score = 0
+            logger.info(
+                "**🤖 The agent is in the process of starting planning🤖 **")
             for _ in range(3):
                 response_total_count += 1
                 try:
@@ -403,8 +405,6 @@ async def main(num_steps=0,
                     traceback.print_exc()
                     continue
 
-            logger.info(f"out_put: {out_put}")
-
             if out_put:
                 each_step_dict = {}
                 each_step_dict["step_index"] = num_steps
@@ -417,13 +417,16 @@ async def main(num_steps=0,
                 each_step_dict["current_trace"] = current_trace
                 each_step_dict["selector"] = selector
                 each_step_dict["execute_action"] = execute_action
-                each_step_dict["xpath"] = xpath
                 each_step_dict["element_value"] = element_value
 
-                logger.info(f"current trace: {current_trace}")
-                logger.info(f"execute_action: {execute_action}")
-                logger.info(f"selector: {selector}")
-                logger.info(f"element_value: {element_value}")
+                logger.info(f"-- Planning output: {out_put}")
+                logger.info(f"-- Current trace: {current_trace}")
+                logger.info(f"-- Action: {execute_action}")
+                logger.info(f"-- Selector: {selector}")
+                logger.info(f"-- Element value: {element_value}")
+
+                logger.info(
+                    "**🤖 The agent is in the process of starting evaluation 🤖**")
 
                 evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
                 for evaluate in evaluate_steps:
@@ -434,8 +437,9 @@ async def main(num_steps=0,
                 each_step_dict["match_func_result"] = match_result
 
                 logger.info(
-                    f"current evaluate score: {total_step_score} / {len(reference_evaluate_steps)}")
-                logger.info(f"current evaluate match result: {match_result}")
+                    f"-- Current evaluatation score: {total_step_score} / {len(reference_evaluate_steps)}")
+                logger.info(
+                    f"-- Current evaluate match result: {match_result}")
 
                 # get status of the task with global reward
                 if out_put["description"].get("reward"):
@@ -451,12 +455,17 @@ async def main(num_steps=0,
                     task_finished = True
                     # break
 
+                logger.info(
+                    "**🤖 The agent is in the process of executing the action 🤖**")
+
                 try:
                     await env.execute_action(execute_action)
                     previous_trace.append(current_trace)
                     error_description = ""
+                    logger.info("-- Successfully execute the action ")
                 except ActionExecutionError as ee:
                     error_message = ee.message
+                    logger.info("-- Failed to execute the action")
                     logger.error(
                         f"ActionExecutionError occurred: {error_message}")
                     error_description = error_message
@@ -474,7 +483,7 @@ async def main(num_steps=0,
                 each_step_dict["previous_trace"] = str(previous_trace)
 
                 logger.info(
-                    f"The URL after executing the action is: {env.page.url}")
+                    f"-- The URL is: {env.page.url}")
 
                 if "vision" in global_reward_mode:
                     vision_reward = await env.capture()
@@ -491,7 +500,7 @@ async def main(num_steps=0,
                 if vision_reward:
                     current_info.update({"vision_reward": vision_reward})
                 logger.info(
-                    f"Step: {num_steps+1}, Total steps: {max_steps + additional_steps}")
+                    f"**🤖 Time Step: {num_steps+1}, Total steps: {max_steps + additional_steps} 🤖**")
                 step_increase, encountered_errors = await adjust_max_action_step(
                     conditions, current_info, encountered_errors, increase_step)
                 additional_steps += step_increase
@@ -505,6 +514,13 @@ async def main(num_steps=0,
             # if a == "q":
             #     human_interaction_stop_status = True
             #     break
+            logger.info(
+                "Press Enter to proceed to the next action, or type 'q' to quit the task: ")
+            a = input()
+            if a.lower() == "q":
+                logger.info("User requested to quit the program.")
+                human_interaction_stop_status = True
+                break
 
         # ! 3.任务评测打分
         if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:

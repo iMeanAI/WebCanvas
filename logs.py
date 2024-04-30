@@ -42,7 +42,7 @@ class Formatter(colorlog.ColoredFormatter):
 
 
 file_formatter = Formatter(
-    "%(asctime)s**[%(levelname)s]**|| %(message)s\n",
+    "%(asctime)s**[%(levelname)s]**|| %(message)s",
     datefmt=None,
     reset=True,
     log_colors={

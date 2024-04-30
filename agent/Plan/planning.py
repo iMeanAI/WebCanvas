@@ -20,7 +20,7 @@ class InteractionMode:
                                 global_reward_mode, ground_truth_data=None, task_name_id=None):
         status_and_description = None
         if len(previous_trace) > 0:
-            stringfy_thought_and_action_output = ObservationPromptConstructor().stringfy_thought_and_action(
+            stringfy_thought_and_action_output = PlanningPromptConstructor().stringfy_thought_and_action(
                 previous_trace)
             if not ground_truth_mode:
                 reward_request = RewardPromptConstructor().construct(
@@ -87,7 +87,7 @@ class DomMode(InteractionMode):
         super().__init__(text_model, visual_model)
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
-        planning_request = ObservationPromptConstructor().construct(
+        planning_request = PlanningPromptConstructor().construct(
             user_request, previous_trace, observation, feedback, status_description)
         # print(f"\033[32m{planning_request}")  # 绿色
         # print("\033[0m")
@@ -209,7 +209,7 @@ class DVMode(InteractionMode):
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         # d_v模式的代码
-        planning_request = D_VObservationPromptConstructor().construct(
+        planning_request = D_VPlanningPromptConstructor().construct(
             user_request, previous_trace, observation, observation_VforD, feedback, status_description)
 
         print(
@@ -225,7 +225,7 @@ class VisionMode(InteractionMode):
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         # vision模式的代码
-        planning_request = VisionObservationPromptConstructor(
+        planning_request = VisionPlanningPromptConstructor(
         ).construct(user_request, previous_trace, observation)
         print(f"\033[32m{planning_request}")  # 绿色
         print("\033[0m")
@@ -303,7 +303,7 @@ class Planning:
                     planning_response)
             except ResponseError as e:
                 logger.error(f"Response Error:{e.message}")
-                raise
+                raise 
 
         if planning_response_action.get('action') == "fill_form":
             JudgeSearchbarRequest = JudgeSearchbarPromptConstructor().construct(
