@@ -209,7 +209,7 @@ class DVMode(InteractionMode):
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         # d_v模式的代码
-        planning_request = D_VPlanningPromptConstructor().construct(
+        planning_request = D_VObservationPromptConstructor().construct(
             user_request, previous_trace, observation, observation_VforD, feedback, status_description)
 
         print(
@@ -225,7 +225,7 @@ class VisionMode(InteractionMode):
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         # vision模式的代码
-        planning_request = VisionPlanningPromptConstructor(
+        planning_request = VisionObservationPromptConstructor(
         ).construct(user_request, previous_trace, observation)
         print(f"\033[32m{planning_request}")  # 绿色
         print("\033[0m")

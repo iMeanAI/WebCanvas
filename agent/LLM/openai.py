@@ -6,6 +6,7 @@ import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
 from sanic.log import logger
 from agent.Utils import *
+from .token_cal import truncate_messages_based_on_estimated_tokens
 
 
 class GPTGenerator:
@@ -15,6 +16,8 @@ class GPTGenerator:
     async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7
                       ) -> (str, str):
         try:
+            if "gpt-3.5" in self.model:
+                messages = truncate_messages_based_on_estimated_tokens(messages, max_tokens=16385)
             cpu_count = multiprocessing.cpu_count()
             with ThreadPoolExecutor(max_workers=cpu_count * 2) as pool:
                 future_answer = pool.submit(

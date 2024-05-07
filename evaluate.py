@@ -29,37 +29,49 @@ def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json
         reference_task_length = task["reference_task_length"]
         task_name_id = task["index"]
         reference_evaluate_steps = []
-        for _, evaluation in enumerate(evaluation_data):
+        for i, evaluation in enumerate(evaluation_data):
             match_function = evaluation["match_function_name"]
             if "url" in match_function:
-                key = evaluation["content"]["key"]
-                reference_answer = evaluation["content"]["reference_answer"]
-                reference_evaluate_steps.append({"match_function": match_function,
-                                                 "key": key, "reference_answer": reference_answer, "score": 0})
-            elif "element_path" in match_function:  # TODO
-                reference_answer = evaluation["content"]["reference_answer"]
-                method = evaluation["method"]
-                netloc = evaluation["content"]["netloc"]
-                reference_evaluate_steps.append({"match_function": match_function, "method": method,
-                                                 "reference_answer": reference_answer, "netloc": netloc,
-                                                 "score": 0})
-
-            elif "element_value" in match_function:
-                reference_answer = evaluation["content"]["reference_answer"]
-                netloc = evaluation["content"]["netloc"]
-                if "path" in evaluation["content"].keys():
-                    path = evaluation["content"]["path"]
+                try:
+                    key = evaluation["content"]["key"]
+                    reference_answer = evaluation["content"]["reference_answer"]
                     reference_evaluate_steps.append({"match_function": match_function,
-                                                     "reference_answer": reference_answer, "netloc": netloc,
-                                                     "path": path, "score": 0})
-                else:
-                    reference_evaluate_steps.append({"match_function": match_function,
+                                                     "key": key, "reference_answer": reference_answer, "score": 0})
+                except:
+                    logger.error(f"url error in task {task_name_id}, step {i}, match_function: {match_function}")
+                    exit(1)
+            elif "element_path" in match_function:
+                try:
+                    reference_answer = evaluation["content"]["reference_answer"]
+                    method = evaluation["method"]
+                    netloc = evaluation["content"]["netloc"]
+                    reference_evaluate_steps.append({"match_function": match_function, "method": method,
                                                      "reference_answer": reference_answer, "netloc": netloc,
                                                      "score": 0})
+                except:
+                    logger.error(
+                        f"element_path error in task {task_name_id}, step {i}, match_function: {match_function}")
+                    exit(1)
+            elif "element_value" in match_function:
+                try:
+                    reference_answer = evaluation["content"]["reference_answer"]
+                    netloc = evaluation["content"]["netloc"]
+                    if "path" in evaluation["content"].keys():
+                        path = evaluation["content"]["path"]
+                        reference_evaluate_steps.append({"match_function": match_function,
+                                                         "reference_answer": reference_answer, "netloc": netloc,
+                                                         "path": path, "score": 0})
+                    else:
+                        reference_evaluate_steps.append({"match_function": match_function,
+                                                         "reference_answer": reference_answer, "netloc": netloc,
+                                                         "score": 0})
+                except:
+                    logger.error(
+                        f"element_value error in task {task_name_id}, step {i}, match_function: {match_function}")
+                    exit(1)
         return_list.append(
             [task_name, task_name_id, reference_task_length, reference_evaluate_steps])
-    # print(return_list)
-    # return_list=return_list[1:]
+
     return return_list
 
 
@@ -260,56 +272,74 @@ async def get_observation(mode: str, env: AsyncHTMLEnvironment, action: Action):
 
 async def main(num_steps=0,
                global_reward_mode="no_global_reward",
-               text_model_name="gpt-4-turbo",
+               observation_text_model_name="gpt-4-turbo",
                global_reward_text_model_name="gpt-4-turbo",
-               json_model_response=False,
+               single_task_name="",
+               raw_data_index=-1,
                mode="dom",
                ground_truth_mode=False,
-               file_path=None):
-    # result record for experiments_tasks
-    record_time_short = time.strftime("%Y%m%d", time.localtime())
-    record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-    write_result_file_path = f"./csv_results/group_sample_{record_time_short}/{record_time}_{mode}_{text_model_name}_{global_reward_mode}_{ground_truth_mode}"
-
-    # get reference data in experiment_tasks mode
-    file = None
-    ground_truth_data = None
-    if task_mode == "experiment_tasks":
-        file = read_file(file_path=file_path)
-    if ground_truth_mode:
-        ground_truth_data = read_json_file(ground_truth_file_path)
-
+               ):
     with open('./configs/dom.toml', 'r') as f:
         config = toml.load(f)
+    task_mode = config['basic']['Task_Mode']
+    batch_tasks_file_path = config['files']['Batch_Tasks_File_Path']
+    json_model_response = config['model']['JSON_Model_Response']
+    all_json_models = config['model']['All_JSON_Models']
+    if mode not in ["dom"]:
+        logger.error("observation mode error!")
+        exit()
 
-    # 评测输入范围内的任务
-    if raw_data_index != -1:
-        re_result = re.split(r'\s|,', raw_data_index)
-        raw_data_start_index = int(re_result[0])
-        raw_data_end_index = int(re_result[-1]) + 1
-    else:
-        raw_data_start_index = 0
-        raw_data_end_index = len(file)
-    print(raw_data_start_index, raw_data_end_index)
+    if json_model_response:
+        if observation_text_model_name not in all_json_models:
+            logger.error("The observation text model does not support JSON mode!")
+            exit()
+        elif observation_text_model_name in all_json_models:
+            print("The observation text model are using JSON mode!")
 
-    # start_index = 1
-    score_dif = [31]
-    # for task_index in score_dif:
-    # for task_index in range(raw_data_start_index, raw_data_end_index):
+    if not os.path.exists(batch_tasks_file_path):
+        logger.error("batch_tasks_file_path not exist!")
+        exit()
 
-    if task_mode == "experiment_tasks":
-        task_range = range(8, raw_data_end_index)
-        task_range1 = score_dif
+    if task_mode == "batch_tasks":
+        # result record for batch_tasks
+        record_time_short = time.strftime("%Y%m%d", time.localtime())
+        record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
+        write_result_file_path = f"./csv_results/raw_record_{record_time_short}/raw_record_{record_time}_{mode}_{observation_text_model_name}_{global_reward_mode}_{global_reward_text_model_name}_{ground_truth_mode}"
+        file = read_file(file_path=batch_tasks_file_path)
+        # 评测输入范围内的任务
+        if raw_data_index != -1:
+            re_result = re.split(r'\s|,', raw_data_index)
+            raw_data_start_index = int(re_result[0])
+            raw_data_end_index = int(re_result[-1]) + 1
+        else:
+            raw_data_start_index = 0
+            raw_data_end_index = len(file)
+        print(raw_data_start_index, raw_data_end_index)
+
+        task_range = range(raw_data_start_index, raw_data_end_index)
     elif task_mode == "single_task":
         task_range = range(0, 1)
+    else:
+        logger.error("task_mode error!")
+        exit()
+
+    ground_truth_data = None
+    if ground_truth_mode:
+        ground_truth_file_path = config['files']['Ground_Truth_File_Path']
+        ground_truth_data = read_json_file(ground_truth_file_path)
+        # check if ground_truth_file_path exists
+        if not os.path.exists(ground_truth_file_path):
+            logger.error("ground_truth_file_path not exist!")
+            exit()
 
     for task_index in task_range:
         response_error_count = 0
         response_total_count = 0
         task_uuid = None
-        if task_mode == "experiment_tasks":
+        if task_mode == "batch_tasks":
             task = file[task_index]
             task_name, task_uuid, reference_task_length, reference_evaluate_steps = task
+            evaluate_steps = reference_evaluate_steps
             logger.info("*" * 100)
             logger.info(f"Start")
             logger.info(f"task index: {task_index}")
@@ -317,9 +347,8 @@ async def main(num_steps=0,
             logger.info(f"task reference length: {reference_task_length}")
             logger.info(f"raw data annotation: {reference_evaluate_steps}")
         elif task_mode == "single_task":
-            task_name = single_task
-            reference_task_length = 10
-            reference_evaluate_steps = []
+            task_name = single_task_name
+            reference_task_length = config['steps']['Single_Task_Action_Step']
             logger.info(f"task_name: {task_name}")
 
         # 创建html环境
@@ -329,8 +358,7 @@ async def main(num_steps=0,
             headless=False,
             slow_mo=1000,
             current_viewport_only=False,
-            viewport_size={"width": 1920, "height": 1280} if mode == "dom" else {
-                "width": 1080, "height": 720},
+            viewport_size={"width": 1080, "height": 720},
             save_trace_enabled=False,
             sleep_after_execution=0.0,
             locale="en-US",
@@ -352,19 +380,21 @@ async def main(num_steps=0,
         invalid_vision_reward_num = 0
 
         # 如果都匹配到了，任务完成
-        evaluate_steps = reference_evaluate_steps
         task_finished = False
         task_global_status = ""
         human_interaction_stop_status = False
 
         # 控制步骤长度相关配置
         conditions = config["conditions"]
-        increase_step = config["basic"]["Condition_Step_Increase"]
+        increase_step = config["steps"]["Batch_Tasks_Condition_Step_Increase"]
         encountered_errors = set()
         current_info = {"URL": env.page.url}
         num_steps = 0
-        max_steps = int(
-            max(config['basic']['Max_Action_Step'], 1.5*reference_task_length))
+        if task_mode == "single_task":
+            max_steps = int(reference_task_length)
+        elif task_mode == "batch_tasks":
+            max_steps = int(
+                max(config['steps']['Batch_Tasks_Max_Action_Step'], 1.5 * reference_task_length))
         additional_steps = 0
 
         # planning 后的结果信息保存
@@ -378,12 +408,12 @@ async def main(num_steps=0,
             error_message = ""
             total_step_score = 0
             logger.info(
-                "**🤖 The agent is in the process of starting planning🤖 **")
+                "**🤖 The agent is in the process of starting planning 🤖**")
             for _ in range(3):
                 response_total_count += 1
                 try:
                     out_put = await Planning.plan(user_request=task_name,
-                                                  text_model_name=text_model_name,
+                                                  text_model_name=observation_text_model_name,
                                                   global_reward_text_model_name=global_reward_text_model_name,
                                                   json_model_response=json_model_response,
                                                   previous_trace=previous_trace,
@@ -427,33 +457,33 @@ async def main(num_steps=0,
 
                 logger.info(
                     "**🤖 The agent is in the process of starting evaluation 🤖**")
+                if task_mode == "batch_tasks":
+                    evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
+                    for evaluate in evaluate_steps:
+                        total_step_score += evaluate["score"]
 
-                evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps, input_path=selector)
-                for evaluate in evaluate_steps:
-                    total_step_score += evaluate["score"]
+                    each_step_dict["score"] = str(
+                        total_step_score) + " / " + str(len(reference_evaluate_steps))
+                    each_step_dict["match_func_result"] = match_result
 
-                each_step_dict["score"] = str(
-                    total_step_score) + " / " + str(len(reference_evaluate_steps))
-                each_step_dict["match_func_result"] = match_result
+                    logger.info(
+                        f"-- Current evaluatation score: {total_step_score} / {len(reference_evaluate_steps)}")
+                    logger.info(
+                        f"-- Current evaluate match result: {match_result}")
 
-                logger.info(
-                    f"-- Current evaluatation score: {total_step_score} / {len(reference_evaluate_steps)}")
-                logger.info(
-                    f"-- Current evaluate match result: {match_result}")
+                    # get status of the task with global reward
+                    if out_put["description"].get("reward"):
+                        each_step_dict["step_reward"] = out_put["description"].get(
+                            "reward")
+                        task_global_status = out_put["description"].get(
+                            "reward").get("status")
+                    else:
+                        each_step_dict["step_reward"] = {}
 
-                # get status of the task with global reward
-                if out_put["description"].get("reward"):
-                    each_step_dict["step_reward"] = out_put["description"].get(
-                        "reward")
-                    task_global_status = out_put["description"].get(
-                        "reward").get("status")
-                else:
-                    each_step_dict["step_reward"] = {}
-
-                if total_step_score == len(reference_evaluate_steps):
-                    # steps_list.append(each_step_dict)
-                    task_finished = True
-                    # break
+                    if total_step_score == len(reference_evaluate_steps):
+                        # steps_list.append(each_step_dict)
+                        task_finished = True
+                        # break
 
                 logger.info(
                     "**🤖 The agent is in the process of executing the action 🤖**")
@@ -523,7 +553,7 @@ async def main(num_steps=0,
                 break
 
         # ! 3.任务评测打分
-        if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
+        if task_mode == "batch_tasks":
             # step score
             total_step_score = 0
             for evaluate in evaluate_steps:
@@ -581,44 +611,21 @@ async def main(num_steps=0,
 if __name__ == "__main__":
     # 解析命令行参数
     parser = argparse.ArgumentParser(
-        description="Run the agent in different observation modes.")
-    parser.add_argument("--observation_mode", choices=["dom", "dom_v_desc", "vision_to_dom", "vision", "d_v"],
-                        default="dom",
-                        help="Choose interaction mode: "
-                             "'dom' for DOM-based interaction, "
-                             "'dom_v_desc' for DOM-based interaction with vision description,"
-                             "'vision_to_dom' for vision-to-dom interaction, "
-                             "'vision' for vision-based interaction, "
-                             "'d_v' for DOM-based and vision-based interaction.")
-    parser.add_argument("--ground_truth_mode", choices=[True, False],
-                        default=False, help="Choose whether to use ground truth data.")
+        description="Run the web agent in different modes.")
     parser.add_argument("--global_reward_mode",
                         choices=["dom_vision_reward",
                                  "dom_reward",
                                  "vision_reward",
                                  "no_global_reward"],
                         default="dom_reward", help="Choose the mode of global reward.")
-    parser.add_argument("--index", "--i", type=str, default=-1)
+    parser.add_argument("--index", type=str, default=-1)
+    parser.add_argument("--single_task_name", type=str, default="Find Dota 2 game and add all DLC to cart in steam.")
     args = parser.parse_args()
-    interaction_mode = args.observation_mode
-    raw_data_index = args.index
-    # setting is below
-    task_mode = "experiment_tasks"  # "experiment_tasks" or "single_task"
-    single_task = "Browse cafes that have outdoor seating and is dog friendly in yelp"
-    # - setting: file path of experiment_tasks reference data
-    if args.ground_truth_mode:
-        # ground_truth_file_path = "./data/ground_truth/GTR_tasks_instructions_0329_FOR_sample_all_data_0327.json"
-        ground_truth_file_path = "./data/ground_truth/GT_instructions_202404161811_for_all_data_0328.json"
-        # check if ground_truth_file_path exists
-        if not os.path.exists(ground_truth_file_path):
-            print("ground_truth_file_path not exist!")
-            exit()
 
     # "./data/data_update_0326/group_sample_all_data_0327.json"
     asyncio.run(main(global_reward_mode=args.global_reward_mode,
-                     text_model_name="gpt-3.5-turbo",
+                     observation_text_model_name="gpt-3.5-turbo",
                      global_reward_text_model_name="gpt-3.5-turbo",
-                     json_model_response=True,
-                     mode=interaction_mode,
-                     ground_truth_mode=args.ground_truth_mode,
-                     file_path="./data/data_0328/all_data_0328.json"))
+                     single_task_name=args.single_task_name,
+                     raw_data_index=args.index
+                     ))

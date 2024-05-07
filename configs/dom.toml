@@ -1,11 +1,32 @@
 [basic]
-Max_Action_Step = 10
-Condition_Step_Increase = 5
+Task_Mode = "batch_tasks"   # single_task or batch_tasks
 Step_Score_Threshold = 6
 default = true              # dom-only or dom-vision with all module
 global_reward = true        # with global reward
 current_step_reward = true  # with current step reward
 previous_trace = true       # with previous trace
+
+[model]
+JSON_Model_Response = true
+All_JSON_Models = ["gpt-4-turbo",
+                   "gpt-4-turbo-2024-04-09",
+                   "gpt-4-turbo-preview",
+                   "gpt-4-0125-preview",
+                   "gpt-4-1106-preview",
+                   "gpt-3.5-turbo",
+                   "gpt-3.5-turbo-0125",
+                   "gpt-3.5-turbo-preview"]
+
+[steps]
+Single_Task_Action_Step = 10
+Batch_Tasks_Max_Action_Step = 10
+Batch_Tasks_Condition_Step_Increase = 5
+
+[files]
+Batch_Tasks_File_Path = "./data/data_0328/all_data_0328.json"
+#  ./data/mind2web-test_20240425.json
+Ground_Truth_File_Path = "./data/ground_truth/GT_instructions_202404161811_for_all_data_0328.json"
+# "./data/ground_truth/GTR_tasks_instructions_0329_FOR_sample_all_data_0327.json"
 
 [conditions]
 URL = ["error"]
