@@ -89,7 +89,7 @@ class DomMode(InteractionMode):
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         planning_request = PlanningPromptConstructor().construct(
             user_request, previous_trace, observation, feedback, status_description)
-        # print(f"\033[32m{planning_request}")  # 绿色
+        # print(f"\033[32m{planning_request}")
         # print("\033[0m")
         logger.info(
             f"\033[32mDOM_based_planning_request:\n{planning_request}\033[0m")
@@ -103,7 +103,6 @@ class DomVDescMode(InteractionMode):
         super().__init__(text_model, visual_model)
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
-        # dom_v_desc模式的代码
         if observation_VforD != "":
             vision_desc_request = VisionDisc2PromptConstructor().construct(
                 user_request, observation_VforD)  # vision description request with user_request
@@ -115,7 +114,7 @@ class DomVDescMode(InteractionMode):
         planning_request = ObservationVisionDiscPromptConstructor().construct(
             user_request, previous_trace, observation, feedback, status_description, vision_desc_response)
         # print(f"\033[32m{planning_request}")
-        # 紫色
+        # Purple color
         print(
             f"\033[35mplanning_request:\n{print_limited_json(planning_request, limit=10000)}")
         print("\033[0m")
@@ -128,15 +127,14 @@ class VisionToDomMode(InteractionMode):
         super().__init__(text_model, visual_model)
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
-        # vision_to_dom模式的代码
         vision_act_request = ObservationVisionActPromptConstructor().construct(
             user_request, previous_trace, observation_VforD, feedback, status_description)
-        max_retries = 3  # 设置最大重试次数为3
+        max_retries = 3
         for attempt in range(max_retries):
             vision_act_response, error_message = await self.visual_model.request(vision_act_request)
-            # 蓝色输出
+            # Blue output
             print(f"\033[36mvision_act_response:\n{vision_act_response}")
-            print("\033[0m")  # 重置颜色
+            print("\033[0m")  # Reset color
             planning_response_thought, planning_response_get = ActionParser().extract_thought_and_action(
                 vision_act_response)
             actions = {
@@ -147,14 +145,14 @@ class VisionToDomMode(InteractionMode):
                 'scroll_up': "Found 'scroll_up' in the vision_act_response.",
                 'go_back': "Found 'go_back' in the vision_act_response."
             }
-            # 检查行为是否在预定义的行为列表中
+            # Check if the action is in the predefined action list
             actions_found = False
             for action, message in actions.items():
                 if action == planning_response_get.get('action'):
                     print(message)
                     actions_found = True
-                    # action无需改变
-                    # `target_element`应该没有，有的话是用不到的
+                    # The action does not need to be changed
+                    # `target_element` should not exist, if it does, it's not used
                     break
 
             # 如果没有找到预定义的行为
@@ -164,39 +162,39 @@ class VisionToDomMode(InteractionMode):
                 target_element = planning_response_get.get('target_element')
                 description = planning_response_get.get('description')
 
-                # 如果目标元素为空或不存在
+                # If the target element is None or does not exist
                 if not target_element:
                     print("The 'target_element' is None or empty.")
-                    continue  # 继续下一次循环尝试
+                    continue
 
-                # 构建视觉到DOM的请求
+                # Construct the request from vision to DOM
                 planning_request = VisionToDomPromptConstructor().construct(target_element, description,
                                                                             observation)
                 print(f"\033[35mplanning_request:{planning_request}")
                 print("\033[0m")
 
-                # 发送请求并等待响应
+                # Send the request and wait for the response
                 planning_response_dom, error_message = await self.text_model.request(planning_request)
                 print(
                     f"\033[34mVisionToDomplanning_response:\n{planning_response_dom}")
                 print("\033[0m")
-                # 解析元素ID
+                # Parse the element ID
                 element_id = ActionParser().get_element_id(planning_response_dom)
                 if element_id == "-1":
                     print("The 'element_id' is not found in the planning_response.")
-                    continue  # 如果未找到元素ID，则继续下一次循环尝试
+                    continue  # If the 'element_id' is not found, continue to the next iteration of the loop
                 else:
                     planning_response_get['element_id'] = element_id
-                    break  # 如果找到元素ID，则退出循环
+                    break  # If the 'element_id' is found, break the loop
 
             else:
-                # 如果找到了预定义的行为，则不需要重试，直接退出循环
+                # If a predefined action is found, there is no need to retry, exit the loop directly
                 break
 
         planning_response_json_str = json5.dumps(
             planning_response_get, indent=2)
         planning_response = f'```\n{planning_response_json_str}\n```'
-        # 检查是否达到最大重试次数
+        # Check if the maximum number of retries has been reached
         if attempt == max_retries - 1:
             print("Max retries of vision_act reached. Unable to proceed.")
 
@@ -208,7 +206,6 @@ class DVMode(InteractionMode):
         super().__init__(text_model, visual_model)
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
-        # d_v模式的代码
         planning_request = D_VObservationPromptConstructor().construct(
             user_request, previous_trace, observation, observation_VforD, feedback, status_description)
 
@@ -224,10 +221,9 @@ class VisionMode(InteractionMode):
         super().__init__(text_model, visual_model)
 
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
-        # vision模式的代码
         planning_request = VisionObservationPromptConstructor(
         ).construct(user_request, previous_trace, observation)
-        print(f"\033[32m{planning_request}")  # 绿色
+        print(f"\033[32m{planning_request}")  # Green color
         print("\033[0m")
         logger.info("\033[32m%s\033[0m", planning_request)
         planning_response, error_message = await self.visual_model.request(planning_request)
@@ -241,7 +237,6 @@ class Planning:
                    global_reward_text_model_name,
                    json_model_response, previous_trace, observation, feedback, mode, observation_VforD, ground_truth_mode, ground_truth_data, task_name_id, global_reward_mode, current_info):
 
-        # 创建GPT查询类
         gpt35 = GPTGenerator35()
         gpt4 = GPTGenerator4()
         gpt4v = GPTGenerator4V()
@@ -275,7 +270,7 @@ class Planning:
                 user_request=user_request, previous_trace=previous_trace, observation=observation,
                 current_info=current_info, ground_truth_mode=ground_truth_mode, global_reward_mode=global_reward_mode,
                 ground_truth_data=ground_truth_data, task_name_id=task_name_id)
-            # 构建planning prompt及查询
+            # Construct the planning prompt and query
             status_description = status_and_description.get(
                 "description") if status_and_description and status_and_description.get("description") else ""
 
@@ -312,7 +307,7 @@ class Planning:
             if Judge_response.lower() == "yes":
                 planning_response_action['action'] = "fill_search"
 
-        # description应该包括thought(GPT4返回的)和action(planning解析的)两个字段
+        # The description should include both the thought (returned by GPT4) and the action (parsed from the planning response)
         planning_response_action["description"] = {
             "reward": status_and_description if len(reward_response) > 0 else None,
             "thought": planning_response_thought,

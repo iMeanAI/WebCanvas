@@ -19,7 +19,7 @@ from evaluate_utils import *
 
 
 def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json"):
-    '''读取标签数据'''
+    """Read label data"""
     return_list = []
     with open(file_path, encoding='utf-8') as f:
         test_data = json5.load(f)
@@ -76,7 +76,7 @@ def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json
 
 
 def get_netloc(url: str) -> str:
-    '''提取出域名，如zhihu.com提取出zhihu，www.google.com.hk提取出google'''
+    """Extract the domain name, for example, extract 'zhihu' from 'zhihu.com', extract 'google' from 'www.google.com.hk' """
     url = urlparse(url)
     try:
         if url.netloc.startswith("www"):
@@ -89,7 +89,7 @@ def get_netloc(url: str) -> str:
 
 
 async def get_element_content(page: Page, selector):
-    '''获取元素内容'''
+    """Get element content"""
     try:
         tag_name = await page.eval_on_selector(selector, "element => element.tagName.toLowerCase()")
         if tag_name in ["input", "textarea"]:
@@ -101,7 +101,7 @@ async def get_element_content(page: Page, selector):
 
 
 async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_value=None):
-    '''评测步骤打分'''
+    """Evaluate step score"""
     step_score = 0
     match_result = []
     for evaluate in evaluate_steps:
@@ -127,7 +127,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                 #       "***", evaluate["reference_answer"])
             elif match_function == "element_path_included_match":
                 pass
-                # * 暂时不做
+                # * Temporarily not doing
 
             elif match_function == "element_value_exactly_match":
                 if input_path is not None and element_value is not None:
@@ -140,7 +140,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                                                                        await page.content(), input_netloc,
                                                                        evaluate["netloc"])
                         if path_score == 0:
-                            # print("value评测中path不匹配")
+                            # print("Path mismatch in value evaluation")
                             score = 0
                         else:
                             score = ElementEvaluator.element_value_exact_match(
@@ -160,7 +160,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                                                                        await page.content(), input_netloc,
                                                                        evaluate["netloc"])
                         if path_score == 0:
-                            # print("value评测中path不匹配")
+                            # print("Path mismatch in value evaluation")
                             score = 0
                         else:
                             score = ElementEvaluator.element_value_include_match(
@@ -182,7 +182,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                                                                            await page.content(), input_netloc,
                                                                            evaluate["netloc"])
                             if path_score == 0:
-                                # print("value评测中path不匹配")
+                                # print("Path mismatch in value evaluation")
                                 score = 0
                             else:
                                 score = await ElementEvaluator.element_value_semantic_match(
@@ -213,7 +213,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
 
 
 async def aexec_playwright(code, page):
-    '''async执行playwright代码'''
+    """Asynchronously execute playwright code"""
     exec(
         f'async def __ex(page): ' +
         ''.join(f'\n {l}' for l in code.split('\n'))
@@ -306,7 +306,7 @@ async def main(num_steps=0,
         record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
         write_result_file_path = f"./csv_results/raw_record_{record_time_short}/raw_record_{record_time}_{mode}_{observation_text_model_name}_{global_reward_mode}_{global_reward_text_model_name}_{ground_truth_mode}"
         file = read_file(file_path=batch_tasks_file_path)
-        # 评测输入范围内的任务
+        # Evaluate tasks within the input range
         if raw_data_index != -1:
             re_result = re.split(r'\s|,', raw_data_index)
             raw_data_start_index = int(re_result[0])
@@ -351,7 +351,7 @@ async def main(num_steps=0,
             reference_task_length = config['steps']['Single_Task_Action_Step']
             logger.info(f"task_name: {task_name}")
 
-        # 创建html环境
+        # Create HTML environment
         env = AsyncHTMLEnvironment(
             mode=mode,
             max_page_length=8192,
@@ -369,22 +369,22 @@ async def main(num_steps=0,
 
         vision_reward = None
 
-        # html 环境相关
+        # Related to the HTML environment
         observation = ""
         observation_VforD = ""
         error_description = ""
         previous_trace = []
 
-        # response 相关
+        # Related to response
         out_put = None
         invalid_vision_reward_num = 0
 
-        # 如果都匹配到了，任务完成
+        # If all are matched, the task is completed
         task_finished = False
         task_global_status = ""
         human_interaction_stop_status = False
 
-        # 控制步骤长度相关配置
+        # Configuration related to controlling the length of steps
         conditions = config["conditions"]
         increase_step = config["steps"]["Batch_Tasks_Condition_Step_Increase"]
         encountered_errors = set()
@@ -397,7 +397,7 @@ async def main(num_steps=0,
                 max(config['steps']['Batch_Tasks_Max_Action_Step'], 1.5 * reference_task_length))
         additional_steps = 0
 
-        # planning 后的结果信息保存
+        # Store the results of the planning process for a task
         task_result = {}
         task_result["task_name"] = task_name
         task_result["id"] = task_uuid
@@ -507,7 +507,8 @@ async def main(num_steps=0,
                 else:
                     observation = await env.get_obs()
 
-                # 执行动作后的url
+                # URL after executing the action
+                each_step_dict["step_url"] = env.page.url
                 each_step_dict["step_url"] = env.page.url
                 each_step_dict["error_message"] = error_message
                 each_step_dict["previous_trace"] = str(previous_trace)
@@ -552,7 +553,7 @@ async def main(num_steps=0,
                 human_interaction_stop_status = True
                 break
 
-        # ! 3.任务评测打分
+        # ! 3. Task evaluation and scoring
         if task_mode == "batch_tasks":
             # step score
             total_step_score = 0
@@ -575,7 +576,7 @@ async def main(num_steps=0,
                 len(reference_evaluate_steps), total_step_score)
             logger.info(f"Finish task score: {finish_task_score}")
 
-            # 保存任务完成的状态
+            # Save the status of the task
             if task_finished:
                 task_result["status"] = "finished"
             elif task_global_status == "finished":
@@ -604,8 +605,8 @@ async def main(num_steps=0,
         # if a == "q":
         #     break
 
-    print(f"\033[31mtask finished!\033[0m")  # 红色
-    input(f"\033[31m按回车键结束\033[0m")
+    print(f"\033[31mtask finished!\033[0m")
+    input(f"\033[31mPress Enter to exit...\033[0m")
 
 
 if __name__ == "__main__":

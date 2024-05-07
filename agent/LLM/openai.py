@@ -23,8 +23,8 @@ class GPTGenerator:
                 future_answer = pool.submit(
                     self.chat, messages, max_tokens, temperature)
                 future_answer_result = await future_answer.result()
-                choice = future_answer_result.choices[0]  # 获取第一个选项
-                # 检查生成结束的原因
+                choice = future_answer_result.choices[0]  # Get the first option
+                # Check the reason for generation termination
                 if choice.finish_reason == 'length':
                     logger.warning("Response may be truncated due to length. Be cautious when parsing JSON.")
                 # openai_response = choice.message['content']

@@ -18,7 +18,7 @@ def parse_thought_action(dict_str):
 
 
 def to_dict(input_string):
-    # 正则表达式模式
+    # Regular expression pattern
     # pattern = r"('action_type'|'element_id'|'url'|'fill_text'):\s*(<[^>]+>|\d+|'[^']+')"
     pattern = r"('action_type'|'element_id'|'url'|'fill_text'):\s*(<[^>]+>|\d+|'[^']+'|\"[^\"]+\")"
     matches = re.findall(pattern, input_string)
@@ -125,7 +125,7 @@ def write_to_json(file_path):
 
 
 def read_file(file_path):
-    '''读取标签数据'''
+    """Read label data"""
     return_list = []
     with open(file_path, encoding='gbk') as f:
         test_data = json5.load(f)

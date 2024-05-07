@@ -10,7 +10,7 @@ from ..Utils import *
 
 
 class ResponseError(Exception):
-    """自定义响应错误类型"""
+    """Custom response error type"""
 
     def __init__(self, message):
         self.message = message

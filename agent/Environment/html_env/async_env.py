@@ -23,7 +23,7 @@ from logs import logger
 
 
 class ActionExecutionError(Exception):
-    """自定义动作执行异常类"""
+    """Custom action execution exception class"""
 
     def __init__(self, action_type, message, selector=None):
         self.action_type = action_type

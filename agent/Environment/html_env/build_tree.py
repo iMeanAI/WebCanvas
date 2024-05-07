@@ -238,7 +238,7 @@ class HTMLTree:
 
     @staticmethod
     def process_element_contents(element: ElementNode) -> str:
-        # TODO 添加合适的可交互元素信息，目前只处理具有text属性的可交互元素
+        # TODO Add appropriate interactive element information, currently only processing interactive elements with text attributes
         html_text = ActiveElements.get_element_value(element)
         if html_text is None:
             return ""
