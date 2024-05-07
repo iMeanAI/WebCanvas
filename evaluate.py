@@ -285,8 +285,13 @@ async def main(num_steps=0,
     batch_tasks_file_path = config['files']['Batch_Tasks_File_Path']
     json_model_response = config['model']['JSON_Model_Response']
     all_json_models = config['model']['All_JSON_Models']
+    step_stop = config['steps']['Step_Stop']
     if mode not in ["dom"]:
         logger.error("observation mode error!")
+        exit()
+
+    if step_stop not in [True, False]:
+        logger.error("step_stop error!")
         exit()
 
     if json_model_response:
@@ -545,13 +550,14 @@ async def main(num_steps=0,
             # if a == "q":
             #     human_interaction_stop_status = True
             #     break
-            logger.info(
-                "Press Enter to proceed to the next action, or type 'q' to quit the task: ")
-            a = input()
-            if a.lower() == "q":
-                logger.info("User requested to quit the program.")
-                human_interaction_stop_status = True
-                break
+            if step_stop:
+                logger.info(
+                    "Press Enter to proceed to the next action, or type 'q' to quit the task: ")
+                a = input()
+                if a.lower() == "q":
+                    logger.info("User requested to quit the program.")
+                    human_interaction_stop_status = True
+                    break
 
         # ! 3. Task evaluation and scoring
         if task_mode == "batch_tasks":
