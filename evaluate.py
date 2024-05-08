@@ -279,7 +279,7 @@ async def main(num_steps=0,
                mode="dom",
                ground_truth_mode=False,
                ):
-    with open('./configs/dom.toml', 'r') as f:
+    with open('configs/setting.toml', 'r') as f:
         config = toml.load(f)
     task_mode = config['basic']['Task_Mode']
     batch_tasks_file_path = config['files']['Batch_Tasks_File_Path']
