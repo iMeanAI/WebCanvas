@@ -2,8 +2,6 @@
 
 <hr>
 
-
-
 <p align="center">
   <a href="https://github.com/imean-ai/WebCanvas/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License Apache 2.0"></a>
   <img src="https://img.shields.io/badge/python-3.11-blue.svg" alt="Python Version 3.11">
@@ -19,9 +17,6 @@
     <a href="#web-demos">[🤖️ Demos(可选的)]</a> 
     <a href="">[🔥 Discord(可选的)]</a> 
 </p>
-
-
-
 
 WebCanvas is a pioneering online evaluation framework designed to address the dynamic nature of web interactions. It provides a realistic assessment of autonomous web agents by utilizing live web environments and emphasizing task completion through the identification of key nodes.
 
@@ -48,7 +43,6 @@ WebCanvas is a pioneering online evaluation framework designed to address the dy
 - [ ] Support token count calculation for LLM to manage computational costs and usage.
 - [ ] Enable user-defined result saving paths to enhance system flexibility and configurability.
 - [ ] Support the management of more error types to improve system robustness and error handling capabilities.
-- [ ] 
 
 ## 🔍 Getting Started
 
@@ -191,9 +185,6 @@ We welcome contributions and suggestions, together we move further to make it be
 - **Step3:** PR will be merged or iterated after review and discussion. Thanks for your contribution!
 
 Before you start, we highly recommend taking a moment to check [here](https://github.com/xlang-ai/OpenAgents/blob/main/CONTRIBUTING.md) before contribution.
-
-- 
-
 
 
 ## 💬 FAQ（可选的）
