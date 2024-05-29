@@ -1,2 +1,2 @@
-from .current_reward import current_reward
-from .global_reward import global_reward
+from .current_reward import *
+from .global_reward import *

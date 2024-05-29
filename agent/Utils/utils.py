@@ -5,11 +5,35 @@ import os
 from PIL import Image
 from io import BytesIO
 from datetime import datetime
-
+# used for download_data and upload_result
+import requests
+import json
 
 # class Utility:
 
 # data utils
+
+
+
+def download_data(url, dest_path):
+    response = requests.get(url)
+    with open(dest_path, 'wb') as file:
+        file.write(response.content)
+
+# def upload_result(url, data):
+#     response = requests.post(url, json=data)
+#     return response.status_code, response.text
+
+def upload_result(url, data):
+    headers = {'Content-Type': 'application/json'}
+    response = requests.post(url, data=json.dumps(data), headers=headers)
+    return response.status_code, response.json()
+
+def save_json(data, file_path):
+    with open(file_path, 'w') as json_file:
+        json.dump(data, json_file, indent=4)
+
+
 def read_json_file(file_path):
     """
     Read and parse a JSON file.
