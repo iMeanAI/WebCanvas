@@ -1,14 +1,14 @@
-
 from evaluate import *
 from agent.Plan import *
 from playwright.async_api import Playwright, async_playwright, expect, Page
+from agent.Environment.html_env.async_env import AsyncHTMLEnvironment, ActionExecutionError
 
 import re
 import toml
 import json
 import traceback
 import os
-from agent.Environment import ActionExecutionError
+from agent.Environment import ActionExecutionError, create_action
 from agent.Plan import Planning
 from agent.Utils.utils import save_screenshot, is_valid_base64
 from evaluate import FinishTaskEvaluator, TaskLengthEvaluator, URLEvaluator, ElementEvaluator
@@ -77,10 +77,12 @@ async def adjust_max_action_step(conditions, current_info, encountered_errors, i
     for condition_type, keywords in conditions.items():
         for keyword in keywords:
             if keyword in current_info[condition_type] and keyword not in encountered_errors:
-                print(f"Detected '{keyword}' in {current_info[condition_type]}, suggesting increase by {increase_step} steps.")
+                print(
+                    f"Detected '{keyword}' in {current_info[condition_type]}, suggesting increase by {increase_step} steps.")
                 total_increase += increase_step
                 encountered_errors.add(keyword)
     return total_increase, encountered_errors
+
 
 def get_netloc(url: str) -> str:
     """Extract the domain name, for example, extract 'zhihu' from 'zhihu.com', extract 'google' from 'www.google.com.hk' """
@@ -206,6 +208,43 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
     return evaluate_steps, match_result
     # print(evaluate_steps)
 
+
+def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
+    thought = response["description"].get("thought")
+    action_type = response['action_type']
+    acton_input = response['value']
+    action = response["description"].get("action")
+    reflection = response["description"].get("reward").get(
+        "description") if response["description"].get("reward") else ""
+    current_trace = {"thought": thought,
+                     "action": action, "reflection": reflection}
+    element_value = ""
+    selector = None
+
+    try:
+        element_id = int(response['id'])
+    except:
+        element_id = 0
+    if action_type in ["fill_form", "fill_search", "click", "select_option"]:
+        try:
+            selector = env.tree.get_selector_and_xpath(
+                env.tree.nodeDict[element_id])
+            element_value = env.tree.get_element_value(
+                env.tree.nodeDict[element_id])
+            if action_type in ["fill_form", "fill_search"]:
+                element_value = acton_input
+        except:
+            logger.info(
+                "Failed to obtain element_id from the accessibility tree.")
+            element_id = 0
+            action_type = "None"
+    else:
+        selector = None
+        element_id = 0
+    execute_action = create_action(elementid=element_id, action_type=action_type, action_input=acton_input)
+    return execute_action, current_trace, selector, element_value
+
+
 def read_config(setting_toml_path=None):
     """
     Reads a TOML configuration file from the given path or the default path
@@ -235,6 +274,7 @@ async def run_task(mode,
                    config,
                    write_result_file_path,
                    reference_task_length,
+                   evaluate_steps,
                    reference_evaluate_steps,
                    env,
                    global_reward_mode,
@@ -485,6 +525,3 @@ async def run_task(mode,
         logger.info(f"Write results to json file: {json_out_file_path}")
         with open(json_out_file_path, 'w') as json_file:
             json.dump(task_result, json_file)
-
-
-
