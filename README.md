@@ -25,11 +25,11 @@ WebCanvas is a pioneering online evaluation framework designed to address the dy
 - **Key Nodes Annotation**: Introduces the concept of "key nodes" to offer in-progress feedback and a granular, phase-based assessment system that adapts to frequent changes in web navigation.
 - **Enhanced Granularity of Progress Reward**: Allows for a thorough assessment of the reward module within the framework of autonomous web agents, focusing on the pivotal influence of reward signal quality.
 - **Easy to Scale with Online Web Environment**: Developed a comprehensive suite of functions to assess intermediate states during real-time, open-ended tasks, allowing for robust evaluation in dynamic web environments.
-- **Mind2Web-Online Dataset**: Presents a refined version of the original Mind2Web static dataset, containing 438 live data and 1995 intermediate evaluation states, serving as the foundation for the benchmark.
+- **Mind2Web-Online Dataset**: Presents a refined version of the original Mind2Web static dataset, containing 542 tasks with 2439 intermediate evaluation states, serving as the foundation for the benchmark.
 
 ## 🔥 News
 
-- **[2024, June 6]** We've released [WebCanvas](https://github.com/iMeanAI/WebCanvas), including Data and Web agents!
+- **[2024, June 6]** We've released [WebCanvas](https://github.com/iMeanAI/WebCanvas), including Data, Plugins, and Web agents!
 
 ## 🛣️ TODOs
 
