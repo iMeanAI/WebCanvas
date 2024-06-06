@@ -149,7 +149,6 @@ async def main(global_reward_mode="no_global_reward",
 
 
 if __name__ == "__main__":
-    # 解析命令行参数
     parser = argparse.ArgumentParser(
         description="Run the web agent in different modes.")
     parser.add_argument("--global_reward_mode",
@@ -162,7 +161,6 @@ if __name__ == "__main__":
     parser.add_argument("--single_task_name", type=str, default="Find Dota 2 game and add all DLC to cart in steam.")
     args = parser.parse_args()
 
-    # "./data/data_update_0326/group_sample_all_data_0327.json"
     asyncio.run(main(global_reward_mode=args.global_reward_mode,
                      observation_text_model_name="gpt-3.5-turbo",
                      global_reward_text_model_name="gpt-3.5-turbo",
