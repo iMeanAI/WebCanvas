@@ -12,15 +12,15 @@
 </p>
 
 <p align="center">
-    <a href="https://www.imean.ai/web-canvas">
-        [<img src="https://img.icons8.com/color/48/000000/internet.png" alt="Website" width="16" height="16"/> Website]
-    </a>
-    <a href="https://huggingface.co/datasets/iMeanAI/Mind2Web-Live">
-        [<img src="https://img.icons8.com/color/48/000000/database.png" alt="Datasets" width="16" height="16"/> Datasets]
-    </a>
-    <a href="https://discord.com/invite/wyhH5QPf">
-        [<img src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord" width="16" height="16"/> Discord]
-    </a>
+    [<a href="https://www.imean.ai/web-canvas">
+        <img src="https://img.icons8.com/color/48/000000/internet.png" alt="Website" width="16" height="16"/> Website
+    </a>]
+    [<a href="https://huggingface.co/datasets/iMeanAI/Mind2Web-Live">
+        <img src="https://img.icons8.com/color/48/000000/database.png" alt="Datasets" width="16" height="16"/> Datasets
+    </a>]
+    [<a href="https://discord.com/invite/wyhH5QPf">
+        <img src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord" width="16" height="16"/> Discord
+    </a>]
 </p>
 
 WebCanvas is a pioneering online evaluation framework designed to address the dynamic nature of web interactions. It provides a realistic assessment of autonomous web agents by utilizing live web environments and emphasizing task completion through the identification of key nodes.
