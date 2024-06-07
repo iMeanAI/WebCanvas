@@ -1,6 +1,5 @@
 <h1 align="center">WebCanvas: Benchmarking Web Agents in Online Environments</h1>
 
-<hr>
 
 <p align="center">
   <a href="https://github.com/iMeanAI/WebCanvas/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License MIT"></a>
@@ -12,9 +11,9 @@
 </p>
 
 <p align="center">
-    <img src="https://img.icons8.com/color/48/000000/internet.png" alt="Website" width="16" height="16"/> <a href="https://www.imean.ai/web-canvas">Website</a> · 
-    <img src="https://img.icons8.com/color/48/000000/database.png" alt="Datasets" width="16" height="16"/> <a href="https://huggingface.co/datasets/iMeanAI/Mind2Web-Live">Datasets</a> · 
-    <img src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord" width="16" height="16"/> <a href="https://discord.com/invite/wyhH5QPf">Discord</a>
+    <img src="https://img.icons8.com/color/48/000000/internet.png" alt="Website" width="15" height="15" style="vertical-align: middle;"/> <a href="https://www.imean.ai/web-canvas">Website</a> · 
+    <img src="https://img.icons8.com/color/48/000000/database.png" alt="Datasets" width="15" height="15" style="vertical-align: middle;"/> <a href="https://huggingface.co/datasets/iMeanAI/Mind2Web-Live">Datasets</a> · 
+    <img src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord" width="15" height="15" style="vertical-align: middle;"/> <a href="https://discord.com/invite/wyhH5QPf">Discord</a>
 </p>
 
 WebCanvas is a pioneering online evaluation framework designed to address the dynamic nature of web interactions. It provides a realistic assessment of autonomous web agents by utilizing live web environments and emphasizing task completion through the identification of key nodes.
