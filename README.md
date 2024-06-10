@@ -3,16 +3,17 @@
 
 <p align="center">
   <a href="https://github.com/iMeanAI/WebCanvas/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License MIT"></a>
-  <img src="https://img.shields.io/badge/python-3.11-blue.svg" alt="Python Version 3.11">
+  <a href="https://www.python.org/downloads/release/python-3110/"><img src="https://img.shields.io/badge/python-3.11-blue.svg" alt="Python Version 3.11"></a>
   <a href="https://github.com/iMeanAI/WebCanvas/issues"><img src="https://img.shields.io/github/issues/iMeanAI/WebCanvas" alt="GitHub Issues"></a>
   <a href="https://github.com/iMeanAI/WebCanvas/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
   <a href="https://github.com/iMeanAI/WebCanvas/stargazers"><img src="https://img.shields.io/github/stars/iMeanAI/WebCanvas" alt="GitHub Stars"></a>
   <a href="https://github.com/iMeanAI/WebCanvas/network/members"><img src="https://img.shields.io/github/forks/iMeanAI/WebCanvas" alt="GitHub Forks"></a>
+
 </p>
 
 <p align="center">
-    <img src="https://img.icons8.com/color/48/000000/internet.png" alt="Website" width="15" height="15" style="vertical-align: middle;"/> <a href="https://www.imean.ai/web-canvas">Website</a> · 
-    <img src="https://img.icons8.com/color/48/000000/database.png" alt="Datasets" width="15" height="15" style="vertical-align: middle;"/> <a href="https://huggingface.co/datasets/iMeanAI/Mind2Web-Live">Datasets</a> · 
+    <img src="https://img.icons8.com/color/48/000000/internet.png" alt="Website" width="15" height="15" style="vertical-align: middle;"/> <a href="https://www.imean.ai/web-canvas">Website</a> • 
+    <img src="https://img.icons8.com/color/48/000000/database.png" alt="Dataset" width="15" height="15" style="vertical-align: middle;"/> <a href="https://huggingface.co/datasets/iMeanAI/Mind2Web-Live">Dataset</a> • 
     <img src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord" width="15" height="15" style="vertical-align: middle;"/> <a href="https://discord.com/invite/wyhH5QPf">Discord</a>
 </p>
 
