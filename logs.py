@@ -6,8 +6,7 @@ import colorlog
 import re
 
 
-# 指定日志文件夹路径
-log_folder = "result_logs"
+log_folder = "LOGS"
 if not os.path.exists(log_folder):
     os.makedirs(log_folder)
 log_file_name = os.path.join(log_folder, time.strftime("%Y-%m-%d_%H-%M-%S") + ".log")
@@ -57,12 +56,10 @@ file_formatter = Formatter(
 )
 
 
-# 创建文件处理器和控制台处理器
 file_handler = logging.FileHandler(log_file_name, encoding='utf-8')
 file_handler.setFormatter(file_formatter)
 stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setFormatter(stream_formatter)
 
-# 添加处理器到日志记录器
 logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
