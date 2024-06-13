@@ -284,7 +284,6 @@ class AsyncHTMLEnvironment:
                     best_option = [i, option, similarity]
             await self.page.evaluate(f'''(selector) => {{
                 var selectElement = document.querySelector(selector);
-                // 先在select下面找option
                 var options = selectElement.querySelectorAll('option');
                 for (var option of options) {{
                     if (option.innerText === "{best_option[1]}") {{
@@ -373,9 +372,6 @@ class AsyncHTMLEnvironment:
         """
         """
         if "element_id" in action and action["element_id"] != 0:
-            # logger.info(f'action["element_id"]:{action["element_id"]}')
-            # logger.info(
-            #     f'tree.nodeDict[action["element_id"]]:{self.tree.nodeDict[action["element_id"]]}')
             action["element_id"] = self.tree.nodeDict[action["element_id"]]
             element_value = self.tree.get_element_value(action["element_id"])
         match action["action_type"]:

@@ -155,7 +155,6 @@ class VisionToDomMode(InteractionMode):
                     # `target_element` should not exist, if it does, it's not used
                     break
 
-            # 如果没有找到预定义的行为
             if not actions_found:
                 print("None of 'goto', 'google_search', 'switch_tab', 'scroll_down', 'scroll_up', or 'go_back' were found in the vision_act_response.")
 

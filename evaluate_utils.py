@@ -462,14 +462,9 @@ async def run_task(mode,
             additional_steps += step_increase
             num_steps += 1
             steps_list.append(each_step_dict)
-            if num_steps >= 25 or task_global_status == "finished" or task_finished:  # 防止无限循环
+            if num_steps >= 25 or task_global_status == "finished" or task_finished:
                 break
 
-        # a = input(
-        #     "Press Enter to proceed to the next action, or type 'q' to quit")
-        # if a == "q":
-        #     human_interaction_stop_status = True
-        #     break
         if step_stop:
             logger.info(
                 "Press Enter to proceed to the next action, or type 'q' to quit the task: ")

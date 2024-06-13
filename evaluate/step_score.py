@@ -15,7 +15,7 @@ class StepEvaluator():
 
 
 class URLEvaluator(StepEvaluator):
-    '''URL评测打分'''
+    '''URL Evaluation Scoring'''
     @staticmethod
     def url_exact_match(input_url, reference_answer, key=False):
         if key:
@@ -75,7 +75,7 @@ class URLEvaluator(StepEvaluator):
 
 
 class ElementEvaluator(StepEvaluator):
-    '''元素评测打分'''
+    '''Element evaluation and scoring'''
     @staticmethod
     def path_exact_match(input_answer, reference_answer, method, html_content, input_netloc, reference_netloc):
         score = 0
@@ -139,7 +139,7 @@ class ElementEvaluator(StepEvaluator):
 
     @staticmethod
     def path_included_match(input_answer, reference_answer, method, html_content):
-        # TODO 路径包含
+        # TODO Add path inclusion matching method
         result_score = MatchFunction.include_match(
             input_answer, reference_answer)
         return result_score
@@ -177,7 +177,7 @@ class ElementEvaluator(StepEvaluator):
 
 
 class TextEvaluator(StepEvaluator):
-    '''文本评测打分'''
+    '''Text evaluation and scoring'''
     @staticmethod
     def text_exact_match(input_answer, reference_answer):
         result_score = MatchFunction.exact_match(
@@ -222,7 +222,7 @@ class MatchFunction():
                 response, _ = await GPT35.request(semantic_request)
                 score = re.findall("```(.*?)```", response, re.S)[0]
                 score = eval(score)
-                score = max(0, min(1, score))  # 将数字限定在0,1之间
+                score = max(0, min(1, score))  # Limit the score between 0 and 1
                 if score != None:
                     break
             except:

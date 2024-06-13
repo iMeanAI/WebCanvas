@@ -147,7 +147,7 @@ class HTMLTree:
             return ActiveElements.is_valid_element(node)
 
     def prune_tree(self) -> str:
-        """遍历每个元素判断是否有效并剪枝"""
+        """Traverse each element to determine if it is valid and prune"""
         result_list = []
         root = self.pruningTreeNode[0]
         if root is None:
@@ -196,7 +196,7 @@ class HTMLTree:
         if tag_name == "unknown":
             tag_name = element["tagName"]
             tag_idx = element["nodeId"]
-            # TODO 添加更多映射关系
+            # TODO Add more mappings
             if tag_name in MapTagNameList:
                 parent_element = self.pruningTreeNode[element["parentId"]]
                 return self.get_tag_name(parent_element)
@@ -243,18 +243,6 @@ class HTMLTree:
         if html_text is None:
             return ""
         return html_text.replace("\n", "").replace("\t", "").strip()
-
-    def get_elements_distance(self, idx1: int, idx2: int) -> int:
-        element1, element2 = self.elementNodes[idx1], self.elementNodes[idx2]
-        if element1["depth"] < element2["depth"]:
-            return self.get_elements_distance(idx2, idx1)
-        higher_element, lower_element = element1, element2
-        while higher_element["depth"] - lower_element["depth"] > 0:
-            higher_element = self.elementNodes[higher_element["parentId"]]
-        while higher_element["nodeId"] != lower_element["nodeId"]:
-            higher_element = self.elementNodes[higher_element["parentId"]]
-            lower_element = self.elementNodes[lower_element["parentId"]]
-        return element1["depth"] + element2["depth"] - 2 * lower_element["depth"]
 
     def get_element_value(self, element_id: int) -> str:
         return self.element_value[str(element_id)]
