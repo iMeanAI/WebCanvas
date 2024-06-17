@@ -1,5 +1,0 @@
-page.goto("https://www.google.com/")
-page.locator("#APjFqb").click()
-page.locator("#APjFqb").fill("123")
-page.locator("#APjFqb").fill("456")
-page.locator("#APjFqb").fill("789")

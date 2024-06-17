@@ -56,7 +56,7 @@ for index, task in enumerate(json_file):
                 # *element match
                 if "element" in temp["match_function_name"]:
 
-                    # 提取出域名，如zhihu.com提取出zhihu，www.google.com.hk提取出google
+                    # extract the domain name, such as extracting "zhihu" from zhihu.com, and "google" from www.google.com.hk
                     url = urlparse(step["href"])
                     if url.netloc.startswith("www"):
                         netloc = re.findall(".*?\.(.*?)\..*?", url.netloc)[0]
