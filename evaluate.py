@@ -151,7 +151,7 @@ async def main(global_reward_mode="no_global_reward",
                raw_data_index=-1,
                mode="dom",
                ground_truth_mode=False,
-               toml_path=""
+               toml_path=None
                ):
 
     config = read_config(toml_path)
