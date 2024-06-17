@@ -53,7 +53,7 @@ class InteractionMode:
                         observation=observation,
                         current_info=current_info)
             print_info(
-                f"Global_Reward_Request:\n{print_limited_json(reward_request, limit=1000)}", "\033[32m")  # 绿色
+                f"Global_Reward_Request:\n{print_limited_json(reward_request, limit=1000)}", "\033[32m")  # green
             reward_response = ""
             for i in range(3):
                 try:
@@ -74,7 +74,7 @@ class InteractionMode:
                     # print(
                     #     f"planning reward_response or status_and_description error for {i+1} times")
                     continue
-            # print(f"\033[34mGlobal_Reward_Response:\n{reward_response}")  # 蓝色
+            # print(f"\033[34mGlobal_Reward_Response:\n{reward_response}")  # blue
             logger.info(
                 f"\033[34mGlobal_Reward_Response:\n{reward_response}\033[34m")
         else:
@@ -110,7 +110,7 @@ class DomVDescMode(InteractionMode):
             vision_desc_response, error_message = await self.visual_model.request(vision_desc_request)
         else:
             vision_desc_response = ""
-        print(f"\033[36mvision_disc_response:\n{vision_desc_response}")  # 蓝色
+        print(f"\033[36mvision_disc_response:\n{vision_desc_response}")  # blue
         planning_request = ObservationVisionDiscPromptConstructor().construct(
             user_request, previous_trace, observation, feedback, status_description, vision_desc_response)
         # print(f"\033[32m{planning_request}")

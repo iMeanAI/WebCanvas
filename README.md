@@ -81,7 +81,7 @@ Visit [Quickstart tutorial - OpenAI API](https://platform.openai.com/docs/quicks
 You can run the repos with the following command:
 
 ```
-python package_evaluate.py \
+python evaluate.py \
     --global_reward_mode dom_reward \
     --index -1 \
     --single_task_name "Find Dota 2 game and add all DLC to cart in steam."
@@ -131,7 +131,7 @@ Thank you for your interest in improving WebCanvas. Your contributions are great
 We are building a vibrant and inclusive community around WebCanvas! Join our community to stay up-to-date with the latest developments and to contribute to the project:
 
 - [GitHub Discussions](https://github.com/iMeanAI/WebCanvas/discussions)
-- [Discord](https://discord.com/invite/wyhH5QPf) (invitation link)
+- [Discord](https://discord.com/invite/wyhH5QPf)
 
 ## 📢 Feedback
 
