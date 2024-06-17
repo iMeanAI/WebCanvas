@@ -1,7 +1,0 @@
-page.goto("https://store.steampowered.com/")
-page.get_by_placeholder("搜索").click()
-page.get_by_placeholder("搜索").fill("dota2")
-page.goto("https://store.steampowered.com/search/?snr=1_4_4__12&term=dota2")
-page.goto("https://store.steampowered.com/search/?term=dota2")
-page.get_by_role("link", name="Dota 2 2013 年 7 月 10 日 免费").click()
-page.locator("#dlc_purchase_action >.btn_addtocart >.btn_green_steamui.btn_medium >span:nth-child(1)").click()

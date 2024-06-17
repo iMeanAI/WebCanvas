@@ -26,8 +26,8 @@ WebCanvas is a pioneering online evaluation framework designed to address the dy
 - **Dynamic and Real-time Web Environment Interaction**: Utilizes live web environments to provide a realistic assessment of web agents, ensuring that evaluations reflect the actual complexities of the web.
 - **Key Nodes Annotation**: Introduces the concept of "key nodes" to offer in-progress feedback and a granular, phase-based assessment system that adapts to frequent changes in web navigation.
 - **Enhanced Granularity of Progress Reward**: Allows for a thorough assessment of the reward module within the framework of autonomous web agents, focusing on the pivotal influence of reward signal quality.
-- **Easy to Scale with Online Web Environment**: Developed a comprehensive suite of functions to assess intermediate states during real-time, open-ended tasks, allowing for robust evaluation in dynamic web environments.
-- **Mind2Web-Online Dataset**: Presents a refined version of the original Mind2Web static dataset, containing 542 tasks with 2439 intermediate evaluation states, serving as the foundation for the benchmark.
+- **Easy to Scale with Online Web Environment**: Connected to a comprehensive suite of toolkits to define demonstration trajectories and intermediate states for real-time, open-ended web tasks, allowing for robust evaluation in dynamic web environments.
+- **Mind2Web-Live Dataset**: Presents a refined version of the original Mind2Web[^1] static dataset, containing 542 tasks with 2439 intermediate evaluation states, serving as the foundation for the benchmark.
 
 ## 🔥 News
 
@@ -139,3 +139,5 @@ We value your feedback and suggestions!
 
 We will be providing a detailed guide on how to give feedback in the upcoming documentation. This will include information on how to submit feedback, the types of feedback we are looking for, and how we plan to address and incorporate your suggestions. Stay tuned for more updates!
 
+#### References
+[^1]: Deng, Xiang, et al. "Mind2web: Towards a generalist agent for the web." Advances in Neural Information Processing Systems 36 (2024).
