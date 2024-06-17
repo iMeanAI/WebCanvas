@@ -1,6 +1,6 @@
 from evaluate import *
 from agent.Plan import *
-from playwright.async_api import Playwright, async_playwright, expect, Page
+from playwright.async_api import Page
 from agent.Environment.html_env.async_env import AsyncHTMLEnvironment, ActionExecutionError
 
 import re
@@ -245,23 +245,23 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
     return execute_action, current_trace, selector, element_value
 
 
-def read_config(setting_toml_path=None):
+def read_config(toml_path=None):
     """
     Reads a TOML configuration file from the given path or the default path
     and returns its content as a dictionary.
 
     Args:
-        setting_toml_path (str, optional): The path to the TOML configuration file.
+        toml_path (str, optional): The path to the TOML configuration file.
                                            If None, use the default path.
 
     Returns:
         dict: The content of the configuration file.
     """
-    if setting_toml_path is None:
+    if toml_path is None:
         # default_path = os.path.join(os.path.dirname(__file__), 'default_settings.toml')
-        setting_toml_path = 'configs/setting.toml'
+        toml_path = 'configs/setting.toml'
 
-    with open(setting_toml_path, 'r') as f:
+    with open(toml_path, 'r') as f:
         config = toml.load(f)
 
     return config
