@@ -1,5 +1,5 @@
 [basic]
-Task_Mode = "batch_tasks"   # single_task or batch_tasks
+Task_Mode = "single_task"   # single_task or batch_tasks
 Step_Score_Threshold = 6
 default = true              # dom-only or dom-vision with all module
 global_reward = true        # with global reward

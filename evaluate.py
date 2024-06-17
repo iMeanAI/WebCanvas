@@ -49,7 +49,7 @@ def validate_config(config, mode, observation_text_model_name):
         logger.error("The observation text model does not support JSON mode!")
         exit()
 
-    if not os.path.exists(batch_tasks_file_path):
+    if task_mode == 'batch_tasks' and not os.path.exists(batch_tasks_file_path):
         logger.error("batch_tasks_file_path not exist!")
         exit()
 
@@ -114,6 +114,8 @@ async def run_experiment(task_range, experiment_config):
         elif experiment_config.config['basic']['Task_Mode'] == "single_task":
             task_name = experiment_config.single_task_name
             reference_task_length = experiment_config.config['steps']['Single_Task_Action_Step']
+            evaluate_steps = experiment_config.config['steps']['Single_Task_Action_Step'] #TODO
+            reference_evaluate_steps = None
             logger.info(f"task_name: {task_name}")
 
         env = create_html_environment(experiment_config.mode)
@@ -157,6 +159,7 @@ async def main(global_reward_mode="no_global_reward",
     config = read_config(toml_path)
     validate_config(config, mode, observation_text_model_name)
 
+    file = None
     if config['basic']['Task_Mode'] == "batch_tasks":
         file = read_file(file_path=config['files']['Batch_Tasks_File_Path'])
         task_range = get_task_range(config['basic']['Task_Mode'], file, raw_data_index)
