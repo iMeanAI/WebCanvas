@@ -69,6 +69,40 @@ def get_task_range(task_mode, file, raw_data_index):
         logger.error("task_mode error!")
         exit()
 
+def log_task_info(task_index, task_name, reference_task_length, reference_evaluate_steps):
+    logger.info("*" * 100)
+    logger.info(f"Start")
+    logger.info(f"task index: {task_index}")
+    logger.info(f"task name: {task_name}")
+    logger.info(f"task reference length: {reference_task_length}")
+    logger.info(f"raw data annotation: {reference_evaluate_steps}")
+
+def generate_result_file_path(config, mode, observation_text_model_name, global_reward_mode, global_reward_text_model_name, ground_truth_mode, record_time_short, record_time):
+    return f"./csv_results/raw_record_{record_time_short}/raw_record_{record_time}_{mode}_{observation_text_model_name}_{global_reward_mode}_{global_reward_text_model_name}_{ground_truth_mode}"
+
+def load_ground_truth_data(config, ground_truth_mode):
+    if ground_truth_mode:
+        ground_truth_file_path = config['files']['Ground_Truth_File_Path']
+        if not os.path.exists(ground_truth_file_path):
+            logger.error("ground_truth_file_path not exist!")
+            exit()
+        return read_json_file(ground_truth_file_path)
+    return None
+
+def create_html_environment(mode):
+    return AsyncHTMLEnvironment(
+        mode=mode,
+        max_page_length=8192,
+        headless=False,
+        slow_mo=1000,
+        current_viewport_only=False,
+        viewport_size={"width": 1080, "height": 720},
+        save_trace_enabled=False,
+        sleep_after_execution=0.0,
+        locale="en-US",
+        use_vimium_effect=True
+    )
+
 async def run_experiment(task_range, experiment_config):
     for task_index in task_range:
         task_uuid = None
@@ -110,28 +144,6 @@ async def run_experiment(task_range, experiment_config):
     print(f"\033[31mtask finished!\033[0m")
     input(f"\033[31mPress Enter to exit...\033[0m")
 
-def log_task_info(task_index, task_name, reference_task_length, reference_evaluate_steps):
-    logger.info("*" * 100)
-    logger.info(f"Start")
-    logger.info(f"task index: {task_index}")
-    logger.info(f"task name: {task_name}")
-    logger.info(f"task reference length: {reference_task_length}")
-    logger.info(f"raw data annotation: {reference_evaluate_steps}")
-
-def create_html_environment(mode):
-    return AsyncHTMLEnvironment(
-        mode=mode,
-        max_page_length=8192,
-        headless=False,
-        slow_mo=1000,
-        current_viewport_only=False,
-        viewport_size={"width": 1080, "height": 720},
-        save_trace_enabled=False,
-        sleep_after_execution=0.0,
-        locale="en-US",
-        use_vimium_effect=True
-    )
-
 async def main(global_reward_mode="no_global_reward",
                observation_text_model_name="gpt-4-turbo",
                global_reward_text_model_name="gpt-4-turbo",
@@ -171,18 +183,6 @@ async def main(global_reward_mode="no_global_reward",
     )
     
     await run_experiment(task_range, experiment_config)
-
-def generate_result_file_path(config, mode, observation_text_model_name, global_reward_mode, global_reward_text_model_name, ground_truth_mode, record_time_short, record_time):
-    return f"./csv_results/raw_record_{record_time_short}/raw_record_{record_time}_{mode}_{observation_text_model_name}_{global_reward_mode}_{global_reward_text_model_name}_{ground_truth_mode}"
-
-def load_ground_truth_data(config, ground_truth_mode):
-    if ground_truth_mode:
-        ground_truth_file_path = config['files']['Ground_Truth_File_Path']
-        if not os.path.exists(ground_truth_file_path):
-            logger.error("ground_truth_file_path not exist!")
-            exit()
-        return read_json_file(ground_truth_file_path)
-    return None
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the web agent in different modes.")
