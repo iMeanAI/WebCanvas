@@ -7,7 +7,7 @@ current_step_reward = true  # with current step reward
 previous_trace = true       # with previous trace
 
 [model]
-JSON_Model_Response = true
+JSON_Model_Response = false
 All_JSON_Models = ["gpt-4-turbo",
                    "gpt-4-turbo-2024-04-09",
                    "gpt-4-turbo-preview",
