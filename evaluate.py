@@ -68,8 +68,7 @@ def get_task_range(task_mode, file, raw_data_index):
         else:
             raw_data_start_index = 0
             raw_data_end_index = len(file)
-        # return range(raw_data_start_index, raw_data_end_index)
-        return range(0, 5)
+        return range(raw_data_start_index, raw_data_end_index)
     elif task_mode == "single_task":
         return range(0, 1)
     else:
