@@ -1,10 +1,7 @@
 [basic]
-Task_Mode = "single_task"   # single_task or batch_tasks
+Task_Mode = "batch_tasks"   # single_task or batch_tasks
 Step_Score_Threshold = 6
-default = true              # dom-only or dom-vision with all module
-global_reward = true        # with global reward
-current_step_reward = true  # with current step reward
-previous_trace = true       # with previous trace
+global_reward = false        # with global reward
 
 [model]
 JSON_Model_Response = true
@@ -27,6 +24,7 @@ Batch_Tasks_Condition_Step_Increase = 5
 Batch_Tasks_File_Path = "./data/data_0328/all_data_0328.json"
 #  ./data/mind2web-test_20240425.json
 Ground_Truth_File_Path = "./data/ground_truth/GT_instructions_202404161811_for_all_data_0328.json"
+out_file_path = "./batch_tasks_results/example_2_without_global_reward"   # YOUR OUT FILE PATH 
 
 [conditions]
 URL = ["error"]

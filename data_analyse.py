@@ -4,6 +4,7 @@ import json5
 import json
 import re
 import os
+from logs import logger
 
 
 def parse_thought_action(dict_str):
@@ -256,10 +257,9 @@ def evaluate(file_path):
     with open(result_file_path, 'w') as json_file:
         json.dump(result_dict, json_file)
 
+    logger.info(f'\033[31mAll reuslts write to {result_file_path} !\033[0m')
+
 
 def get_evaluate_result(input_result_path):
     out_file_path = get_result(input_result_path)
     evaluate(file_path=out_file_path)
-
-
-get_evaluate_result("task_results/gpt-4o-2024-05-13")

@@ -86,7 +86,7 @@ class AsyncHTMLEnvironment:
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
             self.html_content = await self.page.content()
-        self.last_page = self.page
+        # self.last_page = self.page
 
     async def get_obs(self) -> Union[str, Tuple[str, str]]:
         observation = ""
@@ -131,14 +131,14 @@ class AsyncHTMLEnvironment:
                 if bool(urlparse(url).netloc) is False:
                     base_url = self.page.url()
                     url = urljoin(base_url, url)
-                self.last_page = self.page
-                self.page = await self.context.new_page()
+                # self.last_page = self.page
+                # self.page = await self.context.new_page()
                 await self.page.goto(url, timeout=10000)
-                await self.page.wait_for_timeout(1000)
+                await self.page.wait_for_timeout(2000)
                 self.html_content = await self.page.content()
             except:
                 try:
-                    self.last_page = self.page
+                    # self.last_page = self.page
                     selector = rf"{selector}"
                     await self.page.evaluate(f'''(selector) => {{
                         var element = document.querySelector(selector);
@@ -167,8 +167,8 @@ class AsyncHTMLEnvironment:
                 raise e
 
     async def goto(self, action):
-        self.last_page = self.page
-        self.page = await self.context.new_page()
+        # self.last_page = self.page
+        # self.page = await self.context.new_page()
         await self.load_page_with_retry(action['url'])
         self.html_content = await self.page.content()
 
@@ -184,7 +184,8 @@ class AsyncHTMLEnvironment:
             logger.error(
                 f"selector:{selector},label_name:{label},element_id: {element_id},error ({e}) in fill_search action.")
         try:
-            await self.page.locator(selector).fill(action["fill_text"])
+            value = stringfy_value(action['fill_text'])
+            await self.page.locator(selector).fill(value)
             await self.page.locator(selector).press("Enter")
             self.html_content = await self.page.content()
         except:
@@ -217,7 +218,8 @@ class AsyncHTMLEnvironment:
             logger.error(
                 f"selector:{selector},label_name:{label},element_id: {element_id},error ({e}) in fill_form action.")
         try:
-            await self.page.locator(selector).fill(action["fill_text"])
+            value = stringfy_value(action['fill_text'])
+            await self.page.locator(selector).fill(value)
             self.html_content = await self.page.content()
         except:
             try:
@@ -236,15 +238,15 @@ class AsyncHTMLEnvironment:
                 raise e
 
     async def search(self, action):
-        self.last_page = self.page
-        self.page = await self.context.new_page()
         await self.page.goto("https://www.google.com/search?q="+action["fill_text"], timeout=30000)
         await self.page.wait_for_timeout(2000)
         self.html_content = await self.page.content()
 
     async def go_back_last_page(self, action):
-        self.page = self.last_page
-        self.last_page = self.page
+        # self.page = self.last_page
+        # self.last_page = self.page
+        await self.page.go_back()
+        await self.page.wait_for_timeout(2000)
         self.html_content = await self.page.content()
 
     async def select_option(self, action):
@@ -372,6 +374,9 @@ class AsyncHTMLEnvironment:
         """
         """
         if "element_id" in action and action["element_id"] != 0:
+            # logger.info(f'action["element_id"]:{action["element_id"]}')
+            # logger.info(
+            #     f'tree.nodeDict[action["element_id"]]:{self.tree.nodeDict[action["element_id"]]}')
             action["element_id"] = self.tree.nodeDict[action["element_id"]]
             element_value = self.tree.get_element_value(action["element_id"])
         match action["action_type"]:
