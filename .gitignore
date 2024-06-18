@@ -13,5 +13,5 @@ LOGS/
 
 batch_tasks_results/
 
-data/
+data/*
 
