@@ -114,6 +114,51 @@ This program supports several command-line arguments to customize its behavior:
   - Default: `"Find Dota 2 game and add all DLC to cart in steam."`
   - Description: Use this parameter to specify the task that the agent should perform.
 
+### Uploading and Downloading Data
+
+You can use the provided `upload_and_download.py` script to upload or download files via the command line.
+
+#### Upload a File
+
+To upload a file, use the following command:
+
+```bash
+python upload_and_download.py upload \
+    --username your_username \
+    --password your_password \
+    --file-path /path/to/your/file \
+    --challenge-id your_challenge_id \
+    --name your_name \
+    --base-model your_base_model
+```
+
+Replace the placeholders with your actual values:
+
+- `your_username`: Your login username.
+- `your_password`: Your login password.
+- `/path/to/your/file`: The path to the file you want to upload.
+- `your_challenge_id`: The ID of the challenge for the upload.
+- `your_name`: The name for the upload.
+- `your_base_model`: The base model information for the upload.
+
+#### Download a File
+
+To download a file, use the following command:
+
+```bash
+python upload_and_download.py download \
+    --username your_username \
+    --password your_password \
+    --challenge-id your_challenge_id \
+    --save-path /path/to/save/file
+```
+
+Replace the placeholders with your actual values:
+
+- `your_username`: Your login username.
+- `your_password`: Your login password.
+- `your_challenge_id`: The ID of the challenge for the download.
+- `/path/to/save/file`: The path where the downloaded file will be saved.
 
 ## 🤝 Contributing
 
