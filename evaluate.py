@@ -12,9 +12,11 @@ import logging
 from agent.Utils.utils import *
 # evaluate tools
 from evaluate_utils import run_task, read_config, read_file, read_json_file
+from data_analyse import get_evaluate_result
 
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ExperimentConfig:
@@ -30,19 +32,22 @@ class ExperimentConfig:
     record_time: str
     file: list
 
+
 def validate_config(config, mode, observation_text_model_name):
     task_mode = config['basic']['Task_Mode']
     batch_tasks_file_path = config['files']['Batch_Tasks_File_Path']
     json_model_response = config['model']['JSON_Model_Response']
     all_json_models = config['model']['All_JSON_Models']
     step_stop = config['steps']['Step_Stop']
-    
+
     if mode not in ["dom"]:
-        logger.error("observation mode is not correctly defined! Currently we only support DOM observation.")
+        logger.error(
+            "observation mode is not correctly defined! Currently we only support DOM observation.")
         exit()
 
     if step_stop not in [True, False]:
-        logger.error("step_stop is not defined! Try to define your way to terminate the agent.")
+        logger.error(
+            "step_stop is not defined! Try to define your way to terminate the agent.")
         exit()
 
     if json_model_response and observation_text_model_name not in all_json_models:
@@ -53,6 +58,7 @@ def validate_config(config, mode, observation_text_model_name):
         logger.error("batch_tasks_file_path not exist!")
         exit()
 
+
 def get_task_range(task_mode, file, raw_data_index):
     if task_mode == "batch_tasks":
         if raw_data_index != -1:
@@ -62,12 +68,14 @@ def get_task_range(task_mode, file, raw_data_index):
         else:
             raw_data_start_index = 0
             raw_data_end_index = len(file)
-        return range(raw_data_start_index, raw_data_end_index)
+        # return range(raw_data_start_index, raw_data_end_index)
+        return range(0, 5)
     elif task_mode == "single_task":
         return range(0, 1)
     else:
         logger.error("task_mode error!")
         exit()
+
 
 def log_task_info(task_index, task_name, reference_task_length, reference_evaluate_steps):
     logger.info("*" * 100)
@@ -77,8 +85,10 @@ def log_task_info(task_index, task_name, reference_task_length, reference_evalua
     logger.info(f"task reference length: {reference_task_length}")
     logger.info(f"raw data annotation: {reference_evaluate_steps}")
 
-def generate_result_file_path(config, mode, observation_text_model_name, global_reward_mode, global_reward_text_model_name, ground_truth_mode, record_time_short, record_time):
-    return f"./csv_results/raw_record_{record_time_short}/raw_record_{record_time}_{mode}_{observation_text_model_name}_{global_reward_mode}_{global_reward_text_model_name}_{ground_truth_mode}"
+
+def generate_result_file_path(config):
+    return os.path.join(config["files"]["out_file_path"], "json_result")
+
 
 def load_ground_truth_data(config, ground_truth_mode):
     if ground_truth_mode:
@@ -88,6 +98,7 @@ def load_ground_truth_data(config, ground_truth_mode):
             exit()
         return read_json_file(ground_truth_file_path)
     return None
+
 
 def create_html_environment(mode):
     return AsyncHTMLEnvironment(
@@ -103,6 +114,7 @@ def create_html_environment(mode):
         use_vimium_effect=True
     )
 
+
 async def run_experiment(task_range, experiment_config):
     for task_index in task_range:
         task_uuid = None
@@ -110,11 +122,13 @@ async def run_experiment(task_range, experiment_config):
             task = experiment_config.file[task_index]
             task_name, task_uuid, reference_task_length, reference_evaluate_steps = task
             evaluate_steps = reference_evaluate_steps
-            log_task_info(task_index, task_name, reference_task_length, reference_evaluate_steps)
+            log_task_info(task_index, task_name,
+                          reference_task_length, reference_evaluate_steps)
         elif experiment_config.config['basic']['Task_Mode'] == "single_task":
             task_name = experiment_config.single_task_name
             reference_task_length = experiment_config.config['steps']['Single_Task_Action_Step']
-            evaluate_steps = experiment_config.config['steps']['Single_Task_Action_Step'] #TODO
+            # TODO
+            evaluate_steps = experiment_config.config['steps']['Single_Task_Action_Step']
             reference_evaluate_steps = None
             logger.info(f"task_name: {task_name}")
 
@@ -143,8 +157,11 @@ async def run_experiment(task_range, experiment_config):
         await env.close()
         del env
 
-    print(f"\033[31mtask finished!\033[0m")
-    input(f"\033[31mPress Enter to exit...\033[0m")
+    get_evaluate_result(experiment_config.config["files"]["out_file_path"])
+    logger.info('\033[31mAll tasks finished!\033[0m')
+    logger.info('\033[31mPress Enter to exit...\033[0m')
+    input()
+
 
 async def main(global_reward_mode="no_global_reward",
                observation_text_model_name="gpt-4-turbo",
@@ -162,15 +179,16 @@ async def main(global_reward_mode="no_global_reward",
     file = None
     if config['basic']['Task_Mode'] == "batch_tasks":
         file = read_file(file_path=config['files']['Batch_Tasks_File_Path'])
-        task_range = get_task_range(config['basic']['Task_Mode'], file, raw_data_index)
+        task_range = get_task_range(
+            config['basic']['Task_Mode'], file, raw_data_index)
     elif config['basic']['Task_Mode'] == "single_task":
         task_range = get_task_range(config['basic']['Task_Mode'], None, -1)
 
     record_time_short = time.strftime("%Y%m%d", time.localtime())
     record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-    write_result_file_path = generate_result_file_path(config, mode, observation_text_model_name, global_reward_mode, global_reward_text_model_name, ground_truth_mode, record_time_short, record_time)
+    write_result_file_path = generate_result_file_path(config)
     ground_truth_data = load_ground_truth_data(config, ground_truth_mode)
-    
+
     experiment_config = ExperimentConfig(
         mode=mode,
         global_reward_mode=global_reward_mode,
@@ -184,16 +202,19 @@ async def main(global_reward_mode="no_global_reward",
         record_time=record_time,
         file=file
     )
-    
+
     await run_experiment(task_range, experiment_config)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run the web agent in different modes.")
+    parser = argparse.ArgumentParser(
+        description="Run the web agent in different modes.")
     parser.add_argument("--global_reward_mode",
-                        choices=["dom_vision_reward", "dom_reward", "vision_reward", "no_global_reward"],
+                        choices=["dom_vision_reward", "dom_reward",
+                                 "vision_reward", "no_global_reward"],
                         default="dom_reward", help="Choose the mode of global reward.")
     parser.add_argument("--index", type=str, default=-1)
-    parser.add_argument("--single_task_name", type=str, default="Find Dota 2 game and add all DLC to cart in steam.")
+    parser.add_argument("--single_task_name", type=str,
+                        default="Find Dota 2 game and add all DLC to cart in steam.")
     args = parser.parse_args()
 
     asyncio.run(main(global_reward_mode=args.global_reward_mode,

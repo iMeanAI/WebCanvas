@@ -11,6 +11,7 @@ import os
 from agent.Environment import ActionExecutionError, create_action
 from agent.Plan import Planning
 from agent.Utils.utils import save_screenshot, is_valid_base64
+from agent.Reward.global_reward import GlobalReward
 from evaluate import FinishTaskEvaluator, TaskLengthEvaluator, URLEvaluator, ElementEvaluator
 from logs import logger
 
@@ -35,7 +36,8 @@ def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json
                     reference_evaluate_steps.append({"match_function": match_function,
                                                      "key": key, "reference_answer": reference_answer, "score": 0})
                 except:
-                    logger.error(f"url error in task {task_name_id}, step {i}, match_function: {match_function}")
+                    logger.error(
+                        f"url error in task {task_name_id}, step {i}, match_function: {match_function}")
                     exit(1)
             elif "element_path" in match_function:
                 try:
@@ -209,13 +211,13 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
     # print(evaluate_steps)
 
 
-def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
+def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: dict):
     thought = response["description"].get("thought")
     action_type = response['action_type']
     acton_input = response['value']
     action = response["description"].get("action")
-    reflection = response["description"].get("reward").get(
-        "description") if response["description"].get("reward") else ""
+    reflection = step_reward.get(
+        "description") if step_reward else ""
     current_trace = {"thought": thought,
                      "action": action, "reflection": reflection}
     element_value = ""
@@ -241,7 +243,8 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment):
     else:
         selector = None
         element_id = 0
-    execute_action = create_action(elementid=element_id, action_type=action_type, action_input=acton_input)
+    execute_action = create_action(
+        elementid=element_id, action_type=action_type, action_input=acton_input)
     return execute_action, current_trace, selector, element_value
 
 
@@ -267,26 +270,27 @@ def read_config(toml_path=None):
     return config
 
 
-async def run_task(mode,
-                   task_mode,
-                   task_name,
-                   task_uuid,
-                   config,
-                   write_result_file_path,
-                   reference_task_length,
-                   evaluate_steps,
-                   reference_evaluate_steps,
-                   env,
-                   global_reward_mode,
-                   global_reward_text_model_name,
-                   observation_text_model_name,
-                   ground_truth_mode,
-                   ground_truth_data,
-                   json_model_response,
-                   step_stop,
-                   task_index,
-                   record_time=None
-                   ):
+async def run_task(
+    mode,
+    task_mode,
+    task_name,
+    task_uuid,
+    config,
+    write_result_file_path,
+    reference_task_length,
+    evaluate_steps,
+    reference_evaluate_steps,
+    env,
+    global_reward_mode,
+    global_reward_text_model_name,
+    observation_text_model_name,
+    ground_truth_mode,
+    ground_truth_data,
+    json_model_response,
+    step_stop,
+    task_index,
+    record_time=None
+):
     await env.reset("about:blank")
 
     response_error_count = 0
@@ -331,25 +335,40 @@ async def run_task(mode,
     while num_steps < max_steps + additional_steps:
         error_message = ""
         total_step_score = 0
+        step_reward = {}
+        status_description = ""
+
         logger.info(
             "**🤖 The agent is in the process of starting planning 🤖**")
+
+        if config["basic"]["global_reward"] and len(previous_trace) > 0:
+            step_reward, status_description = await GlobalReward.evaluate(
+                config=config,
+                model_name=global_reward_text_model_name,
+                user_request=task_name,
+                previous_trace=previous_trace,
+                observation=observation,
+                current_info=current_info,
+                task_name_id=task_uuid,
+                global_reward_mode=global_reward_mode,
+                ground_truth_mode=ground_truth_mode,
+                ground_truth_data=ground_truth_data,
+            )
+
         for _ in range(3):
             response_total_count += 1
             try:
-                out_put = await Planning.plan(user_request=task_name,
-                                              text_model_name=observation_text_model_name,
-                                              global_reward_text_model_name=global_reward_text_model_name,
-                                              json_model_response=json_model_response,
-                                              previous_trace=previous_trace,
-                                              observation=observation,
-                                              feedback=error_description,
-                                              mode=mode,
-                                              observation_VforD=observation_VforD,
-                                              ground_truth_mode=ground_truth_mode,
-                                              ground_truth_data=ground_truth_data,
-                                              task_name_id=task_uuid,
-                                              global_reward_mode=global_reward_mode,
-                                              current_info=current_info)
+                out_put = await Planning.plan(
+                    config=config,
+                    user_request=task_name,
+                    text_model_name=observation_text_model_name,
+                    previous_trace=previous_trace,
+                    observation=observation,
+                    feedback=error_description,
+                    mode=mode,
+                    observation_VforD=observation_VforD,
+                    status_description=status_description
+                )
 
                 if out_put is not None:
                     break
@@ -364,7 +383,7 @@ async def run_task(mode,
             each_step_dict["step_index"] = num_steps
             each_step_dict["dict_result"] = out_put
             execute_action, current_trace, path, element_value = parse_current_trace(
-                out_put, env)
+                out_put, env, step_reward)
             selector, xpath = (
                 path[0], path[1]) if path is not None else (None, None)
 
@@ -383,7 +402,7 @@ async def run_task(mode,
                 "**🤖 The agent is in the process of starting evaluation 🤖**")
             if task_mode == "batch_tasks":
                 evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps,
-                                                                   input_path=selector)
+                                                                   input_path=selector, element_value=element_value)
                 for evaluate in evaluate_steps:
                     total_step_score += evaluate["score"]
 
@@ -397,11 +416,9 @@ async def run_task(mode,
                     f"-- Current evaluate match result: {match_result}")
 
                 # get status of the task with global reward
-                if out_put["description"].get("reward"):
-                    each_step_dict["step_reward"] = out_put["description"].get(
-                        "reward")
-                    task_global_status = out_put["description"].get(
-                        "reward").get("status")
+                if step_reward:
+                    each_step_dict["step_reward"] = step_reward
+                    task_global_status = step_reward.get("status")
                 else:
                     each_step_dict["step_reward"] = {}
 
