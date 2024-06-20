@@ -1,10 +1,10 @@
 [basic]
-Task_Mode = "batch_tasks"   # single_task or batch_tasks
-Step_Score_Threshold = 6
+Task_Mode = "batch_tasks"    # single_task or batch_tasks
 global_reward = false        # with global reward
+max_time_step = 25           # For all tasks, set the maximum step length
 
 [model]
-JSON_Model_Response = true
+JSON_Model_Response = true      # Whether to output the model Output in json format ?
 All_JSON_Models = ["gpt-4-turbo",
                    "gpt-4-turbo-2024-04-09",
                    "gpt-4-turbo-preview",
@@ -15,16 +15,15 @@ All_JSON_Models = ["gpt-4-turbo",
                    "gpt-3.5-turbo-preview"]
 
 [steps]
-Step_Stop = false             # true or false
-Single_Task_Action_Step = 10
+Step_Stop = false             #  Whether human control of task execution status is required ? true or false
+Single_Task_Action_Step = 10     
 Batch_Tasks_Max_Action_Step = 10
 Batch_Tasks_Condition_Step_Increase = 5
 
 [files]
-Batch_Tasks_File_Path = "./data/data_0328/all_data_0328.json"
-#  ./data/mind2web-test_20240425.json
-Ground_Truth_File_Path = "./data/ground_truth/GT_instructions_202404161811_for_all_data_0328.json"
-out_file_path = "./batch_tasks_results/example_2_without_global_reward"   # YOUR OUT FILE PATH 
+Batch_Tasks_File_Path = "./data/example/example_130.json" # The input data path
+Ground_Truth_File_Path = "./data/ground_truth/GT_instructions_202404161811_for_all_data_0328.json"  # the ground_truth data path
+out_file_path = "./batch_tasks_results/example"   # YOUR OUT FILE PATH 
 
 [conditions]
 URL = ["error"]

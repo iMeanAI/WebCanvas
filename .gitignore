@@ -14,4 +14,6 @@ LOGS/
 batch_tasks_results/
 
 data/*
+!data/example/
+!data/example/example_130.json
 
