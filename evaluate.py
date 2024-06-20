@@ -148,7 +148,6 @@ async def run_experiment(task_range, experiment_config):
                        observation_text_model_name=experiment_config.observation_text_model_name,
                        ground_truth_mode=experiment_config.ground_truth_mode,
                        ground_truth_data=experiment_config.ground_truth_data,
-                       json_model_response=experiment_config.config['model']['JSON_Model_Response'],
                        step_stop=experiment_config.config['steps']['Step_Stop'],
                        task_index=task_index,
                        record_time=experiment_config.record_time)
@@ -183,7 +182,6 @@ async def main(global_reward_mode="no_global_reward",
     elif config['basic']['Task_Mode'] == "single_task":
         task_range = get_task_range(config['basic']['Task_Mode'], None, -1)
 
-    record_time_short = time.strftime("%Y%m%d", time.localtime())
     record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
     write_result_file_path = generate_result_file_path(config)
     ground_truth_data = load_ground_truth_data(config, ground_truth_mode)

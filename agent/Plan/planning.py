@@ -16,72 +16,6 @@ class InteractionMode:
     def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         pass
 
-    # async def get_global_reward(self, user_request, previous_trace, observation, current_info, ground_truth_mode,
-    #                             global_reward_mode, ground_truth_data=None, task_name_id=None):
-    #     status_and_description = None
-    #     if len(previous_trace) > 0:
-    #         stringfy_thought_and_action_output = PlanningPromptConstructor().stringfy_thought_and_action(
-    #             previous_trace)
-    #         if not ground_truth_mode:
-    #             reward_request = RewardPromptConstructor().construct(
-    #                 ground_truth_mode=ground_truth_mode,
-    #                 global_reward_mode=global_reward_mode,
-    #                 user_request=user_request,
-    #                 stringfy_thought_and_action_output=stringfy_thought_and_action_output,
-    #                 observation=observation,
-    #                 current_info=current_info)
-    #         elif ground_truth_mode:
-    #             for item in ground_truth_data:
-    #                 if item.get("index") == task_name_id:
-    #                     instruction = item["instruction"]
-    #                     reward_request = RewardPromptConstructor().construct(
-    #                         ground_truth_mode=ground_truth_mode,
-    #                         global_reward_mode=global_reward_mode,
-    #                         user_request=user_request,
-    #                         stringfy_thought_and_action_output=stringfy_thought_and_action_output,
-    #                         observation=observation,
-    #                         current_info=current_info,
-    #                         instruction=instruction)
-    #                     break
-    #             else:
-    #                 logger.info("No task found in the ground truth data.")
-    #                 reward_request = RewardPromptConstructor().construct(
-    #                     ground_truth_mode="false",
-    #                     global_reward_mode=global_reward_mode,
-    #                     user_request=user_request,
-    #                     stringfy_thought_and_action_output=stringfy_thought_and_action_output,
-    #                     observation=observation,
-    #                     current_info=current_info)
-    #         print_info(
-    #             f"Global_Reward_Request:\n{print_limited_json(reward_request, limit=1000)}", "\033[32m")  # green
-    #         reward_response = ""
-    #         for i in range(3):
-    #             try:
-    #                 if "vision" in global_reward_mode:
-    #                     # TODO
-    #                     reward_response, error_message = await self.visual_model.request(reward_request)
-    #                 else:
-    #                     print_info(
-    #                         f"using gpt_global_reward_text: {self.text_model.model}", "purple")
-    #                     reward_response, error_message = await self.text_model.request(reward_request)
-    #                 status_and_description = ActionParser().extract_status_and_description(
-    #                     reward_response)
-    #                 break
-    #             except Exception as e:
-    #                 logger.error(traceback.format_exc())
-    #                 # traceback.print_exc()
-    #                 logger.info(
-    #                     f"planning reward_response or status_and_description error for {i+1} times")
-    #                 # print(
-    #                 #     f"planning reward_response or status_and_description error for {i+1} times")
-    #                 continue
-    #         # print(f"\033[34mGlobal_Reward_Response:\n{reward_response}")  # blue
-    #         logger.info(
-    #             f"\033[34mGlobal_Reward_Response:\n{reward_response}\033[34m")
-    #     else:
-    #         reward_response = ""
-    #     return reward_response, status_and_description
-
 
 class DomMode(InteractionMode):
     def __init__(self, text_model=None, visual_model=None):
@@ -90,8 +24,6 @@ class DomMode(InteractionMode):
     async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
         planning_request = PlanningPromptConstructor().construct(
             user_request, previous_trace, observation, feedback, status_description)
-        # print(f"\033[32m{planning_request}")
-        # print("\033[0m")
         logger.info(
             f"\033[32mDOM_based_planning_request:\n{planning_request}\033[0m")
         print_info(
@@ -115,8 +47,6 @@ class DomVDescMode(InteractionMode):
         print(f"\033[36mvision_disc_response:\n{vision_desc_response}")  # blue
         planning_request = ObservationVisionDiscPromptConstructor().construct(
             user_request, previous_trace, observation, feedback, status_description, vision_desc_response)
-        # print(f"\033[32m{planning_request}")
-        # Purple color
         print(
             f"\033[35mplanning_request:\n{print_limited_json(planning_request, limit=10000)}")
         print("\033[0m")
@@ -232,6 +162,7 @@ class VisionMode(InteractionMode):
 
 
 class Planning:
+
     @staticmethod
     async def plan(
         config,
@@ -297,7 +228,6 @@ class Planning:
 
         # The description should include both the thought (returned by GPT4) and the action (parsed from the planning response)
         planning_response_action["description"] = {
-            # "reward": status_and_description if len(reward_response) > 0 else None,
             "thought": planning_response_thought,
             "action": (
                 f'{planning_response_action["action"]}: {planning_response_action["action_input"]}' if "description" not in planning_response_action.keys() else
