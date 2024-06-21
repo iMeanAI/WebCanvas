@@ -1,4 +1,5 @@
-from typing import Any
+import os
+import sys
 import openai
 import asyncio
 from functools import partial
@@ -8,6 +9,12 @@ from sanic.log import logger
 from agent.Utils import *
 from .token_cal import truncate_messages_based_on_estimated_tokens
 
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if not openai_api_key:
+    logger.error("OpenAI API key is missing. Please set the OPENAI_API_KEY environment variable.")
+    sys.exit(1)
+
+openai.api_key = openai_api_key
 
 class GPTGenerator:
     def __init__(self, model=None):
@@ -36,17 +43,14 @@ class GPTGenerator:
             # Handle API error here, e.g. retry or log
             logger.error(f"OpenAI API returned an API Error: {e}")
             error_message = f"OpenAI API returned an API Error: {e}"
-            OpenAI_error_flag = True
             return "", error_message
         except openai.error.APIConnectionError as e:
             # Handle connection error here
             error_message = f"Failed to connect to OpenAI API: {e}"
-            OpenAI_error_flag = True
             logger.error(f"Failed to connect to OpenAI API: {e}")
             return "", error_message
         except openai.error.RateLimitError as e:
             # Handle rate limit error (we recommend using exponential backoff)
-            OpenAI_error_flag = True
             error_message = f"OpenAI API request exceeded rate limit: {e}"
             logger.error(f"OpenAI API request exceeded rate limit: {e}")
             return "", error_message

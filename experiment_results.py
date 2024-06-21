@@ -230,7 +230,7 @@ def evaluate(file_path):
     all_data = read_json_result(input_file_path)
     df = pd.DataFrame(all_data)
     df["step_score"] = df["task_score"].apply(lambda x: float(x.split("/")[0]))
-    df["efficiency_score"] = df["step_score"] / df["steps"]
+    df["efficiency_score"] =  df["steps"] / df["step_score"]
     df["score_df_1"] = df["task_score"].apply(lambda x: float(
         x.split("/")[1]) - float(x.split("/")[0]) == 1.0)
 

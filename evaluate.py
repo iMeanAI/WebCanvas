@@ -11,8 +11,8 @@ import logging
 # universal tools
 from agent.Utils.utils import *
 # evaluate tools
-from evaluate_utils import run_task, read_config, read_file, read_json_file
-from data_analyse import get_evaluate_result
+from evaluate.evaluate_utils import run_task, read_config, read_file, read_json_file
+from experiment_results import get_evaluate_result
 
 
 logger = logging.getLogger(__name__)
