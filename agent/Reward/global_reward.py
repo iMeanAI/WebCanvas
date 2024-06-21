@@ -98,8 +98,8 @@ class GlobalReward:
 
         gpt4v = GPTGenerator4V()
 
-        all_json_models = config["model"]["All_JSON_Models"]
-        is_json_response = config["model"]["JSON_Model_Response"]
+        all_json_models = config["model"]["json_models"]
+        is_json_response = config["model"]["json_model_response"]
 
         if is_json_response:
             if model_name in all_json_models:

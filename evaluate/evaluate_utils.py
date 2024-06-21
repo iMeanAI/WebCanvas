@@ -282,12 +282,11 @@ async def run_task(
     reference_evaluate_steps,
     env,
     global_reward_mode,
-    global_reward_text_model_name,
-    observation_text_model_name,
+    global_reward_text_model,
+    observation_text_model,
     ground_truth_mode,
     ground_truth_data,
-    json_model_response,
-    step_stop,
+    interaction_mode,
     task_index,
     record_time=None
 ):
@@ -314,7 +313,7 @@ async def run_task(
 
     # Configuration related to controlling the length of steps
     conditions = config["conditions"]
-    increase_step = config["steps"]["Batch_Tasks_Condition_Step_Increase"]
+    increase_step = config["steps"]["batch_tasks_condition_step_increase"]
     encountered_errors = set()
     current_info = {"URL": env.page.url}
     num_steps = 0
@@ -322,7 +321,7 @@ async def run_task(
         max_steps = int(reference_task_length)
     elif task_mode == "batch_tasks":
         max_steps = int(
-            max(config['steps']['Batch_Tasks_Max_Action_Step'], 1.5 * reference_task_length))
+            max(config['steps']['batch_tasks_max_action_step'], 1.5 * reference_task_length))
     additional_steps = 0
 
     # Store the results of the planning process for a task
@@ -344,7 +343,7 @@ async def run_task(
         if config["basic"]["global_reward"] and len(previous_trace) > 0:
             step_reward, status_description = await GlobalReward.evaluate(
                 config=config,
-                model_name=global_reward_text_model_name,
+                model_name=global_reward_text_model,
                 user_request=task_name,
                 previous_trace=previous_trace,
                 observation=observation,
@@ -361,7 +360,7 @@ async def run_task(
                 out_put = await Planning.plan(
                     config=config,
                     user_request=task_name,
-                    text_model_name=observation_text_model_name,
+                    text_model_name=observation_text_model,
                     previous_trace=previous_trace,
                     observation=observation,
                     feedback=error_description,
@@ -482,9 +481,9 @@ async def run_task(
             if num_steps >= 25 or task_global_status == "finished" or task_finished:
                 break
 
-        if step_stop:
+        if interaction_mode:
             logger.info(
-                "Press Enter to proceed to the next action, or type 'q' to quit the task: ")
+                "Press Enter to proceed to the next action, or type 'q' to quit the task. If you encounter any unexpected issues such as network connection errors or captcha challenges, please resolve them manually now.")
             a = input()
             if a.lower() == "q":
                 logger.info("User requested to quit the program.")

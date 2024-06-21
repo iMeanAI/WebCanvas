@@ -1,11 +1,19 @@
 [basic]
-Task_Mode = "batch_tasks"    # single_task or batch_tasks
+task_mode = "batch_tasks"    # single_task or batch_tasks
 global_reward = false        # with global reward
 max_time_step = 25           # For all tasks, set the maximum step length
 
 [model]
-JSON_Model_Response = true      # Whether to output the model Output in json format ?
-All_JSON_Models = ["gpt-4-turbo",
+json_model_response = true      # Whether to require a model that serves restrict json output ?
+json_models = ["gpt-4-turbo",
+                   "gpt-4-turbo-2024-04-09",
+                   "gpt-4-turbo-preview",
+                   "gpt-4-0125-preview",
+                   "gpt-4-1106-preview",
+                   "gpt-3.5-turbo",
+                   "gpt-3.5-turbo-0125",
+                   "gpt-3.5-turbo-preview"]
+supported_models = ["gpt-4-turbo",
                    "gpt-4-turbo-2024-04-09",
                    "gpt-4-turbo-preview",
                    "gpt-4-0125-preview",
@@ -15,14 +23,14 @@ All_JSON_Models = ["gpt-4-turbo",
                    "gpt-3.5-turbo-preview"]
 
 [steps]
-Step_Stop = false             #  Whether human control of task execution status is required ? true or false
-Single_Task_Action_Step = 10     
-Batch_Tasks_Max_Action_Step = 10
-Batch_Tasks_Condition_Step_Increase = 5
+interaction_mode = true             #  Whether human control of task execution status is required ? true or false
+single_task_action_step = 10     
+batch_tasks_max_action_step = 10
+batch_tasks_condition_step_increase = 5
 
 [files]
-Batch_Tasks_File_Path = "./data/example/example_130.json" # The input data path
-Ground_Truth_File_Path = "./data/ground_truth/GT_instructions_202404161811_for_all_data_0328.json"  # the ground_truth data path
+batch_tasks_file_path = "./data/example/example_130.json" # The input data path
+ground_truth_file_path = "./data/ground_truth/GT_instructions_202404161811_for_all_data_0328.json"  # the ground_truth data path
 out_file_path = "./batch_tasks_results/example"   # YOUR OUT FILE PATH 
 
 [conditions]

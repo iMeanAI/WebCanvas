@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 class ExperimentConfig:
     mode: str
     global_reward_mode: str
-    observation_text_model_name: str
-    global_reward_text_model_name: str
+    observation_text_model: str
+    global_reward_text_model: str
     ground_truth_mode: bool
     single_task_name: str
     config: dict
@@ -33,25 +33,30 @@ class ExperimentConfig:
     file: list
 
 
-def validate_config(config, mode, observation_text_model_name):
-    task_mode = config['basic']['Task_Mode']
-    batch_tasks_file_path = config['files']['Batch_Tasks_File_Path']
-    json_model_response = config['model']['JSON_Model_Response']
-    all_json_models = config['model']['All_JSON_Models']
-    step_stop = config['steps']['Step_Stop']
+def validate_config(config, observation_mode, global_reward_mode, observation_model, global_reward_model):
+    task_mode = config['basic']['task_mode']
+    batch_tasks_file_path = config['files']['batch_tasks_file_path']
+    json_model_response = config['model']['json_model_response']
+    all_json_models = config['model']['json_models']
+    supported_models = config['model']['supported_models']
+    interaction_mode = config['steps']['interaction_mode']
 
-    if mode not in ["dom"]:
+    if observation_mode not in ["dom"]:
         logger.error(
             "observation mode is not correctly defined! Currently we only support DOM observation.")
         exit()
 
-    if step_stop not in [True, False]:
+    if interaction_mode not in [True, False]:
         logger.error(
-            "step_stop is not defined! Try to define your way to terminate the agent.")
+            "interaction_mode is not defined! Try to define whether you want to evaluate the agent in an interactive manner.")
         exit()
 
-    if json_model_response and observation_text_model_name not in all_json_models:
-        logger.error("The observation text model does not support JSON mode!")
+    if (observation_model not in supported_models or (global_reward_mode != 'no_global_reward' and  global_reward_model not in supported_models)):
+        logger.error("The model is not supported at the moment! Feel free to open an issue to provide feedback about supporting your model at https://github.com/iMeanAI/WebCanvas/issues.")
+        exit()
+
+    if json_model_response and (observation_model not in all_json_models or (global_reward_mode != 'no_global_reward' and  global_reward_model not in all_json_models)):
+        logger.error("Model does not support JSON mode!")
         exit()
 
     if task_mode == 'batch_tasks' and not os.path.exists(batch_tasks_file_path):
@@ -91,7 +96,7 @@ def generate_result_file_path(config):
 
 def load_ground_truth_data(config, ground_truth_mode):
     if ground_truth_mode:
-        ground_truth_file_path = config['files']['Ground_Truth_File_Path']
+        ground_truth_file_path = config['files']['ground_truth_file_path']
         if not os.path.exists(ground_truth_file_path):
             logger.error("ground_truth_file_path not exist!")
             exit()
@@ -117,24 +122,24 @@ def create_html_environment(mode):
 async def run_experiment(task_range, experiment_config):
     for task_index in task_range:
         task_uuid = None
-        if experiment_config.config['basic']['Task_Mode'] == "batch_tasks":
+        if experiment_config.config['basic']['task_mode'] == "batch_tasks":
             task = experiment_config.file[task_index]
             task_name, task_uuid, reference_task_length, reference_evaluate_steps = task
             evaluate_steps = reference_evaluate_steps
             log_task_info(task_index, task_name,
                           reference_task_length, reference_evaluate_steps)
-        elif experiment_config.config['basic']['Task_Mode'] == "single_task":
+        elif experiment_config.config['basic']['task_mode'] == "single_task":
             task_name = experiment_config.single_task_name
-            reference_task_length = experiment_config.config['steps']['Single_Task_Action_Step']
+            reference_task_length = experiment_config.config['steps']['single_task_action_step']
             # TODO
-            evaluate_steps = experiment_config.config['steps']['Single_Task_Action_Step']
+            evaluate_steps = experiment_config.config['steps']['single_task_action_step']
             reference_evaluate_steps = None
             logger.info(f"task_name: {task_name}")
 
         env = create_html_environment(experiment_config.mode)
 
         await run_task(mode=experiment_config.mode,
-                       task_mode=experiment_config.config['basic']['Task_Mode'],
+                       task_mode=experiment_config.config['basic']['task_mode'],
                        task_name=task_name,
                        task_uuid=task_uuid,
                        config=experiment_config.config,
@@ -144,11 +149,11 @@ async def run_experiment(task_range, experiment_config):
                        reference_evaluate_steps=reference_evaluate_steps,
                        env=env,
                        global_reward_mode=experiment_config.global_reward_mode,
-                       global_reward_text_model_name=experiment_config.global_reward_text_model_name,
-                       observation_text_model_name=experiment_config.observation_text_model_name,
+                       global_reward_text_model=experiment_config.global_reward_text_model,
+                       observation_text_model=experiment_config.observation_text_model,
                        ground_truth_mode=experiment_config.ground_truth_mode,
                        ground_truth_data=experiment_config.ground_truth_data,
-                       step_stop=experiment_config.config['steps']['Step_Stop'],
+                       interaction_mode=experiment_config.config['steps']['interaction_mode'],
                        task_index=task_index,
                        record_time=experiment_config.record_time)
 
@@ -162,35 +167,35 @@ async def run_experiment(task_range, experiment_config):
 
 
 async def main(global_reward_mode="no_global_reward",
-               observation_text_model_name="gpt-4-turbo",
-               global_reward_text_model_name="gpt-4-turbo",
+               observation_text_model="gpt-4-turbo",
+               global_reward_text_model="gpt-4-turbo",
                single_task_name="",
                raw_data_index=-1,
-               mode="dom",
+               observation_mode="dom",
                ground_truth_mode=False,
                toml_path=None
                ):
 
     config = read_config(toml_path)
-    validate_config(config, mode, observation_text_model_name)
+    validate_config(config, observation_mode, global_reward_mode, observation_text_model, global_reward_text_model)
 
     file = None
-    if config['basic']['Task_Mode'] == "batch_tasks":
-        file = read_file(file_path=config['files']['Batch_Tasks_File_Path'])
+    if config['basic']['task_mode'] == "batch_tasks":
+        file = read_file(file_path=config['files']['batch_tasks_file_path'])
         task_range = get_task_range(
-            config['basic']['Task_Mode'], file, raw_data_index)
-    elif config['basic']['Task_Mode'] == "single_task":
-        task_range = get_task_range(config['basic']['Task_Mode'], None, -1)
+            config['basic']['task_mode'], file, raw_data_index)
+    elif config['basic']['task_mode'] == "single_task":
+        task_range = get_task_range(config['basic']['task_mode'], None, -1)
 
     record_time = time.strftime("%Y%m%d-%H%M%S", time.localtime())
     write_result_file_path = generate_result_file_path(config)
     ground_truth_data = load_ground_truth_data(config, ground_truth_mode)
 
     experiment_config = ExperimentConfig(
-        mode=mode,
+        mode=observation_mode,
         global_reward_mode=global_reward_mode,
-        observation_text_model_name=observation_text_model_name,
-        global_reward_text_model_name=global_reward_text_model_name,
+        observation_text_model=observation_text_model,
+        global_reward_text_model=global_reward_text_model,
         ground_truth_mode=ground_truth_mode,
         single_task_name=single_task_name,
         config=config,
@@ -215,7 +220,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     asyncio.run(main(global_reward_mode=args.global_reward_mode,
-                     observation_text_model_name="gpt-3.5-turbo",
-                     global_reward_text_model_name="gpt-3.5-turbo",
+                     observation_text_model="gpt-3.5-turbo",
+                     global_reward_text_model="gpt-3.5-turbo",
                      single_task_name=args.single_task_name,
                      raw_data_index=args.index))
