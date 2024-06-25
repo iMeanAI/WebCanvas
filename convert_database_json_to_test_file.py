@@ -27,11 +27,11 @@ for index, task in enumerate(json_file):
     for step in steps:
         if "rewardFunction" in step.keys() and len(step["rewardFunction"]) > 0:
 
-            #! hack: 将description更新至href
+            #! Hack: Update description to href
             if "description" in step.keys() and is_url(step["description"]):
                 step["href"] = step["description"]
 
-            #! hack: 合并element value和element path
+            #! hack: Merge element value and element path
             flag_value = False
             flag_path = False
             for func in step["rewardFunction"]:

@@ -1,5 +1,7 @@
 .vscode/
 
+agent/LLM/claude.py
+
 
 **/__pycache__
 
@@ -11,9 +13,11 @@ results/
 
 LOGS/
 
-batch_tasks_results/
+batch_tasks_results/*
 
 data/*
 !data/example/
 !data/example/example_130.json
+!data/example/mind2web-test_104tasks_20240528.json
 
+test.py

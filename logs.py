@@ -9,7 +9,8 @@ import re
 log_folder = "LOGS"
 if not os.path.exists(log_folder):
     os.makedirs(log_folder)
-log_file_name = os.path.join(log_folder, time.strftime("%Y-%m-%d_%H-%M-%S") + ".log")
+log_file_name = os.path.join(
+    log_folder, time.strftime("%Y-%m-%d_%H-%M-%S") + ".log")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 

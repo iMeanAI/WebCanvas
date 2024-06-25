@@ -78,7 +78,6 @@ def get_task_range(task_mode, file, raw_data_index):
 
 def log_task_info(task_index, task_name, reference_task_length, reference_evaluate_steps):
     logger.info("*" * 100)
-    logger.info(f"Start")
     logger.info(f"task index: {task_index}")
     logger.info(f"task name: {task_name}")
     logger.info(f"task reference length: {reference_task_length}")
@@ -145,7 +144,7 @@ async def run_experiment(task_range, experiment_config):
                        env=env,
                        global_reward_mode=experiment_config.global_reward_mode,
                        global_reward_text_model_name=experiment_config.global_reward_text_model_name,
-                       observation_text_model_name=experiment_config.observation_text_model_name,
+                       planning_text_model=experiment_config.observation_text_model_name,
                        ground_truth_mode=experiment_config.ground_truth_mode,
                        ground_truth_data=experiment_config.ground_truth_data,
                        step_stop=experiment_config.config['steps']['Step_Stop'],
@@ -158,7 +157,6 @@ async def run_experiment(task_range, experiment_config):
     get_evaluate_result(experiment_config.config["files"]["out_file_path"])
     logger.info('\033[31mAll tasks finished!\033[0m')
     logger.info('\033[31mPress Enter to exit...\033[0m')
-    input()
 
 
 async def main(global_reward_mode="no_global_reward",

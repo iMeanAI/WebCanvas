@@ -21,22 +21,49 @@ class ActionParser():
     def __init__(self):
         pass
 
-    # Extract Thought and Action from the results returned by OpenAI,
+    # Extract Thought and Action from the results returned by LLM,
     # return thought (str) and action (dict), where action has four fields: action, element_id, action_input, description
-    def extract_thought_and_action(self, message) -> tuple[Any, Any]:
+    def extract_thought_and_action(self, message) -> tuple[str, dict]:
+        result_action = None
         try:
             result_action = re.findall("```(.*?)```", message, re.S)[0]
+            result_action = self.parse_action(message)
         except:
-            result_action = message.split("Action:")[-1].strip()
-        result_action = self.parse_action(result_action)
+            try:
+                result_action = self.parse_action(message)
+            except:
+                result_action = self.parse_action_with_re(message)
         if not result_action:
             raise ResponseError(
-                "OpenAI response is an invalid JSON blob or Empty, Please make sure you have access to OpenAI")
+                "Response is an invalid JSON blob or Empty!")
         elif result_action and result_action.get("action") == '':
             raise ResponseError(
-                "OpenAI response action is Empty, Please try again.")
+                "Response action is Empty, Please try again.")
         result_thought = result_action.get("thought")
         return result_thought, result_action
+
+    def parse_action_with_re(self, message):
+        pattern = r'"thought"\s*:\s*"([^"]*)"\s*,\s*"action"\s*:\s*"([^"]*)"\s*,\s*"action_input"\s*:\s*"([^"]*)"\s*,\s*"element_id"\s*:\s*(null|\d*)\s*,\s*"description"\s*:\s*"([^"]*)"'
+        match = re.search(pattern, message)
+        if match:
+            thought = str(match.group(1))
+            action = str(match.group(2))
+            action_input = str(match.group(3))
+            element_id = str(match.group(4))
+            description = str(match.group(5))
+            thought = re.sub(r'\s+', ' ', thought).strip()
+            action = re.sub(r'\s+', ' ', action).strip()
+            action_input = re.sub(r'\s+', ' ', action_input).strip()
+            element_id = re.sub(r'\s+', ' ', element_id).strip()
+            description = re.sub(r'\s+', ' ', description).strip()
+            result_dict = {
+                "thought": thought,
+                "action": action,
+                "action_input": action_input,
+                "element_id": element_id,
+                "description": description
+            }
+            return result_dict
 
     def parse_action(self, message):
         message_substring = extract_longest_substring(message)

@@ -208,13 +208,14 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
 
 def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: dict):
     thought = response["description"].get("thought")
-    action_type = response['action_type']
-    acton_input = response['value']
-    action = response["description"].get("action")
+    action_type = response['action_type'] if response.get(
+        'action_type') else "None"
+    acton_input = response['value'] if response.get('value') else ""
+    action = response['description'].get('action')
     reflection = step_reward.get(
         "description") if step_reward else ""
-    current_trace = {"thought": thought,
-                     "action": action, "reflection": reflection}
+    current_trace = {'thought': thought,
+                     'action': action, 'reflection': reflection}
     element_value = ""
     selector = None
     try:
@@ -276,7 +277,7 @@ async def run_task(
     env,
     global_reward_mode,
     global_reward_text_model_name,
-    observation_text_model_name,
+    planning_text_model,
     ground_truth_mode,
     ground_truth_data,
     step_stop,
@@ -287,6 +288,8 @@ async def run_task(
 
     response_error_count = 0
     response_total_count = 0
+    step_index = 0
+    num_steps = 0
     vision_reward = None
 
     # Related to the HTML environment
@@ -309,7 +312,7 @@ async def run_task(
     increase_step = config["steps"]["Batch_Tasks_Condition_Step_Increase"]
     encountered_errors = set()
     current_info = {"URL": env.page.url}
-    num_steps = 0
+
     if task_mode == "single_task":
         max_steps = int(reference_task_length)
     elif task_mode == "batch_tasks":
@@ -329,6 +332,7 @@ async def run_task(
         total_step_score = 0
         step_reward = {}
         status_description = ""
+
         logger.info(
             "**🤖 The agent is in the process of starting planning 🤖**")
 
@@ -353,7 +357,7 @@ async def run_task(
                 out_put = await Planning.plan(
                     config=config,
                     user_request=task_name,
-                    text_model_name=observation_text_model_name,
+                    text_model_name=planning_text_model,
                     previous_trace=previous_trace,
                     observation=observation,
                     feedback=error_description,
@@ -371,7 +375,7 @@ async def run_task(
 
         if out_put:
             each_step_dict = {}
-            each_step_dict["step_index"] = num_steps
+            each_step_dict["step_index"] = step_index
             each_step_dict["dict_result"] = out_put
             execute_action, current_trace, path, element_value = parse_current_trace(
                 out_put, env, step_reward)
@@ -466,10 +470,13 @@ async def run_task(
             step_increase, encountered_errors = await adjust_max_action_step(
                 conditions, current_info, encountered_errors, increase_step)
             additional_steps += step_increase
-            num_steps += 1
+
+            step_index += 1
             steps_list.append(each_step_dict)
-            if num_steps >= config["basic"]["max_time_step"] or task_global_status == "finished" or task_finished:
-                break
+
+        num_steps += 1
+        if num_steps >= config["basic"]["max_time_step"] or task_global_status == "finished" or task_finished:
+            break
 
         if step_stop:
             logger.info(
@@ -518,11 +525,10 @@ async def run_task(
         task_result["step_list"] = steps_list
         task_result["evaluate_steps"] = reference_evaluate_steps
 
-        json_result_folder = write_result_file_path
-        if not os.path.exists(json_result_folder):
-            os.makedirs(json_result_folder)
+        if not os.path.exists(write_result_file_path):
+            os.makedirs(write_result_file_path)
         json_out_file_path = os.path.join(
-            json_result_folder, str(task_index) + "_" + task_result["id"] + ".json")
+            write_result_file_path, str(task_index) + "_" + task_result["id"] + ".json")
         logger.info(f"Write results to json file: {json_out_file_path}")
         with open(json_out_file_path, 'w') as json_file:
             json.dump(task_result, json_file)

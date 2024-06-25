@@ -25,9 +25,8 @@ class DomMode(InteractionMode):
         planning_request = PlanningPromptConstructor().construct(
             user_request, previous_trace, observation, feedback, status_description)
         logger.info(
-            f"\033[32mDOM_based_planning_request:\n{planning_request}\033[0m")
-        print_info(
-            f"gpt_planning_text_model: {self.text_model.model}", "purple")
+            f"\033[32mDOM_based_planning_request:\n{planning_request}\033[0m\n")
+        logger.info(f"planning_text_model: {self.text_model.model}")
         planning_response, error_message = await self.text_model.request(planning_request)
         return planning_response, error_message, None, None
 
@@ -200,7 +199,7 @@ class Planning:
             "vision": VisionMode(visual_model=gpt4v)
         }
 
-        # planning_response_thought, planning_response_action 仅在vision_to_dom模式下有用
+        # planning_response_thought, planning_response_action
         planning_response, error_message, planning_response_thought, planning_response_action = await modes[mode].execute(
             status_description=status_description,
             user_request=user_request,
@@ -209,8 +208,7 @@ class Planning:
             feedback=feedback,
             observation_VforD=observation_VforD)
 
-        logger.info(
-            f"\033[34mOpenai_Planning_Response:\n{planning_response}\033[0m")
+        logger.info(f"\033[34mPlanning_Response:\n{planning_response}\033[0m")
         if mode != "vision_to_dom":
             try:
                 planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(
@@ -222,11 +220,14 @@ class Planning:
         if planning_response_action.get('action') == "fill_form":
             JudgeSearchbarRequest = JudgeSearchbarPromptConstructor().construct(
                 input_element=observation, planning_response_action=planning_response_action)
-            Judge_response, error_message = await gpt35.request(JudgeSearchbarRequest)
-            if Judge_response.lower() == "yes":
-                planning_response_action['action'] = "fill_search"
+            try:
+                Judge_response, error_message = await gpt35.request(JudgeSearchbarRequest)
+                if Judge_response.lower() == "yes":
+                    planning_response_action['action'] = "fill_search"
+            except:
+                planning_response_action['action'] = "fill_form"
 
-        # The description should include both the thought (returned by GPT4) and the action (parsed from the planning response)
+        # The description should include both the thought (returned by LLM) and the action (parsed from the planning response)
         planning_response_action["description"] = {
             "thought": planning_response_thought,
             "action": (

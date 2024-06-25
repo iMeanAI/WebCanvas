@@ -12,9 +12,6 @@ class InteractionMode:
         self.text_model = text_model
         self.visual_model = visual_model
 
-    def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
-        pass
-
     async def get_global_reward(self, user_request, previous_trace, observation, current_info, ground_truth_mode,
                                 global_reward_mode, ground_truth_data=None, task_name_id=None):
         reward_response = None

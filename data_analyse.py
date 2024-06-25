@@ -53,6 +53,8 @@ def to_dict(input_string):
     action_dict = enum_to_action_str()
     extracted_fields["action_type"] = action_dict[str(
         extracted_fields["action_type"])].lower()
+    extracted_fields["fill_text"] = extracted_fields["fill_text"] if extracted_fields.get(
+        "fill_text") else ""
     action = ""
     if "google_search" in extracted_fields["action_type"].lower():
         action = "google_search" + "[" + extracted_fields["fill_text"] + "]"

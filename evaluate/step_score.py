@@ -214,15 +214,14 @@ class MatchFunction():
         GPT35 = GPTGenerator35()
         semantic_request = SemanticMatchPromptConstructor(
         ).construct(input_answer, semantic_method)
-
         score = None
-        Max_Semantic_Match_Count = 3
-        for i in range(Max_Semantic_Match_Count):
+        for i in range(3):
             try:
                 response, _ = await GPT35.request(semantic_request)
                 score = re.findall("```(.*?)```", response, re.S)[0]
                 score = eval(score)
-                score = max(0, min(1, score))  # Limit the score between 0 and 1
+                # Limit the score between 0 and 1
+                score = max(0, min(1, score))
                 if score != None:
                     break
             except:
@@ -230,10 +229,6 @@ class MatchFunction():
         if score == None:
             score = 0
         if score != 0 and score != 1:
-            # print("semantic_method:", semantic_method,
-            #       "input_answer:", input_answer, score)
             return round(score, 2)
         else:
-            # print("semantic_method:", semantic_method,
-            #       "input_answer:", input_answer, score)
             return score
