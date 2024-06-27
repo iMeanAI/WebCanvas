@@ -43,7 +43,7 @@ class InteractionMode:
                             instruction=instruction)
                         break
                 else:
-                    logger.info("No task found in the ground truth data.")
+                    logger.info("Running reward modeling without human-labeled reference.")
                     reward_request = RewardPromptConstructor().construct(
                         ground_truth_mode="false",
                         global_reward_mode=global_reward_mode,

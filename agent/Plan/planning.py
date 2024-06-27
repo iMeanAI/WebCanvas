@@ -200,7 +200,7 @@ class Planning:
             "vision": VisionMode(visual_model=gpt4v)
         }
 
-        # planning_response_thought, planning_response_action 仅在vision_to_dom模式下有用
+        # planning_response_thought, planning_response_action only effective in vision_to_dom mode
         planning_response, error_message, planning_response_thought, planning_response_action = await modes[mode].execute(
             status_description=status_description,
             user_request=user_request,

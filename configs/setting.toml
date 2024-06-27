@@ -4,7 +4,7 @@ global_reward = false        # with global reward
 max_time_step = 25           # For all tasks, set the maximum step length
 
 [model]
-json_model_response = true      # Whether to require a model that serves restrict json output ?
+json_model_response = true      # Whether to require a model that serves restrict json output
 json_models = ["gpt-4-turbo",
                    "gpt-4-turbo-2024-04-09",
                    "gpt-4-turbo-preview",
@@ -23,7 +23,7 @@ supported_models = ["gpt-4-turbo",
                    "gpt-3.5-turbo-preview"]
 
 [steps]
-interaction_mode = true             #  Whether human control of task execution status is required ? true or false
+interaction_mode = true             #  Whether human control of task execution status is required
 single_task_action_step = 10     
 batch_tasks_max_action_step = 10
 batch_tasks_condition_step_increase = 5

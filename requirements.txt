@@ -19,6 +19,5 @@ bs4
 lxml
 colorlog
 toml
-zipfile
-os
 argparse
+requests_toolbelt

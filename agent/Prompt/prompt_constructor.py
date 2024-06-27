@@ -3,7 +3,6 @@ import json5
 
 from .vision_to_dom_prompts import VisionToDomPrompts
 from .dom_vision_disc_prompts import DomVisionDiscPrompts
-from .old_base_prompts import OldBasePrompts
 from .base_prompts import BasePrompts
 from .dom_vision_prompts import DomVisionPrompts
 from .vision_prompts import VisionPrompts
@@ -18,7 +17,7 @@ class BasePromptConstructor:
         pass
 
 
-# 类：构建根据dom tree得到的planning的prompt
+# Class: Construct prompts for planning based on the DOM tree
 class PlanningPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = BasePrompts.planning_prompt_system
@@ -47,12 +46,12 @@ class PlanningPromptConstructor(BasePromptConstructor):
             "role": "user", "content": self.prompt_user}]
         return messages
 
-    # 将previous thought和action转化成格式化字符串
+    # Convert previous thought, action and reflection into a formatted string
     def stringfy_thought_and_action(self, input_list: list) -> str:
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
         for idx, i in enumerate(input_list):
-            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]},Reflection:{i["reflection"]}\";\n'
+            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}, Reflection:{i["reflection"]}\";\n'
         str_output += "]"
         return str_output
 
@@ -74,7 +73,6 @@ class VisionDisc2PromptConstructor(BasePromptConstructor):
                            {"type": "text", "text": "current web page screenshot is:"},
                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}]
 
-        # 构造最终的消息负载
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
         return messages
@@ -91,8 +89,7 @@ class VisionDisc1PromptConstructor(BasePromptConstructor):
     ) -> list:
         prompt_elements = [{"type": "text", "text": "current web page screenshot is:"},
                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}]
-
-        # 构造最终的消息负载
+        
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
         return messages
@@ -131,7 +128,7 @@ class ObservationVisionDiscPromptConstructor(BasePromptConstructor):
                     {"role": "user", "content": self.prompt_user}]
         return messages
 
-    # 将previous thought和action转化成格式化字符串
+    # Convert previous thought, action into a formatted string
     def stringfy_thought_and_action(self, input_list: list) -> str:
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
@@ -245,19 +242,19 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
                   len(prompt_elements))
             prompt_elements_str = json5.dumps(prompt_elements)
             print("len of prompt_elements_str before observation_VforD:", len(
-                prompt_elements_str))  # 这将打印出转换为JSON字符串的prompt_elements的长度
+                prompt_elements_str))  # This will print the length of prompt_elements converted to a JSON string
             print("len of about gpt token of prompt_elements_str before observation_VforD:", len(
                 prompt_elements_str) / 5.42, "\n")
             prompt_elements.append(
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{observation_VforD}"}})
-        # 构造最终的消息负载
+
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
         # print(prompt_elements)
         print("messages finished!\n")
         return messages
 
-    # 将previous thought和action转化成格式化字符串
+    # Convert previous thought, action into a formatted string
     def stringfy_thought_and_action(self, input_list: list) -> str:
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
@@ -269,33 +266,29 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
 
 class VisionObservationPromptConstructor(BasePromptConstructor):
     def __init__(self):
-        self.prompt_system = VisionPrompts.vision_planning_prompt_system  # 假设有视觉提示的系统部分
+        self.prompt_system = VisionPrompts.vision_planning_prompt_system 
         self.prompt_user = VisionPrompts.vision_prompt_user
 
     def construct(self, user_request: str, previous_trace: str, base64_image: str) -> list:
-        # 使用模板渲染用户请求
+
         rendered_prompt = Template(self.prompt_user).render(
             user_request=user_request)
         prompt_elements = [{"type": "text", "text": rendered_prompt}]
 
-        # 如果有以前的追踪记录，则添加
         if len(previous_trace) > 0:
             history_memory = HistoryMemory(previous_trace=[previous_trace])
             trace_prompt = history_memory.construct_previous_trace_prompt()
             prompt_elements.append({"type": "text", "text": trace_prompt})
 
-            # 添加当前观察（图像数据）
             prompt_elements.append(
                 {"type": "text", "text": "The current observation is:"})
             prompt_elements.append(
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}})
 
-        # 构造最终的消息负载
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
         return messages
 
-    # 将previous thought和action转化成格式化字符串
     def stringfy_thought_and_action(self, input_list: list) -> str:
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
@@ -350,7 +343,7 @@ class RewardPromptConstructor(BasePromptConstructor):
         return messages
 
 
-# 类：构建reward的prompt
+# Class: Construct prompt for textual reward
 class CurrentRewardPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = BasePrompts.current_reward_prompt_system
@@ -373,7 +366,7 @@ class CurrentRewardPromptConstructor(BasePromptConstructor):
         return messages
 
 
-# 类：构建vision reward的prompt
+# Class: Construct prompt for vision reward
 class VisionRewardPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = DomVisionPrompts.current_d_vision_reward_prompt_system
@@ -395,26 +388,24 @@ class VisionRewardPromptConstructor(BasePromptConstructor):
             stringfy_current_trace_output=stringfy_current_trace_output)
         self.prompt_user += f"the key information of current web page is: {observation}"
         prompt_elements = [{"type": "text", "text": self.prompt_user}]
-        # 添加当前观察（图像数据）
+
         prompt_elements.append(
             {"type": "text", "text": "the screenshot of current web page is :"})
         prompt_elements.append(
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{observation_VforD}"}})
 
-        # 构造最终的消息负载
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
         return messages
 
 
-# 类：构建判断该元素是否是搜索框的prompt（如果是，则前端需要额外加上回车操作）
+# Class: Construct prompt to determine if the element is a search box (if so, the front-end needs to add an extra Enter operation)
 class JudgeSearchbarPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = BasePrompts.judge_searchbar_prompt_system
         self.prompt_user = BasePrompts.judge_searchbar_prompt_user
 
-    # 构建判断是否是搜索框的prompt，输出openai可解析的格式
-    # TODO 改掉decoded_result
+    # TODO modify decoded_result
     def construct(self, input_element, planning_response_action) -> list:
         self.prompt_user = Template(self.prompt_user).render(input_element=str(
             input_element), element_id=planning_response_action['element_id'],

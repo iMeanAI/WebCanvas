@@ -16,8 +16,8 @@ from evaluate import FinishTaskEvaluator, TaskLengthEvaluator, URLEvaluator, Ele
 from logs import logger
 
 
-def read_file(file_path="./data/data_update_0326/group_sample_all_data_0327.json"):
-    """Read label data"""
+def read_file(file_path="./data/example/example_40.json"):
+    """Read labeled data"""
     return_list = []
     with open(file_path, encoding='utf-8') as f:
         test_data = json5.load(f)
