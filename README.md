@@ -50,7 +50,7 @@ conda activate webcanvas
 pip install -r requirements.txt
 ```
 
-#### Recommend Environment
+#### Recommended Environment
 
 From our experiments, the experimental environment plays a crucial role in agent performance. We recommend experimenting on a Windows server using Chrome or Firefox browser engines, preferably on servers located in the United States. Below is the experiment results on Mind2Web-Live test set.
 
