@@ -51,11 +51,11 @@ def validate_config(config, observation_mode, global_reward_mode, observation_mo
             "interaction_mode is not defined! Try to define whether you want to evaluate the agent in an interactive manner.")
         exit()
 
-    if (observation_model not in supported_models or (global_reward_mode != 'no_global_reward' and  global_reward_model not in supported_models)):
+    if (observation_model not in supported_models or (global_reward_mode != 'no_global_reward' and global_reward_model not in supported_models)):
         logger.error("The model is not supported at the moment! Feel free to open an issue to provide feedback about supporting your model at https://github.com/iMeanAI/WebCanvas/issues.")
         exit()
 
-    if json_model_response and (observation_model not in all_json_models or (global_reward_mode != 'no_global_reward' and  global_reward_model not in all_json_models)):
+    if json_model_response and (observation_model not in all_json_models or (global_reward_mode != 'no_global_reward' and global_reward_model not in all_json_models)):
         logger.error("Model does not support JSON mode!")
         exit()
 
@@ -148,8 +148,8 @@ async def run_experiment(task_range, experiment_config):
                        reference_evaluate_steps=reference_evaluate_steps,
                        env=env,
                        global_reward_mode=experiment_config.global_reward_mode,
-                       global_reward_text_model_name=experiment_config.global_reward_text_model_name,
-                       planning_text_model=experiment_config.observation_text_model_name,
+                       global_reward_text_model=experiment_config.global_reward_text_model,
+                       planning_text_model=experiment_config.observation_text_model,
                        ground_truth_mode=experiment_config.ground_truth_mode,
                        ground_truth_data=experiment_config.ground_truth_data,
                        interaction_mode=experiment_config.config['steps']['interaction_mode'],
@@ -174,7 +174,8 @@ async def main(global_reward_mode="no_global_reward",
                ):
 
     config = read_config(toml_path)
-    validate_config(config, observation_mode, global_reward_mode, observation_text_model, global_reward_text_model)
+    validate_config(config, observation_mode, global_reward_mode,
+                    observation_text_model, global_reward_text_model)
 
     file = None
     if config['basic']['task_mode'] == "batch_tasks":
