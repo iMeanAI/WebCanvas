@@ -17,7 +17,7 @@ from logs import logger
 
 
 def read_file(file_path):
-    """Read label data"""
+    """Read labeled data"""
     return_list = []
     with open(file_path, encoding='utf-8') as f:
         test_data = json5.load(f)
@@ -115,6 +115,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
             elif match_function == "url_semantic_match":
                 score = await URLEvaluator.url_semantic_match(
                     page.url, evaluate["reference_answer"], evaluate["key"])
+                # print(score, "url_semantic_match")
             elif match_function == "element_path_exactly_match":
                 input_netloc = get_netloc(page.url)
                 method = evaluate["method"]
@@ -130,6 +131,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
             elif match_function == "element_value_exactly_match":
                 if input_path is not None and element_value is not None:
                     input_netloc = get_netloc(page.url)
+
                     # print(element_value)
                     # print(await page.locator(input_path).input_value())
                     if "path" in evaluate.keys():
@@ -203,7 +205,9 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
             match_result.append(
                 {evaluate["match_function"]: evaluate["reference_answer"]})
         step_score += evaluate["score"]
+
     return evaluate_steps, match_result
+    # print(evaluate_steps)
 
 
 def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: dict):
@@ -218,6 +222,7 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: 
                      'action': action, 'reflection': reflection}
     element_value = ""
     selector = None
+
     try:
         element_id = int(response['id'])
     except:
@@ -257,6 +262,7 @@ def read_config(toml_path=None):
     if toml_path is None:
         # default_path = os.path.join(os.path.dirname(__file__), 'default_settings.toml')
         toml_path = 'configs/setting.toml'
+
     with open(toml_path, 'r') as f:
         config = toml.load(f)
 
@@ -275,11 +281,11 @@ async def run_task(
     reference_evaluate_steps,
     env,
     global_reward_mode,
-    global_reward_text_model_name,
+    global_reward_text_model,
     planning_text_model,
     ground_truth_mode,
     ground_truth_data,
-    step_stop,
+    interaction_mode,
     task_index,
     record_time=None
 ):
@@ -308,7 +314,7 @@ async def run_task(
 
     # Configuration related to controlling the length of steps
     conditions = config["conditions"]
-    increase_step = config["steps"]["Batch_Tasks_Condition_Step_Increase"]
+    increase_step = config["steps"]["batch_tasks_condition_step_increase"]
     encountered_errors = set()
     current_info = {"URL": env.page.url}
 
@@ -316,7 +322,7 @@ async def run_task(
         max_steps = int(reference_task_length)
     elif task_mode == "batch_tasks":
         max_steps = int(
-            max(config['steps']['Batch_Tasks_Max_Action_Step'], 1.5 * reference_task_length))
+            max(config['steps']['batch_tasks_max_action_step'], 1.5 * reference_task_length))
     additional_steps = 0
 
     # Store the results of the planning process for a task
@@ -335,11 +341,10 @@ async def run_task(
         logger.info(
             "**🤖 The agent is in the process of starting planning 🤖**")
 
-        # Use global reward to evaluate previous actions
         if config["basic"]["global_reward"] and len(previous_trace) > 0:
             step_reward, status_description = await GlobalReward.evaluate(
                 config=config,
-                model_name=global_reward_text_model_name,
+                model_name=global_reward_text_model,
                 user_request=task_name,
                 previous_trace=previous_trace,
                 observation=observation,
@@ -364,6 +369,7 @@ async def run_task(
                     observation_VforD=observation_VforD,
                     status_description=status_description
                 )
+
                 if out_put is not None:
                     break
             except Exception as e:
@@ -409,19 +415,21 @@ async def run_task(
                 logger.info(
                     f"-- Current evaluate match result: {match_result}")
 
-                # The agent uses global reward to determine the progress of task completion
+                # get status of the task with global reward
                 if step_reward:
                     each_step_dict["step_reward"] = step_reward
                     task_global_status = step_reward.get("status")
                 else:
                     each_step_dict["step_reward"] = {}
 
-                # The agent has completed marking all key nodes
                 if total_step_score == len(reference_evaluate_steps):
+                    # steps_list.append(each_step_dict)
                     task_finished = True
+                    # break
 
             logger.info(
                 "**🤖 The agent is in the process of executing the action 🤖**")
+
             try:
                 await env.execute_action(execute_action)
                 previous_trace.append(current_trace)
@@ -477,9 +485,9 @@ async def run_task(
         if num_steps >= config["basic"]["max_time_step"] or task_global_status == "finished" or task_finished:
             break
 
-        if step_stop:
+        if interaction_mode:
             logger.info(
-                "Press Enter to proceed to the next action, or type 'q' to quit the task: ")
+                "Press Enter to proceed to the next action, or type 'q' to quit the task. If you encounter any unexpected issues such as network connection errors or captcha challenges, please resolve them manually now.")
             a = input()
             if a.lower() == "q":
                 logger.info("User requested to quit the program.")

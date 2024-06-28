@@ -13,8 +13,6 @@ class ClaudeGenerator:
 
     def __init__(self):
         self.model = "claude-3-5-sonnet-20240620"
-        # self.model = "claude-3-haiku-20240307"
-        # self.model = "claude-3-opus-20240229"
         self.client = AsyncAnthropic(
             api_key=os.environ.get('ANTHROPIC_API_KEY')
         )

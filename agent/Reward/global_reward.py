@@ -40,7 +40,7 @@ class InteractionMode:
                             instruction=instruction)
                         break
                 else:
-                    logger.info("No task found in the ground truth data.")
+                    logger.info("Running reward modeling without human-labeled reference.")
                     reward_request = RewardPromptConstructor().construct(
                         ground_truth_mode="false",
                         global_reward_mode=global_reward_mode,
@@ -95,8 +95,8 @@ class GlobalReward:
 
         gpt4v = GPTGenerator4V()
 
-        all_json_models = config["model"]["All_JSON_Models"]
-        is_json_response = config["model"]["JSON_Model_Response"]
+        all_json_models = config["model"]["json_models"]
+        is_json_response = config["model"]["json_model_response"]
 
         if is_json_response:
             if model_name in all_json_models:

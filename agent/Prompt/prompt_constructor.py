@@ -3,7 +3,6 @@ import json5
 
 from .vision_to_dom_prompts import VisionToDomPrompts
 from .dom_vision_disc_prompts import DomVisionDiscPrompts
-from .old_base_prompts import OldBasePrompts
 from .base_prompts import BasePrompts
 from .dom_vision_prompts import DomVisionPrompts
 from .vision_prompts import VisionPrompts
@@ -18,7 +17,7 @@ class BasePromptConstructor:
         pass
 
 
-# Build a prompt for planning based on the DOM tree
+# Class: Construct prompts for planning based on the DOM tree
 class PlanningPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = BasePrompts.planning_prompt_system
@@ -47,12 +46,12 @@ class PlanningPromptConstructor(BasePromptConstructor):
             "role": "user", "content": self.prompt_user}]
         return messages
 
-    # Previous thought and action are converted to formatted strings
+    # Convert previous thought, action and reflection into a formatted string
     def stringfy_thought_and_action(self, input_list: list) -> str:
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
         for idx, i in enumerate(input_list):
-            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]},Reflection:{i["reflection"]}\";\n'
+            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}, Reflection:{i["reflection"]}\";\n'
         str_output += "]"
         return str_output
 
@@ -74,7 +73,6 @@ class VisionDisc2PromptConstructor(BasePromptConstructor):
                            {"type": "text", "text": "current web page screenshot is:"},
                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}]
 
-        # Construct the final message payload
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
         return messages
@@ -91,8 +89,7 @@ class VisionDisc1PromptConstructor(BasePromptConstructor):
     ) -> list:
         prompt_elements = [{"type": "text", "text": "current web page screenshot is:"},
                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}]
-
-        # Construct the final message payload
+        
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
         return messages
@@ -131,7 +128,7 @@ class ObservationVisionDiscPromptConstructor(BasePromptConstructor):
                     {"role": "user", "content": self.prompt_user}]
         return messages
 
-    # Convert previous thought and action into formatted string
+    # Convert previous thought, action into a formatted string
     def stringfy_thought_and_action(self, input_list: list) -> str:
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
@@ -245,19 +242,18 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
                   len(prompt_elements))
             prompt_elements_str = json5.dumps(prompt_elements)
             print("len of prompt_elements_str before observation_VforD:", len(
-                prompt_elements_str))  # This will print the length of prompt_elements converted into JSON string
+                prompt_elements_str))  # This will print the length of prompt_elements converted to a JSON string
             print("len of about gpt token of prompt_elements_str before observation_VforD:", len(
                 prompt_elements_str) / 5.42, "\n")
             prompt_elements.append(
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{observation_VforD}"}})
-        # Construct the final message payload
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
         # print(prompt_elements)
         print("messages finished!\n")
         return messages
 
-    # Convert previous thought and action into formatted string
+    # Convert previous thought, action into a formatted string
     def stringfy_thought_and_action(self, input_list: list) -> str:
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
@@ -269,7 +265,7 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
 
 class VisionObservationPromptConstructor(BasePromptConstructor):
     def __init__(self):
-        self.prompt_system = VisionPrompts.vision_planning_prompt_system
+        self.prompt_system = VisionPrompts.vision_planning_prompt_system 
         self.prompt_user = VisionPrompts.vision_prompt_user
 
     def construct(self, user_request: str, previous_trace: str, base64_image: str) -> list:
@@ -286,7 +282,6 @@ class VisionObservationPromptConstructor(BasePromptConstructor):
                 {"type": "text", "text": "The current observation is:"})
             prompt_elements.append(
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}})
-
 
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
@@ -346,6 +341,7 @@ class RewardPromptConstructor(BasePromptConstructor):
         return messages
 
 
+# Class: Construct prompt for textual reward
 class CurrentRewardPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = BasePrompts.current_reward_prompt_system
@@ -367,6 +363,7 @@ class CurrentRewardPromptConstructor(BasePromptConstructor):
         return messages
 
 
+# Class: Construct prompt for vision reward
 class VisionRewardPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = DomVisionPrompts.current_d_vision_reward_prompt_system
@@ -398,14 +395,13 @@ class VisionRewardPromptConstructor(BasePromptConstructor):
         return messages
 
 
-# Class: Build a prompt to determine whether the element is a search box (if so, the front end needs to add an additional return operation)
+# Class: Construct prompt to determine if the element is a search box (if so, the front-end needs to add an extra Enter operation)
 class JudgeSearchbarPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = BasePrompts.judge_searchbar_prompt_system
         self.prompt_user = BasePrompts.judge_searchbar_prompt_user
 
-    # Build a prompt to determine whether it is a search box, and output a format that can be parsed by openai
-    # TODO decoded_result
+    # TODO modify decoded_result
     def construct(self, input_element, planning_response_action) -> list:
         self.prompt_user = Template(self.prompt_user).render(input_element=str(
             input_element), element_id=planning_response_action['element_id'],

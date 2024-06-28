@@ -178,8 +178,8 @@ class Planning:
         gpt35 = GPTGenerator35()
         gpt4v = GPTGenerator4V()
 
-        all_json_models = config["model"]["All_JSON_Models"]
-        is_json_response = config["model"]["JSON_Model_Response"]
+        all_json_models = config["model"]["json_models"]
+        is_json_response = config["model"]["json_model_response"]
 
         if is_json_response:
             if text_model_name in all_json_models:
@@ -199,7 +199,7 @@ class Planning:
             "vision": VisionMode(visual_model=gpt4v)
         }
 
-        # planning_response_thought, planning_response_action
+        # planning_response_thought, planning_response_action only effective in vision_to_dom mode
         planning_response, error_message, planning_response_thought, planning_response_action = await modes[mode].execute(
             status_description=status_description,
             user_request=user_request,

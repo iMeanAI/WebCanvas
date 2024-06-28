@@ -19,3 +19,5 @@ bs4
 lxml
 colorlog
 toml
+argparse
+requests_toolbelt
