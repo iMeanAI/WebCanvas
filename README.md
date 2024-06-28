@@ -13,36 +13,34 @@
 
 <p align="center">
     <img src="https://img.icons8.com/color/48/000000/internet.png" alt="Website" width="15" height="15" style="vertical-align: middle;"/> <a href="https://www.imean.ai/web-canvas">Website</a> • 
+    <img src="https://img.icons8.com/?size=100&id=qGwgMt9xZDy5&format=png&color=000000" alt="Paper" width="17" height="17" style="vertical-align: middle;"/> <a href="https://arxiv.org/abs/2406.12373">Paper</a> • 
     <img src="https://img.icons8.com/color/48/000000/database.png" alt="Dataset" width="15" height="15" style="vertical-align: middle;"/> <a href="https://huggingface.co/datasets/iMeanAI/Mind2Web-Live">Dataset</a> • 
-    <img src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord" width="15" height="15" style="vertical-align: middle;"/> <a href="https://discord.com/invite/wyhH5QPf">Discord</a>
+    <img src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord" width="15" height="15" style="vertical-align: middle;"/> <a href="https://discord.com/invite/wyhH5QPf">Discord</a> • 
+    <img src="https://img.icons8.com/?size=100&id=13963&format=png&color=000000" alt="Twitter" width="18" height="18" style="vertical-align: middle;"/> <a href="https://x.com/iMeanAI">Twitter</a> • 
+    <img src="https://img.icons8.com/?size=100&id=77525&format=png&color=000000" alt="Calendly" width="15" height="15" style="vertical-align: middle;"/> <a href="https://calendly.com/dehan/30min">Talk to Author</a>
 </p>
 
-WebCanvas is a pioneering online evaluation framework designed to address the dynamic nature of web interactions. It provides a realistic assessment of autonomous web agents by utilizing live web environments and emphasizing task completion through the identification of key nodes.
+Existing benchmarks for web agent tasks are either offline and static, or operate within a fully reproducible environment with limited Internet dynamics. The WebCanvas project aims to pioneer the online evaluation of web agents. Additionally, we offer a suite of toolkits for scaling and maintaining web agent data to support this endeavor. We welcome any constructive feedback on the project and look forward to partnering with you in developing agents for web tasks!
+
+## 🔥 News
+
+- **[2024, June 18]** Our paper will be presented at [agentic markets workshop](https://sites.google.com/view/amw-2024/home?authuser=0) in ICML 2024 and [natural language reasoning and structured explanations workshop](https://nl-reasoning-workshop.github.io/) in ACL 2024. See you in Vienna and Bangkok!
+- **[2024, June 18]** Our pre-print [paper](https://arxiv.org/abs/2406.12373) is available!
+- **[2024, June 6]** We've released [WebCanvas](https://github.com/iMeanAI/WebCanvas), including Data, Platform, Toolkits, and Web agents!
 
 
 ## 🌟Features
 
 - **Comprehensive Agent Framework**: Includes a universal agent framework with four key modules: Planning, Observation, Memory, and Reward, designed to perform complex tasks within real-world online web environments effectively.
-- **Dynamic and Real-time Web Environment Interaction**: Utilizes live web environments to provide a realistic assessment of web agents, ensuring that evaluations reflect the actual complexities of the web.
-- **Key Nodes Annotation**: Introduces the concept of "key nodes" to offer in-progress feedback and a granular, phase-based assessment system that adapts to frequent changes in web navigation.
+- **Dynamic and Real-time Web Environment Interaction**: Utilizes live web environments to provide a realistic assessment and feedback of web agents.
+- **Key Nodes Annotation**: Introduces the concept of "key nodes" to offer in-progress feedback and a granular, phase-based assessment system that adapts to frequent changes in real-world web navigation.
 - **Enhanced Granularity of Progress Reward**: Allows for a thorough assessment of the reward module within the framework of autonomous web agents, focusing on the pivotal influence of reward signal quality.
-- **Easy to Scale with Online Web Environment**: Connected to a comprehensive suite of toolkits to define demonstration trajectories and intermediate states for real-time, open-ended web tasks, allowing for robust evaluation in dynamic web environments.
-- **Mind2Web-Live Dataset**: Presents a refined version of the original Mind2Web[^1] static dataset, containing 542 tasks with 2439 intermediate evaluation states, serving as the foundation for the benchmark.
-
-## 🔥 News
-
-- **[2024, June 6]** We've released [WebCanvas](https://github.com/iMeanAI/WebCanvas), including Data, Plugins, and Web agents!
-
-## 🛣️ TODOs
-
-- [ ] Design and implement a modular architecture for the existing Agent framework (LLM, Memory, Reward, Observation, etc.).
-- [ ] Support token count calculation for LLM to manage computational costs and usage.
-- [ ] Enable user-defined result saving paths to enhance system flexibility and configurability.
-- [ ] Support the management of more error types to improve system robustness and error handling capabilities.
+- **Easy to Scale with Online Web Environment**: Connected to a comprehensive suite of toolkits with accurate observation capture and rich action space to define demonstration trajectories and intermediate states for real-time, open-ended web tasks, allowing for robust evaluation in dynamic web environments. Check out our [browser plugin and data platform](https://builder.imean.ai/).
+- **Mind2Web-Live Dataset**: Presents a refined version of the original Mind2Web[^1] static dataset, containing 542 tasks with 2439 intermediate evaluation states, serving as the foundation general purpose benchmark.
 
 ## 🔍 Getting Started
 
-### Setting Up Your Environment
+### Setting Up the Environment
 
 First, ensure your environment is ready by installing the necessary dependencies:
 
@@ -58,7 +56,7 @@ Before running the repos, you need to set up the required API keys as using feat
 
 For setting up OpenAI API keys, add your API key to your environment variables:
 
-Our current framework only supports the OpenAI API. We plan to release updates in the future to support additional models.
+Our current version only supports the OpenAI API. We plan to release updates in the future to support more models soon.
 
 If using OpenAI models, set a valid OpenAI API key (starting with `sk-`) as the environment variable:
 
@@ -76,11 +74,45 @@ setx OPENAI_API_KEY "your-api-key-here"
 
 Visit [Quickstart tutorial - OpenAI API](https://platform.openai.com/docs/quickstart?context=python) for more details.
 
-### Usage
+
+### Download Raw Data of a Challenge
+
+Register on the platform [here](https://www.imean.ai/web-canvas).
+
+First, ensure your environment variables are correctly set so that the code can access the necessary credentials and URL.
+```
+export GRAPHQL_USERNAME=your_username
+export GRAPHQL_PASSWORD=your_password
+```
+
+To download a file, use the following command:
+
+```bash
+python data/upload_and_download.py download \
+    --challenge-id your_challenge_id \
+    --save-path /path/to/save/file
+```
+
+- `your_challenge_id`: The ID of the challenge for the download. Obtain this ID on the url link of the challenge for now. For example, the ID of [Mind2Web-Live Test](https://www.imean.ai/web-canvas/challenges/WjVIjPfpa-psiltU3oD2W/leaderboard) is "WjVIjPfpa-psiltU3oD2W".
+- `/path/to/save/file`: The path where the downloaded file will be saved.
+
+#### Process the Raw Data
+The raw data contain rich information on step level to inspire future research. However, it's not for our evaluation.
+
+To process the raw data, run the follow command:
+
+```
+python data/raw_data_processor.py \
+    --input-file path/to/input/file \
+    --output-file path/to/output/file
+
+```
+
+### Run the Evaluation
 
 You can run the repos with the following command:
 
-```
+```bash
 python evaluate.py \
     --global_reward_mode dom_reward \
     --index -1 \
@@ -88,7 +120,7 @@ python evaluate.py \
 
 ```
 
-This command runs the script with DOM-based global reward calculation, processing the default task "Find Dota 2 game and add all DLC to cart in steam" and using the default data index -1.
+This command runs the script with DOM-based self-reward, processing the default task "Find Dota 2 game and add all DLC to cart in steam" or using the default data index -1. The evaluation mode is controlled by the `task_mode` parameter in `configs/setting.toml`, allowing you to choose between batch mode and single mode.
 
 
 ### Parameter Descriptions
@@ -114,6 +146,26 @@ This program supports several command-line arguments to customize its behavior:
   - Default: `"Find Dota 2 game and add all DLC to cart in steam."`
   - Description: Use this parameter to specify the task that the agent should perform.
 
+### Upload the Result for a Challenge
+
+IMPORTANT: You should upload the generated out.json file to participate a challenge. To upload your result, use the following command:
+
+```bash
+python data/download_and_upload.py upload \
+    --file-path /path/to/your/file \
+    --challenge-id your_challenge_id \
+    --name your_agent_name \
+    --base-model your_agent_base_model
+```
+
+Replace the placeholders with your actual values:
+
+- `/path/to/your/file`: The path to the result you want to upload.
+- `your_challenge_id`: The ID of the challenge you want to participate.
+- `your_agent_name`: The agent name for the upload.
+- `your_agent_base_model`: The agent base model information for the upload.
+
+You can also submit through our platform. We will conduct an official check on your submission to prevent cheating.
 
 ## 🤝 Contributing
 
@@ -123,7 +175,6 @@ We welcome contributions to WebCanvas!
 In the coming updates, we will provide detailed guidelines on how to contribute to our project. This will include instructions on our coding standards, the process for submitting pull requests, and how to report issues, and more. Stay tuned for more information!
 
 Thank you for your interest in improving WebCanvas. Your contributions are greatly appreciated and essential to the growth and success of our project.
-
 
 
 ## 🌐 Community

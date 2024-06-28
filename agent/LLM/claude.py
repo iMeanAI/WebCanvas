@@ -41,3 +41,4 @@ class ClaudeGenerator:
         }
         response = await self.client.messages.create(**data)
         return response.content[0].text
+

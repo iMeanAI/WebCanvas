@@ -3,7 +3,6 @@ import json5
 
 from .vision_to_dom_prompts import VisionToDomPrompts
 from .dom_vision_disc_prompts import DomVisionDiscPrompts
-from .old_base_prompts import OldBasePrompts
 from .base_prompts import BasePrompts
 from .dom_vision_prompts import DomVisionPrompts
 from .vision_prompts import VisionPrompts
@@ -47,12 +46,12 @@ class PlanningPromptConstructor(BasePromptConstructor):
             "role": "user", "content": self.prompt_user}]
         return messages
 
-    # Previous thought and action are converted to formatted strings
+    # Previous thought, action and reflection are converted to formatted strings
     def stringfy_thought_and_action(self, input_list: list) -> str:
         input_list = json5.loads(input_list, encoding="utf-8")
         str_output = "["
         for idx, i in enumerate(input_list):
-            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]},Reflection:{i["reflection"]}\";\n'
+            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}, Reflection:{i["reflection"]}\";\n'
         str_output += "]"
         return str_output
 
@@ -245,7 +244,7 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
                   len(prompt_elements))
             prompt_elements_str = json5.dumps(prompt_elements)
             print("len of prompt_elements_str before observation_VforD:", len(
-                prompt_elements_str))  # This will print the length of prompt_elements converted into JSON string
+                prompt_elements_str)) # This will print the length of prompt_elements converted into JSON string
             print("len of about gpt token of prompt_elements_str before observation_VforD:", len(
                 prompt_elements_str) / 5.42, "\n")
             prompt_elements.append(
@@ -269,7 +268,7 @@ class D_VObservationPromptConstructor(BasePromptConstructor):
 
 class VisionObservationPromptConstructor(BasePromptConstructor):
     def __init__(self):
-        self.prompt_system = VisionPrompts.vision_planning_prompt_system
+        self.prompt_system = VisionPrompts.vision_planning_prompt_system 
         self.prompt_user = VisionPrompts.vision_prompt_user
 
     def construct(self, user_request: str, previous_trace: str, base64_image: str) -> list:
@@ -286,7 +285,6 @@ class VisionObservationPromptConstructor(BasePromptConstructor):
                 {"type": "text", "text": "The current observation is:"})
             prompt_elements.append(
                 {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}})
-
 
         messages = [{"role": "system", "content": self.prompt_system},
                     {"role": "user", "content": prompt_elements}]
@@ -346,6 +344,7 @@ class RewardPromptConstructor(BasePromptConstructor):
         return messages
 
 
+# Construct prompt for textual reward
 class CurrentRewardPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = BasePrompts.current_reward_prompt_system
@@ -367,6 +366,7 @@ class CurrentRewardPromptConstructor(BasePromptConstructor):
         return messages
 
 
+# Construct prompt for vision reward
 class VisionRewardPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = DomVisionPrompts.current_d_vision_reward_prompt_system
@@ -388,6 +388,7 @@ class VisionRewardPromptConstructor(BasePromptConstructor):
             stringfy_current_trace_output=stringfy_current_trace_output)
         self.prompt_user += f"the key information of current web page is: {observation}"
         prompt_elements = [{"type": "text", "text": self.prompt_user}]
+
         prompt_elements.append(
             {"type": "text", "text": "the screenshot of current web page is :"})
         prompt_elements.append(
@@ -398,7 +399,7 @@ class VisionRewardPromptConstructor(BasePromptConstructor):
         return messages
 
 
-# Class: Build a prompt to determine whether the element is a search box (if so, the front end needs to add an additional return operation)
+# Build a prompt to determine whether the element is a search box (if so, the front end needs to add an additional return operation)
 class JudgeSearchbarPromptConstructor(BasePromptConstructor):
     def __init__(self):
         self.prompt_system = BasePrompts.judge_searchbar_prompt_system
