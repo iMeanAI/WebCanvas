@@ -208,9 +208,9 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
 
 def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: dict):
     thought = response["description"].get("thought")
-    action_type = response['action_type'] if response.get(
-        'action_type') else "None"
-    acton_input = response['value'] if response.get('value') else ""
+    action_type = response['action_type']
+    acton_input = response['value'] if response.get(
+        'value') and isinstance(response.get('value'), str) else ""
     action = response['description'].get('action')
     reflection = step_reward.get(
         "description") if step_reward else ""
@@ -247,7 +247,6 @@ def read_config(toml_path=None):
     """
     Reads a TOML configuration file from the given path or the default path
     and returns its content as a dictionary.
-
     Args:
         toml_path (str, optional): The path to the TOML configuration file.
                                            If None, use the default path.

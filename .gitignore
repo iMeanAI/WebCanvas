@@ -13,7 +13,7 @@ results/
 
 LOGS/
 
-batch_tasks_results/*
+batch_tasks_results/
 
 data/*
 !data/example/

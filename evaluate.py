@@ -156,7 +156,6 @@ async def run_experiment(task_range, experiment_config):
 
     get_evaluate_result(experiment_config.config["files"]["out_file_path"])
     logger.info('\033[31mAll tasks finished!\033[0m')
-    logger.info('\033[31mPress Enter to exit...\033[0m')
 
 
 async def main(global_reward_mode="no_global_reward",
