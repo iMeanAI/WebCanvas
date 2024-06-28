@@ -114,7 +114,6 @@ To process the raw data, run the follow command:
 python data/raw_data_processor.py \
     --input-file path/to/input/file \
     --output-file path/to/output/file
-
 ```
 
 ### Run the Evaluation
@@ -126,7 +125,6 @@ python evaluate.py \
     --global_reward_mode dom_reward \
     --index -1 \
     --single_task_name "Find Dota 2 game and add all DLC to cart in steam."
-
 ```
 
 This command runs the script with DOM-based self-reward, processing the default task "Find Dota 2 game and add all DLC to cart in steam" or using the default data index -1. The evaluation mode is controlled by the `task_mode` parameter in `configs/setting.toml`, allowing you to choose between batch mode and single mode(without automatic evaluation). Remember to specify your path to the test file in `configs/setting.toml`.
