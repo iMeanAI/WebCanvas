@@ -50,15 +50,24 @@ conda activate webcanvas
 pip install -r requirements.txt
 ```
 
+#### Recommend Environment
+
+From our experiments, the experimental environment plays a crucial role in agent performance. We recommend experimenting on a Windows server using Chrome or Firefox browser engines, preferably on servers located in the United States. Below is the experiment results on Mind2Web-Live test set.
+
+| Planning Model | IP Region    | System  | Browser | Completion Rate | Task Success Rate | Efficiency Score |
+|----------------|--------------|---------|---------|-----------------|-------------------|------------------|
+| gpt-3.5-turbo-0125        | United States| Windows | Chrome  | 40.2%           | 16.5%             | 3.03             |
+| gpt-3.5-turbo-0125        | United States| Windows | Firefox | 42.1%           | 20.2%             | 2.79             |
+| gpt-3.5-turbo-0125        | United States| Linux   | Chrome  | 36.5%           | 15.4%             | 3.33             |
+| gpt-3.5-turbo-0125        | United Kingdom| Windows | Chrome | 23.6%           | 8.65%             | 7.78             |
+| gpt-3.5-turbo-0125        | Singapore    | Windows | Chrome  | 42.3%           | 21.2%             | 2.95             |
+
+
 ### Configuration
 
 Before running the repos, you need to set up the required API keys as using features dependent on external APIs. Our current framework only supports the OpenAI API. We plan to release updates in the future to support additional models.
 
 For setting up OpenAI API keys, add your API key to your environment variables:
-
-Our current version only supports the OpenAI API. We plan to release updates in the future to support more models soon.
-
-If using OpenAI models, set a valid OpenAI API key (starting with `sk-`) as the environment variable:
 
 MacOS/Linux:
 
@@ -88,7 +97,7 @@ export GRAPHQL_PASSWORD=your_password
 To download a file, use the following command:
 
 ```bash
-python data/upload_and_download.py download \
+python data/dataset_io.py download \
     --challenge-id your_challenge_id \
     --save-path /path/to/save/file
 ```
@@ -120,7 +129,7 @@ python evaluate.py \
 
 ```
 
-This command runs the script with DOM-based self-reward, processing the default task "Find Dota 2 game and add all DLC to cart in steam" or using the default data index -1. The evaluation mode is controlled by the `task_mode` parameter in `configs/setting.toml`, allowing you to choose between batch mode and single mode.
+This command runs the script with DOM-based self-reward, processing the default task "Find Dota 2 game and add all DLC to cart in steam" or using the default data index -1. The evaluation mode is controlled by the `task_mode` parameter in `configs/setting.toml`, allowing you to choose between batch mode and single mode(without automatic evaluation). Remember to specify your path to the test file in `configs/setting.toml`.
 
 
 ### Parameter Descriptions
@@ -146,12 +155,16 @@ This program supports several command-line arguments to customize its behavior:
   - Default: `"Find Dota 2 game and add all DLC to cart in steam."`
   - Description: Use this parameter to specify the task that the agent should perform.
 
+#### Interaction Mode
+
+Evaluating web agents in an online environment can sometimes be painful due to issues like network problems or bot tests on certain websites. Adopting an evaluation method that accommodates these issues allows for an accurate assessment of an agent's performance under specific current conditions. Additionally, we provide a more flexible interaction mode, enabling users to manually solve environmental issues and get the optimized performance of their web agents. You can simply set the `interaction_mode` parameter in `configs/setting.toml` to enable this feature. We will accumulate our implementation on error handling in online agent inference, and try to minimize human efforts by triggering only when exceptions occur in the following version. 
+
 ### Upload the Result for a Challenge
 
 IMPORTANT: You should upload the generated out.json file to participate a challenge. To upload your result, use the following command:
 
 ```bash
-python data/download_and_upload.py upload \
+python data/dataset_io.py upload \
     --file-path /path/to/your/file \
     --challenge-id your_challenge_id \
     --name your_agent_name \
@@ -189,6 +202,8 @@ We are building a vibrant and inclusive community around WebCanvas! Join our com
 We value your feedback and suggestions!
 
 We will be providing a detailed guide on how to give feedback in the upcoming documentation. This will include information on how to submit feedback, the types of feedback we are looking for, and how we plan to address and incorporate your suggestions. Stay tuned for more updates!
+
+- [Talk to Founder](https://calendly.com/dehan/30min), we welcome any discussion and feedback on the future of live agent evaluation!
 
 #### References
 [^1]: Deng, Xiang, et al. "Mind2web: Towards a generalist agent for the web." Advances in Neural Information Processing Systems 36 (2024).

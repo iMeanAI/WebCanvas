@@ -21,3 +21,4 @@ colorlog
 toml
 argparse
 requests_toolbelt
+anthropic

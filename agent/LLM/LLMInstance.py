@@ -39,7 +39,6 @@ class LLMInstance:
         return LLMInstance._gpt4json
 
 
-# 访问GPT生成器实例：
 # gpt35_instance = LLMInstance.get_gpt35()
 # gpt4_instance = LLMInstance.get_gpt4()
 # gpt4v_instance = LLMInstance.get_gpt4v()

@@ -16,7 +16,7 @@ from evaluate import FinishTaskEvaluator, TaskLengthEvaluator, URLEvaluator, Ele
 from logs import logger
 
 
-def read_file(file_path="./data/example/example_40.json"):
+def read_file(file_path="./data/example/example_130.json"):
     """Read labeled data"""
     return_list = []
     with open(file_path, encoding='utf-8') as f:
@@ -532,7 +532,7 @@ async def run_task(
         if not os.path.exists(json_result_folder):
             os.makedirs(json_result_folder)
         json_out_file_path = os.path.join(
-            json_result_folder, str(task_index) + "_" + task_result["id"] + ".json")
+            json_result_folder, str(task_index) + "_" + str(task_result["id"]) + ".json")
         logger.info(f"Write results to json file: {json_out_file_path}")
         with open(json_out_file_path, 'w') as json_file:
             json.dump(task_result, json_file)
