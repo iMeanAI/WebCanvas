@@ -205,8 +205,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
             match_result.append(
                 {evaluate["match_function"]: evaluate["reference_answer"]})
         step_score += evaluate["score"]
-    # print("current step score:", step_score, "/", len(evaluate_steps))
-    # print("current step match result:", match_result)
+
     return evaluate_steps, match_result
     # print(evaluate_steps)
 
@@ -214,8 +213,9 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
 def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: dict):
     thought = response["description"].get("thought")
     action_type = response['action_type']
-    acton_input = response['value']
-    action = response["description"].get("action")
+    acton_input = response['value'] if response.get(
+        'value') and isinstance(response.get('value'), str) else ""
+    action = response['description'].get('action')
     reflection = step_reward.get(
         "description") if step_reward else ""
     current_trace = {"thought": thought,
@@ -252,11 +252,9 @@ def read_config(toml_path=None):
     """
     Reads a TOML configuration file from the given path or the default path
     and returns its content as a dictionary.
-
     Args:
         toml_path (str, optional): The path to the TOML configuration file.
                                            If None, use the default path.
-
     Returns:
         dict: The content of the configuration file.
     """
@@ -283,7 +281,7 @@ async def run_task(
     env,
     global_reward_mode,
     global_reward_text_model,
-    observation_text_model,
+    planning_text_model,
     ground_truth_mode,
     ground_truth_data,
     interaction_mode,
@@ -317,6 +315,8 @@ async def run_task(
     encountered_errors = set()
     current_info = {"URL": env.page.url}
     num_steps = 0
+    step_index = 0
+
     if task_mode == "single_task":
         max_steps = int(reference_task_length)
     elif task_mode == "batch_tasks":
@@ -360,7 +360,7 @@ async def run_task(
                 out_put = await Planning.plan(
                     config=config,
                     user_request=task_name,
-                    text_model_name=observation_text_model,
+                    text_model_name=planning_text_model,
                     previous_trace=previous_trace,
                     observation=observation,
                     feedback=error_description,
@@ -379,7 +379,7 @@ async def run_task(
 
         if out_put:
             each_step_dict = {}
-            each_step_dict["step_index"] = num_steps
+            each_step_dict["step_index"] = step_index
             each_step_dict["dict_result"] = out_put
             execute_action, current_trace, path, element_value = parse_current_trace(
                 out_put, env, step_reward)
@@ -476,10 +476,12 @@ async def run_task(
             step_increase, encountered_errors = await adjust_max_action_step(
                 conditions, current_info, encountered_errors, increase_step)
             additional_steps += step_increase
-            num_steps += 1
             steps_list.append(each_step_dict)
-            if num_steps >= 25 or task_global_status == "finished" or task_finished:
-                break
+            step_index += 1
+
+        num_steps += 1
+        if num_steps >= config["basic"]["max_time_step"] or task_global_status == "finished" or task_finished:
+            break
 
         if interaction_mode:
             logger.info(

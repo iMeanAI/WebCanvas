@@ -11,11 +11,8 @@ from logs import logger
 
 class ClaudeGenerator:
 
-    def __init__(self):
-        self.model = "claude-3-5-sonnet-20240620"
-        # self.model = "claude-3-haiku-20240307"
-        # self.model = "claude-3-opus-20240229"
-        
+    def __init__(self, model: str = "claude-3-5-sonnet-20240620"):
+        self.model = model
         self.client = AsyncAnthropic(
             api_key=os.environ.get('ANTHROPIC_API_KEY')
         )
@@ -42,4 +39,3 @@ class ClaudeGenerator:
         }
         response = await self.client.messages.create(**data)
         return response.content[0].text
-

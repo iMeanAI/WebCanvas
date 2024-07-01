@@ -115,16 +115,19 @@ def write_task_result_to_df(each_task_json_file_path):
     step_list = data["step_list"]
     task_name = data["task_name"]
     task_status = data["status"]
+    uuid = data["id"]
     reference_task_length = data["reference_task_length"]
     evaluate_steps = data["evaluate_steps"]
     for idx, item in enumerate(step_list):
         for key in item:
             step_list[idx][key] = str(step_list[idx][key])
     data_df = json_normalize(step_list, errors='ignore')
-    return task_name, task_status, reference_task_length, evaluate_steps, data_df
+    return uuid, task_name, task_status, reference_task_length, evaluate_steps, data_df
 
 
 def write_to_json(df):
+    if df.empty:
+        return []
     df["step_index"] = df["step_index"].apply(lambda x: int(x))
     df["trace_to_dict"] = df["current_trace"].apply(
         lambda x: parse_thought_action(x))
@@ -154,7 +157,7 @@ def write_to_json(df):
     ]
 
     def summary(x):
-        dic = {
+        return {
             "step_index": x["step_index"],
             "trace_description": x["trace_to_dict"] if x["trace_to_dict"] else {},
             "selector": x["selector"] if x["selector"] != "None" else "",
@@ -167,8 +170,6 @@ def write_to_json(df):
             "match_result": x["match_result"],
             "error": x["error"] if x["error"] != "None" else ""
         }
-        # print(dic["match_result"])
-        return dic
     step_list = []
     df_copy.apply(lambda x: step_list.append(summary(x)), axis=1)
     return step_list
@@ -181,19 +182,20 @@ def get_result(input_json_path):
     for _, filename in enumerate(os.listdir(json_result_path)):
         file_path = os.path.join(json_result_path, filename)
         out_json = {}
-        task_name, task_status, reference_task_length, evaluate_steps, data_df = write_task_result_to_df(
+        uuid, task_name, task_status, reference_task_length, evaluate_steps, data_df = write_task_result_to_df(
             file_path)
         out_json["task_id"] = int(filename.split("_")[0])
         out_json["task_name"] = task_name
         out_json["task_status"] = task_status
+        out_json["uuid"] = uuid
+        out_json["reference_length"] = reference_task_length
         if os.path.isfile(file_path):
             task_step_list = write_to_json(data_df)
             out_json["step_list"] = task_step_list
             out_json["evaluation"] = evaluate_steps
-            task_list.append(out_json)
-
+            if len(task_step_list) > 0:
+                task_list.append(out_json)
     task_list = sorted(task_list, key=lambda x: x['task_id'])
-
     if not os.path.exists(out_file_path):
         os.makedirs(out_file_path)
     out_json_file_path = out_file_path + '/out.json'
@@ -258,7 +260,7 @@ def evaluate(file_path):
 
     with open(result_file_path, 'w') as json_file:
         json.dump(result_dict, json_file)
-
+        
     logger.info(f'\033[31mAll reuslts write to {result_file_path} !\033[0m')
 
 

@@ -388,7 +388,6 @@ class VisionRewardPromptConstructor(BasePromptConstructor):
             stringfy_current_trace_output=stringfy_current_trace_output)
         self.prompt_user += f"the key information of current web page is: {observation}"
         prompt_elements = [{"type": "text", "text": self.prompt_user}]
-
         prompt_elements.append(
             {"type": "text", "text": "the screenshot of current web page is :"})
         prompt_elements.append(
