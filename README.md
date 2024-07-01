@@ -1,4 +1,4 @@
-<h1 align="center">WebCanvas: Benchmarking Web Agents in Online Environments</h1>
+<h1 align="center">WebCanvas: Streamline Your Web Agent Development and Evaluation</h1>
 
 
 <p align="center">
@@ -12,12 +12,12 @@
 </p>
 
 <p align="center">
-    <img src="https://img.icons8.com/color/48/000000/internet.png" alt="Website" width="15" height="15" style="vertical-align: middle;"/> <a href="https://www.imean.ai/web-canvas">Website</a> • 
+    <img src="https://img.icons8.com/color/48/000000/internet.png" alt="Platform" width="15" height="15" style="vertical-align: middle;"/> <a href="https://www.imean.ai/web-canvas">Platform</a> • 
     <img src="https://img.icons8.com/?size=100&id=qGwgMt9xZDy5&format=png&color=000000" alt="Paper" width="17" height="17" style="vertical-align: middle;"/> <a href="https://arxiv.org/abs/2406.12373">Paper</a> • 
     <img src="https://img.icons8.com/color/48/000000/database.png" alt="Dataset" width="15" height="15" style="vertical-align: middle;"/> <a href="https://huggingface.co/datasets/iMeanAI/Mind2Web-Live">Dataset</a> • 
     <img src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord" width="15" height="15" style="vertical-align: middle;"/> <a href="https://discord.com/invite/wyhH5QPf">Discord</a> • 
     <img src="https://img.icons8.com/?size=100&id=13963&format=png&color=000000" alt="Twitter" width="18" height="18" style="vertical-align: middle;"/> <a href="https://x.com/iMeanAI">Twitter</a> • 
-    <img src="https://img.icons8.com/?size=100&id=77525&format=png&color=000000" alt="Calendly" width="15" height="15" style="vertical-align: middle;"/> <a href="https://calendly.com/dehan/30min">Talk to Author</a>
+    <!-- <img src="https://img.icons8.com/?size=100&id=77525&format=png&color=000000" alt="Calendly" width="15" height="15" style="vertical-align: middle;"/> <a href="https://calendly.com/dehan/30min">Talk to Author</a> -->
 </p>
 
 Existing benchmarks for web agent tasks are either offline and static, or operate within a fully reproducible environment with limited Internet dynamics. The WebCanvas project aims to pioneer the online evaluation of web agents. Additionally, we offer a suite of toolkits for scaling and maintaining web agent data to support this endeavor. We welcome any constructive feedback on the project and look forward to partnering with you in developing agents for web tasks!
@@ -25,20 +25,20 @@ Existing benchmarks for web agent tasks are either offline and static, or operat
 ## 🔥 News
 
 - **[2024, June 18]** Our paper will be presented at [agentic markets workshop](https://sites.google.com/view/amw-2024/home?authuser=0) in ICML 2024 and [natural language reasoning and structured explanations workshop](https://nl-reasoning-workshop.github.io/) in ACL 2024. See you in Vienna and Bangkok!
-- **[2024, June 18]** Our pre-print [paper](https://arxiv.org/abs/2406.12373) is available!
-- **[2024, June 6]** We've released [WebCanvas](https://github.com/iMeanAI/WebCanvas), including Data, Platform, Toolkits, and Web agents!
+- **[2024, June 18]** Our pre-print [paper](https://arxiv.org/abs/2406.12373) "WebCanvas: Benchmarking Web Agents in Online Environments" is available!
+- **[2024, June 6]** We've released WebCanvas, including [Data](https://huggingface.co/datasets/iMeanAI/Mind2Web-Live), [Platform](https://www.imean.ai/web-canvas), [Toolkits](https://webcanvas.gitbook.io/webcanvas-docs), and Web agents(in this repo)!
 
 
 ## 🌟Features
 
-- **Comprehensive Agent Framework**: Includes a universal agent framework with four key modules: Planning, Observation, Memory, and Reward, designed to perform complex tasks within real-world online web environments effectively.
+- **Base Agent Framework**: Includes a universal agent framework with four key modules: Planning, Observation, Memory, and Reward, designed to perform complex tasks within real-world online web environments effectively.
 - **Dynamic and Real-time Web Environment Interaction**: Utilizes live web environments to provide a realistic assessment and feedback of web agents.
 - **Key Nodes Annotation**: Introduces the concept of "key nodes" to offer in-progress feedback and a granular, phase-based assessment system that adapts to frequent changes in real-world web navigation.
 - **Enhanced Granularity of Progress Reward**: Allows for a thorough assessment of the reward module within the framework of autonomous web agents, focusing on the pivotal influence of reward signal quality.
 - **Easy to Scale with Online Web Environment**: Connected to a comprehensive suite of toolkits with accurate observation capture and rich action space to define demonstration trajectories and intermediate states for real-time, open-ended web tasks, allowing for robust evaluation in dynamic web environments. Check out our [browser plugin and data platform](https://builder.imean.ai/).
 - **Mind2Web-Live Dataset**: Presents a refined version of the original Mind2Web[^1] static dataset, containing 542 tasks with 2439 intermediate evaluation states, serving as the foundation general purpose benchmark.
 
-## 🔍 Getting Started
+## 🔍 Evaluation on Existing WebCanvas Benchmarks
 
 ### Setting Up the Environment
 
@@ -50,7 +50,7 @@ conda activate webcanvas
 pip install -r requirements.txt
 ```
 
-#### Recommended Environment
+#### Recommended Environment for Mind2Web-Live
 
 From our experiments, the experimental environment plays a crucial role in agent performance. We recommend experimenting on a Windows server using Chrome or Firefox browser engines, preferably on servers located in the United States. Below is the experiment results on Mind2Web-Live test set.
 
@@ -178,8 +178,11 @@ Replace the placeholders with your actual values:
 
 You can also submit through our platform. We will conduct an official check on your submission to prevent cheating.
 
-## 🤝 Contributing
+## Create Your Own Benchmark Dataset
 
+You can follow instructions on this [documentation](https://webcanvas.gitbook.io/webcanvas-docs) about how to create your own challenging benchmark for web agents. 
+
+## 🤝 Contributing
 
 We welcome contributions to WebCanvas!
 
