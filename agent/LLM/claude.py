@@ -11,8 +11,8 @@ from logs import logger
 
 class ClaudeGenerator:
 
-    def __init__(self):
-        self.model = "claude-3-5-sonnet-20240620"
+    def __init__(self, model: str = "claude-3-5-sonnet-20240620"):
+        self.model = model
         self.client = AsyncAnthropic(
             api_key=os.environ.get('ANTHROPIC_API_KEY')
         )
