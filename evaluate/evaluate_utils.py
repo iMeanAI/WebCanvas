@@ -16,7 +16,7 @@ from evaluate import FinishTaskEvaluator, TaskLengthEvaluator, URLEvaluator, Ele
 from logs import logger
 
 
-def read_file(file_path):
+def read_file(file_path="./data/example/example_130.json"):
     """Read labeled data"""
     return_list = []
     with open(file_path, encoding='utf-8') as f:
@@ -218,8 +218,8 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: 
     action = response['description'].get('action')
     reflection = step_reward.get(
         "description") if step_reward else ""
-    current_trace = {'thought': thought,
-                     'action': action, 'reflection': reflection}
+    current_trace = {"thought": thought,
+                     "action": action, "reflection": reflection}
     element_value = ""
     selector = None
 
@@ -255,7 +255,6 @@ def read_config(toml_path=None):
     Args:
         toml_path (str, optional): The path to the TOML configuration file.
                                            If None, use the default path.
-
     Returns:
         dict: The content of the configuration file.
     """
@@ -293,8 +292,6 @@ async def run_task(
 
     response_error_count = 0
     response_total_count = 0
-    step_index = 0
-    num_steps = 0
     vision_reward = None
 
     # Related to the HTML environment
@@ -317,6 +314,8 @@ async def run_task(
     increase_step = config["steps"]["batch_tasks_condition_step_increase"]
     encountered_errors = set()
     current_info = {"URL": env.page.url}
+    num_steps = 0
+    step_index = 0
 
     if task_mode == "single_task":
         max_steps = int(reference_task_length)
@@ -477,9 +476,8 @@ async def run_task(
             step_increase, encountered_errors = await adjust_max_action_step(
                 conditions, current_info, encountered_errors, increase_step)
             additional_steps += step_increase
-
-            step_index += 1
             steps_list.append(each_step_dict)
+            step_index += 1
 
         num_steps += 1
         if num_steps >= config["basic"]["max_time_step"] or task_global_status == "finished" or task_finished:
@@ -532,10 +530,12 @@ async def run_task(
         task_result["step_list"] = steps_list
         task_result["evaluate_steps"] = reference_evaluate_steps
 
-        if not os.path.exists(write_result_file_path):
-            os.makedirs(write_result_file_path)
+        json_result_folder = write_result_file_path
+        if not os.path.exists(json_result_folder):
+            os.makedirs(json_result_folder)
         json_out_file_path = os.path.join(
-            write_result_file_path, str(task_index) + "_" + task_result["id"] + ".json")
+            json_result_folder, str(task_index) + "_" + str(task_result["id"]) + ".json")
         logger.info(f"Write results to json file: {json_out_file_path}")
         with open(json_out_file_path, 'w') as json_file:
             json.dump(task_result, json_file)
+
