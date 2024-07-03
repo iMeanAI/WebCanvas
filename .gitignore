@@ -19,5 +19,8 @@ data/*
 !data/example/
 !data/example/example_130.json
 !data/example/mind2web-test_104tasks_20240528.json
+!data/human_labeled_reward_reference/*
+!data/dataset_io.py
+!data/raw_data_processor.py
 
 test.py
