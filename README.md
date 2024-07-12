@@ -15,9 +15,9 @@
     <img src="https://img.icons8.com/color/48/000000/internet.png" alt="Platform" width="15" height="15" style="vertical-align: middle;"/> <a href="https://www.imean.ai/web-canvas">Platform</a> • 
     <img src="https://img.icons8.com/?size=100&id=qGwgMt9xZDy5&format=png&color=000000" alt="Paper" width="17" height="17" style="vertical-align: middle;"/> <a href="https://arxiv.org/abs/2406.12373">Paper</a> • 
     <img src="https://img.icons8.com/color/48/000000/database.png" alt="Dataset" width="15" height="15" style="vertical-align: middle;"/> <a href="https://huggingface.co/datasets/iMeanAI/Mind2Web-Live">Dataset</a> • 
-    <img src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord" width="15" height="15" style="vertical-align: middle;"/> <a href="https://discord.com/invite/wyhH5QPf">Discord</a> • 
+    <img src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord" width="15" height="15" style="vertical-align: middle;"/> <a href="https://discord.gg/dhtgvJ52">Discord</a> • 
     <img src="https://img.icons8.com/?size=100&id=13963&format=png&color=000000" alt="Twitter" width="18" height="18" style="vertical-align: middle;"/> <a href="https://x.com/iMeanAI">Twitter</a>
-    <!-- <img src="https://img.icons8.com/?size=100&id=77525&format=png&color=000000" alt="Calendly" width="15" height="15" style="vertical-align: middle;"/> <a href="https://calendly.com/dehan/30min">Talk to Author</a> -->
+    <img src="https://img.icons8.com/?size=100&id=38288&format=png&color=000000" alt="WeChat" width="18" height="18" style="vertical-align: middle;"/> <a href="https://postimg.cc/4nZ9JYdF">WeChat</a>
 </p>
 
 Existing benchmarks for web agent tasks are either offline and static, or operate within a fully reproducible environment with limited Internet dynamics. The WebCanvas project aims to pioneer the online evaluation of web agents. Additionally, we offer a suite of toolkits for scaling and maintaining web agent data to support this endeavor. We welcome any constructive feedback on the project and look forward to partnering with you in developing agents for web tasks!
@@ -37,6 +37,30 @@ Existing benchmarks for web agent tasks are either offline and static, or operat
 - **Enhanced Granularity of Progress Reward**: Allows for a thorough assessment of the reward module within the framework of autonomous web agents, focusing on the pivotal influence of reward signal quality.
 - **Easy to Scale with Online Web Environment**: Connected to a comprehensive suite of toolkits with accurate observation capture and rich action space to define demonstration trajectories and intermediate states for real-time, open-ended web tasks, allowing for robust evaluation in dynamic web environments. Check out our [browser plugin and data platform](https://builder.imean.ai/).
 - **Mind2Web-Live Dataset**: Presents a refined version of the original Mind2Web[^1] static dataset, containing 542 tasks with 2439 intermediate evaluation states, serving as the foundation general purpose benchmark.
+
+## 🚀 Roadmap
+
+- **Better Modularity and More Flexible Integration**: To help easier integration of WebCanvas evaluation, connect offline agents to online environment.
+- **Better Observation**: Faster in computing, more accurate, and combine more modality(text, code, vision, conversation, etc.)
+- **Broader Action Space**: Add actions like cache in memory, output final answer, code execution etc. to develop a better interface for web agent, which may differ from human's.
+- **Dynamic Evaluation Function**: Provide toolkit for community to define dynamic evaluation functions(for example, model-based evaluation) as supplementary of current static evaluation functions.
+- **More Dataset Coverage**: Introduce more datasets in different domains that address key capabilities in online web tasks.
+- **Accumulate Knowledge on Agent Experiences**: Develop better algorithm to handle error encountered when inference in live environment, also accumulate knowledge on agent experiences in different websites.
+- **Statistics on Agent Cost other than Performance**: Enable calculation of token consumption or GPU consumption of agent framework or agent model to serve as another optimization goal for truly practical web agent.
+- **Cloud Version to Mitigate Environment Discrepancy**: We are working on a cloud version for more reliable evaluation.
+
+
+## 📋 TODO
+
+- [ ] Support more base model calling(Claude, Gemini, Open-source Models from together.ai, etc.). - in progress
+- [ ] Add more benchmarking data as showcase: webarena[^2], GAIA[^3], workarena[^4], etc. - in progress
+- [ ] Enable token consumption calculation. - in progress
+- [ ] Better modularity to ease integration. - in progress
+- [ ] Add vision as an extra observation and implement various grounding strategies.
+- [ ] Keep updating error handling module.
+- [ ] Develop up-to-date visualizations of current live websites agent performance.
+- [ ] Add information extraction related actions and relative evaluation metrics.
+- [ ] Enable script-based actions and evaluation.
 
 ## 🔍 Evaluation on Existing WebCanvas Benchmarks
 
@@ -196,7 +220,7 @@ Thank you for your interest in improving WebCanvas. Your contributions are great
 We are building a vibrant and inclusive community around WebCanvas! Join our community to stay up-to-date with the latest developments and to contribute to the project:
 
 - [GitHub Discussions](https://github.com/iMeanAI/WebCanvas/discussions)
-- [Discord](https://discord.com/invite/wyhH5QPf)
+- [Discord](https://discord.gg/dhtgvJ52)
 
 ## 📢 Feedback
 
@@ -206,5 +230,19 @@ We will be providing a detailed guide on how to give feedback in the upcoming do
 
 - [Talk to Founder](https://calendly.com/dehan/30min), we welcome any discussion and feedback on the future of live agent evaluation!
 
+## Citation
+
+If you use this project in your research, please cite our paper:
+
+@article{pan2024webcanvas,
+  title={WebCanvas: Benchmarking Web Agents in Online Environments},
+  author={Pan, Yichen and Kong, Dehan and Zhou, Sida and Cui, Cheng and Leng, Yifei and Jiang, Bing and Liu, Hangyu and Shang, Yanyi and Zhou, Shuyan and Wu, Tongshuang and others},
+  journal={arXiv preprint arXiv:2406.12373},
+  year={2024}
+}
+
 #### References
 [^1]: Deng, Xiang, et al. "Mind2web: Towards a generalist agent for the web." Advances in Neural Information Processing Systems 36 (2024).
+[^2]: Zhou, Shuyan, et al. "Webarena: A realistic web environment for building autonomous agents." arXiv preprint arXiv:2307.13854 (2023).
+[^3]: Mialon, Grégoire, et al. "Gaia: a benchmark for general ai assistants." arXiv preprint arXiv:2311.12983 (2023).
+[^4]: Drouin, Alexandre, et al. "WorkArena: How Capable are Web Agents at Solving Common Knowledge Work Tasks?." arXiv preprint arXiv:2403.07718 (2024).
