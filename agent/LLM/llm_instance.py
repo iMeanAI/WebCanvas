@@ -1,88 +1,34 @@
-from .openai import GPTGenerator35, GPTGenerator4, GPTGenerator4V, GPTGenerator4WithJSON, GPTGenerator35WithJSON
+from .openai import GPTGenerator, GPTGeneratorWithJSON
+from .claude import ClaudeGenerator
+from .gemini import GeminiGenerator
+from .togetherai import TogetherAIGenerator
 
 
-class LLMInstance:
-    _gpt35 = None
-    _gpt4 = None
-    _gpt4v = None
-    _gpt35json = None
-    _gpt4json = None
+def create_llm_instance(model, json_mode=False, all_json_models=None):
+    if "gpt" in model:
+        if json_mode:
+            if model in all_json_models:
+                return GPTGeneratorWithJSON(model)
+            else:
+                raise ValueError("The text model does not support JSON mode.")
+        else:
+            return GPTGenerator(model)
+    elif "claude" in model:
+        if json_mode:
+            raise ValueError("Claude does not support JSON mode.")
+        else:
+            return ClaudeGenerator(model)
+    elif "gemini" in model:
+        if json_mode:
+            raise ValueError("Gemini does not support JSON mode.")
+        else:
+            return GeminiGenerator(model)
+    else:
+        if json_mode:
+            raise ValueError("TogetherAI does not support JSON mode.")
+        else:
+            return TogetherAIGenerator(model)
 
-    @staticmethod
-    def get_gpt35():
-        if LLMInstance._gpt35 is None:
-            LLMInstance._gpt35 = GPTGenerator35()
-        return LLMInstance._gpt35
-
-    @staticmethod
-    def get_gpt4():
-        if LLMInstance._gpt4 is None:
-            LLMInstance._gpt4 = GPTGenerator4()
-        return LLMInstance._gpt4
-
-    @staticmethod
-    def get_gpt4v():
-        if LLMInstance._gpt4v is None:
-            LLMInstance._gpt4v = GPTGenerator4V()
-        return LLMInstance._gpt4v
-
-    @staticmethod
-    def get_gpt35json():
-        if LLMInstance._gpt35json is None:
-            LLMInstance._gpt35json = GPTGenerator35WithJSON()
-        return LLMInstance._gpt35json
-
-    @staticmethod
-    def get_gpt4json():
-        if LLMInstance._gpt4json is None:
-            LLMInstance._gpt4json = GPTGenerator4WithJSON()
-        return LLMInstance._gpt4json
-
-
-# gpt35_instance = LLMInstance.get_gpt35()
-# gpt4_instance = LLMInstance.get_gpt4()
-# gpt4v_instance = LLMInstance.get_gpt4v()
-# gpt35json_instance = LLMInstance.get_gpt35json()
-# gpt4json_instance = LLMInstance.get_gpt4json()
-
-
-# _gpt35 = None
-# _gpt4 = None
-# _gpt4v = None
-# _gpt35json = None
-# _gpt4json = None
-#
-#
-# def get_gpt35():
-#     global _gpt35
-#     if _gpt35 is None:
-#         _gpt35 = GPTGenerator35()
-#     return _gpt35
-#
-#
-# def get_gpt4():
-#     global _gpt4
-#     if _gpt4 is None:
-#         _gpt4 = GPTGenerator4()
-#     return _gpt4
-#
-#
-# def get_gpt4v():
-#     global _gpt4v
-#     if _gpt4v is None:
-#         _gpt4v = GPTGenerator4V()
-#     return _gpt4v
-#
-#
-# def get_gpt35json():
-#     global _gpt35json
-#     if _gpt35json is None:
-#         _gpt35json = GPTGenerator35WithJSON()
-#     return _gpt35json
-#
-#
-# def get_gpt4json():
-#     global _gpt4json
-#     if _gpt4json is None:
-#         _gpt4json = GPTGenerator4WithJSON()
-#     return _gpt4json
+async def semantic_match_llm_request(messages: list = None):
+    GPT35 = GPTGenerator(model="gpt-3.5-turbo")
+    return await GPT35.request(messages)
