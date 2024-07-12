@@ -24,6 +24,7 @@ Existing benchmarks for web agent tasks are either offline and static, or operat
 
 ## 🔥 News
 
+- **[2024, July 13]** We've just released v0.0.2 of WebCanvas! This update brings the ability to call different base model services, including OpenAI, Claude, Gemini, and together.ai. Now, you can choose any of these model services for testing on our platform. Additionally, we've launched a new repository: [WebCanvas Showcase](https://github.com/iMeanAI/WebCanvas_showcase). This repo demonstrates how different agent frameworks can be integrated with the WebCanvas framework for online evaluation. We're kicking things off with the integration of SEEACT[^5] and WebCanvas. Play with it and explore the possibilities!
 - **[2024, June 18]** Our paper will be presented at [agentic markets workshop](https://sites.google.com/view/amw-2024/home?authuser=0) in ICML 2024 and [natural language reasoning and structured explanations workshop](https://nl-reasoning-workshop.github.io/) in ACL 2024. See you in Vienna and Bangkok!
 - **[2024, June 18]** Our pre-print [paper](https://arxiv.org/abs/2406.12373) "WebCanvas: Benchmarking Web Agents in Online Environments" is available!
 - **[2024, June 6]** We've released WebCanvas, including [Data](https://huggingface.co/datasets/iMeanAI/Mind2Web-Live), [Platform](https://www.imean.ai/web-canvas), [Toolkits](https://webcanvas.gitbook.io/webcanvas-docs), and Web agents(in this repo)!
@@ -52,7 +53,7 @@ Existing benchmarks for web agent tasks are either offline and static, or operat
 
 ## 📋 TODO
 
-- [ ] Support more base model calling(Claude, Gemini, Open-source Models from together.ai, etc.). *(in progress)*
+- [x] Support more base model calling(Claude, Gemini, Open-source Models from together.ai, etc.). *(Done)*
 - [ ] Add more brilliant web agent benchmarking data as showcase: webarena[^2], GAIA[^3], workarena[^4], etc. *(in progress)*
 - [ ] Enable token consumption calculation. *(in progress)*
 - [ ] Better modularity to ease integration. *(in progress)*
@@ -97,7 +98,7 @@ For setting up OpenAI API keys, add your API key to your environment variables:
 
 MacOS/Linux:
 
-```
+```bash
 export OPENAI_API_KEY='your-api-key-here'
 ```
 
@@ -199,7 +200,7 @@ python evaluate.py \
     --global_reward_mode dom_reward \
     --index -1 \
     --single_task_name "Find Dota 2 game and add all DLC to cart in steam." \
-    --observation_text_model gpt-3.5-turbo \
+    --planning_text_model gpt-3.5-turbo \
     --global_reward_text_model gpt-3.5-turbo
 ```
 
@@ -229,15 +230,15 @@ This program supports several command-line arguments to customize its behavior:
   - Default: `"Find Dota 2 game and add all DLC to cart in steam."`
   - Description: Use this parameter to specify the task that the agent should perform.
 
-- `--observation_text_model`: Specifies the model used for observation processing.
+- `--planning_text_model`: Specifies the model used for planning module.
   - Type: String
   - Default: `gpt-3.5-turbo`
-  - Description: Use this parameter to specify which text model to use for processing observations.
+  - Description: Use this parameter to specify which text model to use for planning module.
 
-- `--global_reward_text_model`: Specifies the model used for global reward processing.
+- `--global_reward_text_model`: Specifies the model used for global reward reasoning.
   - Type: String
   - Default: `gpt-3.5-turbo`
-  - Description: Use this parameter to specify which text model to use for processing global rewards.
+  - Description: Use this parameter to specify which text model to use for global reward reasoning.
 
 #### Interaction Mode
 
@@ -310,3 +311,4 @@ If you use this project in your research, please cite our paper:
 [^2]: Zhou, Shuyan, et al. "Webarena: A realistic web environment for building autonomous agents." arXiv preprint arXiv:2307.13854 (2023).
 [^3]: Mialon, Grégoire, et al. "Gaia: a benchmark for general ai assistants." arXiv preprint arXiv:2311.12983 (2023).
 [^4]: Drouin, Alexandre, et al. "WorkArena: How Capable are Web Agents at Solving Common Knowledge Work Tasks?." arXiv preprint arXiv:2403.07718 (2024).
+[^5]: Zheng, Boyuan, et al. "Gpt-4v (ision) is a generalist web agent, if grounded." arXiv preprint arXiv:2401.01614 (2024). 
