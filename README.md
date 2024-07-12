@@ -17,7 +17,7 @@
     <img src="https://img.icons8.com/color/48/000000/database.png" alt="Dataset" width="15" height="15" style="vertical-align: middle;"/> <a href="https://huggingface.co/datasets/iMeanAI/Mind2Web-Live">Dataset</a> • 
     <img src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord" width="15" height="15" style="vertical-align: middle;"/> <a href="https://discord.gg/dhtgvJ52">Discord</a> • 
     <img src="https://img.icons8.com/?size=100&id=13963&format=png&color=000000" alt="Twitter" width="18" height="18" style="vertical-align: middle;"/> <a href="https://x.com/iMeanAI">Twitter</a> • 
-    <img src="https://img.icons8.com/?size=100&id=38288&format=png&color=000000" alt="WeChat" width="18" height="18" style="vertical-align: middle;"/> <a href="https://postimg.cc/4nZ9JYdF">WeChat</a>
+    <img src="https://img.icons8.com/?size=100&id=19977&format=png&color=000000" alt="WeChat" width="18" height="18" style="vertical-align: middle;"/> <a href="https://postimg.cc/4nZ9JYdF">WeChat</a>
 </p>
 
 Existing benchmarks for web agent tasks are either offline and static, or operate within a fully reproducible environment with limited Internet dynamics. The WebCanvas project aims to pioneer the online evaluation of web agents. Additionally, we offer a suite of toolkits for scaling and maintaining web agent data to support this endeavor. We welcome any constructive feedback on the project and look forward to partnering with you in developing agents for web tasks!
@@ -89,7 +89,9 @@ From our experiments, the experimental environment plays a crucial role in agent
 
 ### Configuration
 
-Before running the repos, you need to set up the required API keys as using features dependent on external APIs. Our current framework only supports the OpenAI API. We plan to release updates in the future to support additional models.
+Before running the repos, you need to set up the required API keys as using features dependent on external APIs.
+
+#### OpenAI API Keys
 
 For setting up OpenAI API keys, add your API key to your environment variables:
 
@@ -107,6 +109,54 @@ setx OPENAI_API_KEY "your-api-key-here"
 
 Visit [Quickstart tutorial - OpenAI API](https://platform.openai.com/docs/quickstart?context=python) for more details.
 
+#### Claude API Keys
+
+For setting up Claude API keys, add your API key to your environment variables:
+
+MacOS/Linux:
+
+```bash
+export ANTHROPIC_API_KEY='your-api-key-here'
+```
+
+Windows:
+
+```text
+setx ANTHROPIC_API_KEY "your-api-key-here"
+```
+#### Gemini API Keys
+
+For setting up Gemini API keys, add your API key to your environment variables:
+
+MacOS/Linux:
+
+```bash
+export GOOGLE_API_KEY='your-api-key-here'
+```
+
+Windows:
+
+```text
+setx GOOGLE_API_KEY "your-api-key-here"
+```
+
+#### Together AI API Keys
+
+For setting up Together AI API keys, add your API key to your environment variables:
+
+MacOS/Linux:
+
+```bash
+export TOGETHER_API_KEY='your-api-key-here'
+```
+
+Windows:
+
+```text
+setx TOGETHER_API_KEY "your-api-key-here"
+```
+
+Make sure to replace `your-api-key-here` with your actual API keys. This ensures that the necessary APIs are accessible for the features you intend to use in the repository.
 
 ### Download Raw Data of a Challenge
 
@@ -148,10 +198,12 @@ You can run the repos with the following command:
 python evaluate.py \
     --global_reward_mode dom_reward \
     --index -1 \
-    --single_task_name "Find Dota 2 game and add all DLC to cart in steam."
+    --single_task_name "Find Dota 2 game and add all DLC to cart in steam." \
+    --observation_text_model gpt-3.5-turbo \
+    --global_reward_text_model gpt-3.5-turbo
 ```
 
-This command runs the script with DOM-based self-reward, processing the default task "Find Dota 2 game and add all DLC to cart in steam" or using the default data index -1. The evaluation mode is controlled by the `task_mode` parameter in `configs/setting.toml`, allowing you to choose between batch mode and single mode(without automatic evaluation). Remember to specify your path to the test file in `configs/setting.toml`.
+This command runs the script with DOM-based self-reward, processing the default task "Find Dota 2 game and add all DLC to cart in steam" or using the default data index -1. It also uses the GPT-3.5 Turbo model for both observation and global reward processing. The evaluation mode is controlled by the `task_mode` parameter in `configs/setting.toml`, allowing you to choose between batch mode and single mode(without automatic evaluation). Remember to specify your path to the test file in `configs/setting.toml`.
 
 
 ### Parameter Descriptions
@@ -176,6 +228,16 @@ This program supports several command-line arguments to customize its behavior:
   - Type: String
   - Default: `"Find Dota 2 game and add all DLC to cart in steam."`
   - Description: Use this parameter to specify the task that the agent should perform.
+
+- `--observation_text_model`: Specifies the model used for observation processing.
+  - Type: String
+  - Default: `gpt-3.5-turbo`
+  - Description: Use this parameter to specify which text model to use for processing observations.
+
+- `--global_reward_text_model`: Specifies the model used for global reward processing.
+  - Type: String
+  - Default: `gpt-3.5-turbo`
+  - Description: Use this parameter to specify which text model to use for processing global rewards.
 
 #### Interaction Mode
 
