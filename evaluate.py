@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class ExperimentConfig:
     mode: str
     global_reward_mode: str
-    observation_text_model: str
+    planning_text_model: str
     global_reward_text_model: str
     ground_truth_mode: bool
     single_task_name: str
@@ -144,7 +144,7 @@ async def run_experiment(task_range, experiment_config):
                        env=env,
                        global_reward_mode=experiment_config.global_reward_mode,
                        global_reward_text_model=experiment_config.global_reward_text_model,
-                       observation_text_model=experiment_config.observation_text_model,
+                       planning_text_model=experiment_config.planning_text_model,
                        ground_truth_mode=experiment_config.ground_truth_mode,
                        ground_truth_data=experiment_config.ground_truth_data,
                        interaction_mode=experiment_config.config['steps']['interaction_mode'],
@@ -160,7 +160,7 @@ async def run_experiment(task_range, experiment_config):
 
 
 async def main(global_reward_mode="no_global_reward",
-               observation_text_model="gpt-4-turbo",
+               planning_text_model="gpt-4-turbo",
                global_reward_text_model="gpt-4-turbo",
                single_task_name="",
                raw_data_index=-1,
@@ -169,7 +169,7 @@ async def main(global_reward_mode="no_global_reward",
                toml_path=None
                ):
     config = read_config(toml_path)
-    validate_config(config, observation_mode, global_reward_mode, observation_text_model, global_reward_text_model)
+    validate_config(config, observation_mode, global_reward_mode, planning_text_model, global_reward_text_model)
 
     file = None
     if config['basic']['task_mode'] == "batch_tasks":
@@ -186,7 +186,7 @@ async def main(global_reward_mode="no_global_reward",
     experiment_config = ExperimentConfig(
         mode=observation_mode,
         global_reward_mode=global_reward_mode,
-        observation_text_model=observation_text_model,
+        planning_text_model=planning_text_model,
         global_reward_text_model=global_reward_text_model,
         ground_truth_mode=ground_truth_mode,
         single_task_name=single_task_name,
@@ -210,13 +210,13 @@ if __name__ == "__main__":
     parser.add_argument("--index", type=str, default=-1)
     parser.add_argument("--single_task_name", type=str,
                         default="Find Dota 2 game and add all DLC to cart in steam.")
-    parser.add_argument("--observation_text_model", type=str, default="gpt-3.5-turbo")
+    parser.add_argument("--planning_text_model", type=str, default="gpt-3.5-turbo")
     parser.add_argument("--global_reward_text_model", type=str, default="gpt-3.5-turbo")
 
     args = parser.parse_args()
 
     asyncio.run(main(global_reward_mode=args.global_reward_mode,
-                     observation_text_model=args.observation_text_model,
+                     planning_text_model=args.planning_text_model,
                      global_reward_text_model=args.global_reward_text_model,
                      single_task_name=args.single_task_name,
                      raw_data_index=args.index

@@ -283,7 +283,7 @@ async def run_task(
     env,
     global_reward_mode,
     global_reward_text_model,
-    observation_text_model,
+    planning_text_model,
     ground_truth_mode,
     ground_truth_data,
     interaction_mode,
@@ -360,7 +360,7 @@ async def run_task(
                 out_put = await Planning.plan(
                     config=config,
                     user_request=task_name,
-                    text_model_name=observation_text_model,
+                    text_model_name=planning_text_model,
                     previous_trace=previous_trace,
                     observation=observation,
                     feedback=error_description,
