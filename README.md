@@ -53,7 +53,7 @@ Existing benchmarks for web agent tasks are either offline and static, or operat
 ## 📋 TODO
 
 - [ ] Support more base model calling(Claude, Gemini, Open-source Models from together.ai, etc.). *(in progress)*
-- [ ] Add more benchmarking data as showcase: webarena[^2], GAIA[^3], workarena[^4], etc. *(in progress)*
+- [ ] Add more brilliant web agent benchmarking data as showcase: webarena[^2], GAIA[^3], workarena[^4], etc. *(in progress)*
 - [ ] Enable token consumption calculation. *(in progress)*
 - [ ] Better modularity to ease integration. *(in progress)*
 - [ ] Add vision as an extra observation and implement various grounding strategies.
@@ -234,12 +234,14 @@ We will be providing a detailed guide on how to give feedback in the upcoming do
 
 If you use this project in your research, please cite our paper:
 
+```
 @article{pan2024webcanvas,
   title={WebCanvas: Benchmarking Web Agents in Online Environments},
   author={Pan, Yichen and Kong, Dehan and Zhou, Sida and Cui, Cheng and Leng, Yifei and Jiang, Bing and Liu, Hangyu and Shang, Yanyi and Zhou, Shuyan and Wu, Tongshuang and others},
   journal={arXiv preprint arXiv:2406.12373},
   year={2024}
 }
+```
 
 #### References
 [^1]: Deng, Xiang, et al. "Mind2web: Towards a generalist agent for the web." Advances in Neural Information Processing Systems 36 (2024).
