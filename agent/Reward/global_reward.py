@@ -93,24 +93,15 @@ class GlobalReward:
         ground_truth_data,
     ):
 
-        gpt4v = GPTGenerator4V()
+        gpt4v = GPTGenerator(model="gpt-4-turbo")
 
         all_json_models = config["model"]["json_models"]
         is_json_response = config["model"]["json_model_response"]
 
-        if is_json_response:
-            if model_name in all_json_models:
-                gpt_global_reward_text = GPTGeneratorWithJSON(
-                    model=model_name)
-            else:
-                gpt_global_reward_text = GPTGenerator(
-                    model=model_name)
-                logger.info(
-                    "The text model does not support JSON mode.")
-        else:
-            gpt_global_reward_text = GPTGenerator(
-                model=model_name)
-        _, reward_response = await InteractionMode(text_model=gpt_global_reward_text, visual_model=gpt4v).get_global_reward(
+        llm_global_reward_text = create_llm_instance(
+            model_name, is_json_response, all_json_models)
+        
+        _, reward_response = await InteractionMode(text_model=llm_global_reward_text, visual_model=gpt4v).get_global_reward(
             user_request=user_request, previous_trace=previous_trace, observation=observation,
             current_info=current_info, ground_truth_mode=ground_truth_mode, global_reward_mode=global_reward_mode,
             ground_truth_data=ground_truth_data, task_name_id=task_name_id)

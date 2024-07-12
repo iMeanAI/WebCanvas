@@ -14,7 +14,6 @@ from agent.Utils.utils import *
 from evaluate.evaluate_utils import run_task, read_config, read_file, read_json_file
 from experiment_results import get_evaluate_result
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -38,7 +37,6 @@ def validate_config(config, observation_mode, global_reward_mode, observation_mo
     batch_tasks_file_path = config['files']['batch_tasks_file_path']
     json_model_response = config['model']['json_model_response']
     all_json_models = config['model']['json_models']
-    supported_models = config['model']['supported_models']
     interaction_mode = config['steps']['interaction_mode']
 
     if observation_mode not in ["dom"]:
@@ -51,11 +49,8 @@ def validate_config(config, observation_mode, global_reward_mode, observation_mo
             "interaction_mode is not defined! Try to define whether you want to evaluate the agent in an interactive manner.")
         exit()
 
-    if (observation_model not in supported_models or (global_reward_mode != 'no_global_reward' and  global_reward_model not in supported_models)):
-        logger.error("The model is not supported at the moment! Feel free to open an issue to provide feedback about supporting your model at https://github.com/iMeanAI/WebCanvas/issues.")
-        exit()
-
-    if json_model_response and (observation_model not in all_json_models or (global_reward_mode != 'no_global_reward' and  global_reward_model not in all_json_models)):
+    if json_model_response and (observation_model not in all_json_models or (
+            global_reward_mode != 'no_global_reward' and global_reward_model not in all_json_models)):
         logger.error("Model does not support JSON mode!")
         exit()
 
@@ -173,7 +168,6 @@ async def main(global_reward_mode="no_global_reward",
                ground_truth_mode=False,
                toml_path=None
                ):
-
     config = read_config(toml_path)
     validate_config(config, observation_mode, global_reward_mode, observation_text_model, global_reward_text_model)
 
@@ -205,6 +199,7 @@ async def main(global_reward_mode="no_global_reward",
 
     await run_experiment(task_range, experiment_config)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Run the web agent in different modes.")
@@ -215,10 +210,15 @@ if __name__ == "__main__":
     parser.add_argument("--index", type=str, default=-1)
     parser.add_argument("--single_task_name", type=str,
                         default="Find Dota 2 game and add all DLC to cart in steam.")
+    parser.add_argument("--observation_text_model", type=str, default="gpt-3.5-turbo")
+    parser.add_argument("--global_reward_text_model", type=str, default="gpt-3.5-turbo")
+
     args = parser.parse_args()
 
     asyncio.run(main(global_reward_mode=args.global_reward_mode,
-                     observation_text_model="gpt-3.5-turbo",
-                     global_reward_text_model="gpt-3.5-turbo",
+                     observation_text_model=args.observation_text_model,
+                     global_reward_text_model=args.global_reward_text_model,
                      single_task_name=args.single_task_name,
-                     raw_data_index=args.index))
+                     raw_data_index=args.index
+                     )
+                )

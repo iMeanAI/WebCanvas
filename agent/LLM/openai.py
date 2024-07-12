@@ -14,46 +14,29 @@ if not openai_api_key:
     logger.error("OpenAI API key is missing. Please set the OPENAI_API_KEY environment variable.")
     sys.exit(1)
 
-openai.api_key = openai_api_key
+client = openai.OpenAI(api_key=openai_api_key)
+
 
 class GPTGenerator:
     def __init__(self, model=None):
         self.model = model
 
-    async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7
-                      ) -> (str, str):
+    async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7) -> (str, str):
         try:
             if "gpt-3.5" in self.model:
                 messages = truncate_messages_based_on_estimated_tokens(messages, max_tokens=16385)
             cpu_count = multiprocessing.cpu_count()
             with ThreadPoolExecutor(max_workers=cpu_count * 2) as pool:
-                future_answer = pool.submit(
-                    self.chat, messages, max_tokens, temperature)
+                future_answer = pool.submit(self.chat, messages, max_tokens, temperature)
                 future_answer_result = await future_answer.result()
-                choice = future_answer_result.choices[0]  # Get the first option
-                # Check the reason for generation termination
+                choice = future_answer_result.choices[0]  # 获取第一个选项
                 if choice.finish_reason == 'length':
                     logger.warning("Response may be truncated due to length. Be cautious when parsing JSON.")
-                # openai_response = choice.message['content']
-                openai_response = list(future_answer_result.choices)[
-                    0].to_dict()['message']['content']
-                pool.shutdown()
+                openai_response = choice.message.content
                 return openai_response, ""
-        except openai.error.APIError as e:
-            # Handle API error here, e.g. retry or log
-            logger.error(f"OpenAI API returned an API Error: {e}")
-            error_message = f"OpenAI API returned an API Error: {e}"
-            return "", error_message
-        except openai.error.APIConnectionError as e:
-            # Handle connection error here
-            error_message = f"Failed to connect to OpenAI API: {e}"
-            logger.error(f"Failed to connect to OpenAI API: {e}")
-            return "", error_message
-        except openai.error.RateLimitError as e:
-            # Handle rate limit error (we recommend using exponential backoff)
-            error_message = f"OpenAI API request exceeded rate limit: {e}"
-            logger.error(f"OpenAI API request exceeded rate limit: {e}")
-            return "", error_message
+        except Exception as e:
+            logger.error(f"Error in GPTGenerator.request: {e}")
+            return "", str(e)
 
     async def chat(self, messages, max_tokens=500, temperature=0.7):
         loop = asyncio.get_event_loop()
@@ -62,13 +45,11 @@ class GPTGenerator:
             'max_tokens': max_tokens,
             'temperature': temperature,
             'messages': messages,
-            # 'stop': ["Observation:"]
         }
-        # Check if response_format is defined and add it to the data if so
         if hasattr(self, 'response_format'):
             data['response_format'] = self.response_format
 
-        func = partial(openai.ChatCompletion.create, **data)
+        func = partial(client.chat.completions.create, **data)
         return await loop.run_in_executor(None, func)
 
 

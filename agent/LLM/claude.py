@@ -11,10 +11,8 @@ from logs import logger
 
 class ClaudeGenerator:
 
-    def __init__(self):
-        self.model = "claude-3-5-sonnet-20240620"
-        # self.model = "claude-3-haiku-20240307"
-        # self.model = "claude-3-opus-20240229"
+    def __init__(self, model=None):
+        self.model = model
         
         self.client = AsyncAnthropic(
             api_key=os.environ.get('ANTHROPIC_API_KEY')
@@ -28,7 +26,8 @@ class ClaudeGenerator:
             response = await loop.run_in_executor(self.pool, partial(self.chat, messages, max_tokens, temperature))
             return await response, ""
         except Exception as e:
-            raise e
+            logger.error(f"Error in ClaudeGenerator.request: {e}")
+            return "", str(e)
 
     async def chat(self, message, max_tokens=1024, temperature=0.7):
 
