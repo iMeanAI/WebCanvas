@@ -6,7 +6,7 @@ gymnasium
 playwright==1.32.1
 Pillow
 evaluate
-openai>=0.27.0,<=0.28.0
+openai
 types-tqdm
 tiktoken
 aiolimiter
@@ -22,3 +22,4 @@ toml
 argparse
 requests_toolbelt
 anthropic
+google-generativeai
