@@ -175,26 +175,19 @@ class Planning:
         status_description
     ):
 
-        gpt35 = GPTGenerator35()
-        gpt4v = GPTGenerator4V()
+        gpt35 = GPTGenerator(model="gpt-3.5-turbo")
+        gpt4v = GPTGenerator(model="gpt-4-turbo")
 
         all_json_models = config["model"]["json_models"]
         is_json_response = config["model"]["json_model_response"]
 
-        if is_json_response:
-            if text_model_name in all_json_models:
-                gpt_planning_text = GPTGeneratorWithJSON(model=text_model_name)
-            else:
-                gpt_planning_text = GPTGenerator(model=text_model_name)
-                logger.info(
-                    "The text model does not support JSON mode.")
-        else:
-            gpt_planning_text = GPTGenerator(model=text_model_name)
+        llm_planning_text = create_llm_instance(
+            text_model_name, is_json_response, all_json_models)
 
         modes = {
-            "dom": DomMode(text_model=gpt_planning_text),
-            "dom_v_desc": DomVDescMode(visual_model=gpt4v, text_model=gpt_planning_text),
-            "vision_to_dom": VisionToDomMode(visual_model=gpt4v, text_model=gpt_planning_text),
+            "dom": DomMode(text_model=llm_planning_text),
+            "dom_v_desc": DomVDescMode(visual_model=gpt4v, text_model=llm_planning_text),
+            "vision_to_dom": VisionToDomMode(visual_model=gpt4v, text_model=llm_planning_text),
             "d_v": DVMode(visual_model=gpt4v),
             "vision": VisionMode(visual_model=gpt4v)
         }
