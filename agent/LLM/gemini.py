@@ -7,13 +7,6 @@ from concurrent.futures import ThreadPoolExecutor
 from sanic.log import logger
 import google.generativeai as genai
 
-gemini_api_key = os.getenv("GOOGLE_API_KEY")
-if not gemini_api_key:
-    logger.error("Gemini API key is missing. Please set the GOOGLE_API_KEY environment variable.")
-    sys.exit(1)
-
-genai.configure(api_key=gemini_api_key)
-
 
 class GeminiGenerator:
     def __init__(self, model=None):
@@ -21,6 +14,7 @@ class GeminiGenerator:
         self.pool = ThreadPoolExecutor(max_workers=os.cpu_count() * 2)
 
     async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7) -> (str, str):
+        genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
         loop = asyncio.get_event_loop()
         try:
             response = await loop.run_in_executor(self.pool, partial(self.chat, messages, max_tokens, temperature))

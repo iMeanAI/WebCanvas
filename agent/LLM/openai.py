@@ -9,17 +9,11 @@ from sanic.log import logger
 from agent.Utils import *
 from .token_cal import truncate_messages_based_on_estimated_tokens
 
-openai_api_key = os.getenv("OPENAI_API_KEY")
-if not openai_api_key:
-    logger.error("OpenAI API key is missing. Please set the OPENAI_API_KEY environment variable.")
-    sys.exit(1)
-
-client = openai.OpenAI(api_key=openai_api_key)
-
 
 class GPTGenerator:
     def __init__(self, model=None):
         self.model = model
+        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7) -> (str, str):
         try:
@@ -49,7 +43,7 @@ class GPTGenerator:
         if hasattr(self, 'response_format'):
             data['response_format'] = self.response_format
 
-        func = partial(client.chat.completions.create, **data)
+        func = partial(self.client.chat.completions.create, **data)
         return await loop.run_in_executor(None, func)
 
 
@@ -74,33 +68,6 @@ class JSONModeMixin(GPTGenerator):
         return await super().request(messages, max_tokens, temperature)
 
 
-# Example subclass with JSON mode support
-class GPTGenerator35WithJSON(JSONModeMixin):
-    def __init__(self, model=None):
-        super().__init__(model=model if model is not None else "gpt-3.5-turbo")
-
-
-class GPTGenerator4WithJSON(JSONModeMixin):
-    def __init__(self, model=None):
-        super().__init__(model=model if model is not None else "gpt-4-turbo")
-
-
 class GPTGeneratorWithJSON(JSONModeMixin):
-    def __init__(self, model=None):
-        super().__init__(model=model if model is not None else "gpt-4-turbo")
-
-
-# Subclass without JSON mode
-class GPTGenerator35(GPTGenerator):
-    def __init__(self, model=None):
-        super().__init__(model=model if model is not None else "gpt-3.5-turbo")
-
-
-class GPTGenerator4(GPTGenerator):
-    def __init__(self, model=None):
-        super().__init__(model=model if model is not None else "gpt-4-turbo")
-
-
-class GPTGenerator4V(GPTGenerator):
     def __init__(self, model=None):
         super().__init__(model=model if model is not None else "gpt-4-turbo")
