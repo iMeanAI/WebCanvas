@@ -68,6 +68,16 @@ def read_file(file_path="./data/example/example_130.json"):
                     logger.error(
                         f"element_value error in task {task_name_id}, step {i}, match_function: {match_function}")
                     exit(1)
+            elif "text" in match_function:
+                try:
+                    reference_answer = evaluation["content"]["reference_answer"]
+                    reference_evaluate_steps.append({"match_function": match_function,
+                                                     "reference_answer": reference_answer, "score": 0})
+                except:
+                    logger.error(
+                        f"element_value error in task {task_name_id}, step {i}, match_function: {match_function}")
+                    exit(1)
+
         return_list.append(
             [task_name, task_name_id, reference_task_length, reference_evaluate_steps])
 
@@ -99,11 +109,12 @@ def get_netloc(url: str) -> str:
     return netloc
 
 
-async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_value=None):
+async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_value=None, text_content=None):
     """Evaluate step score"""
     step_score = 0
     match_result = []
     for evaluate in evaluate_steps:
+        score = 0
         if evaluate["score"] != 1:
             match_function = evaluate["match_function"]
             if match_function == "url_exactly_match":
@@ -194,35 +205,55 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                 else:
                     score = 0
             elif match_function == "text_exact_match":
-                pass  # TODO
-            elif match_function == "text_include_match":
-                pass
+                if text_content is not None and text_content != "":
+                    score = TextEvaluator.text_exact_match(
+                        text_content, evaluate["reference_answer"])
+            elif match_function == "text_included_match":
+                if text_content is not None and text_content != "":
+                    score = TextEvaluator.text_included_match(
+                        text_content, evaluate["reference_answer"])
             elif match_function == "text_semantic_match":
-                pass
+                if text_content is not None and text_content != "":
+                    score = TextEvaluator.text_semantic_match(
+                        text_content, evaluate["reference_answer"])
+            elif match_function == "text_exact_match":
+                if text_content is not None and text_content != "":
+                    score = TextEvaluator.text_exact_match(
+                        text_content, evaluate["reference_answer"])
+            elif match_function == "text_included_match":
+                if text_content is not None and text_content != "":
+                    score = TextEvaluator.text_included_match(
+                        text_content, evaluate["reference_answer"])
+            elif match_function == "text_semantic_match":
+                if text_content is not None and text_content != "":
+                    score = TextEvaluator.text_semantic_match(
+                        text_content, evaluate["reference_answer"])
+
 
             evaluate["score"] = max(evaluate["score"], score)
         if evaluate["score"] >= 1:
             match_result.append(
                 {evaluate["match_function"]: evaluate["reference_answer"]})
         step_score += evaluate["score"]
-    # print("current step score:", step_score, "/", len(evaluate_steps))
-    # print("current step match result:", match_result)
+
     return evaluate_steps, match_result
     # print(evaluate_steps)
 
 
 def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: dict):
     thought = response["description"].get("thought")
-    action_type = response['action_type']
-    acton_input = response['value']
+    action_type = response.get(
+        'action_type') if response.get('action_type') else ""
+    acton_input = response['value'] if response.get(
+        'value') and isinstance(response.get('value'), str) else ""
     action = response["description"].get("action")
     reflection = step_reward.get(
         "description") if step_reward else ""
     current_trace = {"thought": thought,
                      "action": action, "reflection": reflection}
     element_value = ""
+    text_content = ""
     selector = None
-
     try:
         element_id = int(response['id'])
     except:
@@ -240,12 +271,21 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: 
                 "Failed to obtain element_id from the accessibility tree.")
             element_id = 0
             action_type = "None"
+    elif action_type in ["get_final_answer", "cache_storage"]:
+        selector = None
+        element_id = 0
+        text_content = acton_input
     else:
         selector = None
         element_id = 0
-    execute_action = create_action(
-        elementid=element_id, action_type=action_type, action_input=acton_input)
-    return execute_action, current_trace, selector, element_value
+    try:
+        execute_action = create_action(
+            elementid=element_id, action_type=action_type, action_input=acton_input)
+    except Exception as e:
+        logger.error(f"Create action error: {e}")
+        execute_action = create_action(
+            elementid=element_id, action_type="None", action_input="")
+    return execute_action, current_trace, selector, element_value, text_content
 
 
 def read_config(toml_path=None):
@@ -381,7 +421,7 @@ async def run_task(
             each_step_dict = {}
             each_step_dict["step_index"] = num_steps
             each_step_dict["dict_result"] = out_put
-            execute_action, current_trace, path, element_value = parse_current_trace(
+            execute_action, current_trace, path, element_value, text_content = parse_current_trace(
                 out_put, env, step_reward)
             selector, xpath = (
                 path[0], path[1]) if path is not None else (None, None)
@@ -401,7 +441,7 @@ async def run_task(
                 "**🤖 The agent is in the process of starting evaluation 🤖**")
             if task_mode == "batch_tasks":
                 evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps,
-                                                                   input_path=selector, element_value=element_value)
+                                                                   input_path=selector, element_value=element_value, text_content=text_content)
                 for evaluate in evaluate_steps:
                     total_step_score += evaluate["score"]
 
@@ -536,4 +576,3 @@ async def run_task(
         logger.info(f"Write results to json file: {json_out_file_path}")
         with open(json_out_file_path, 'w') as json_file:
             json.dump(task_result, json_file)
-

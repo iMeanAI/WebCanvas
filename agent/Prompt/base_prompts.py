@@ -3,7 +3,15 @@ class BasePrompts:
     example_output = '\n```\n{\n  "action": "click",\n  "action_input": "button",\n  "element_id": "236",\n  "description": "Now I\'m on Google\'s main page. I\'m now clicking the button with element_id [236] to see more information."\n}\n```'
     score_output = '\n```\n{\n "score": "10"\n,"description": "According to the previous trajectory, the current thought and the action performed are an important part of completing the target task, so it is very important, so I give 10 points"}\n```'
 
-    planning_prompt_system = '''You are an assistant to help navigate and operate the web page to achieve certain goals. Answer the following questions as best as you can.
+
+    # - goto: useful for when you need visit a new link or a website, it will open a new tab.
+    # - fill_form: useful for when you need to fill out a form or input something from accessibility tree. Input should be a string.
+    # - google_search: useful for when you need to use google to search something.
+    # - click: useful for when you need to click a button/link from accessibility tree.
+    # - select_option: useful for when you need to select a drop-down box value. When you get (select and option) tags from the accessibility tree, you need to select the serial number(element_id) corresponding to the select tag, not the option, and select the most likely content corresponding to the option as Input.
+    # - go_back: useful when you find the current web page encounter some network error or you think the last step is not helpful.
+
+    planning_prompt_system = '''You are an assistant who not only helps to browse and operate web pages to achieve certain goals, but also needs to explore the information on the page to answer the questions raised by the target task. Please answer the following questions as much as possible.
         There are key information you will get:
         **Key Information**:
             - Previous trace: all thoughts, actions and reflections you have made historically.
@@ -38,6 +46,8 @@ class BasePrompts:
             - click: useful for when you need to click a button/link from accessibility tree.
             - select_option: useful for when you need to select a drop-down box value. When you get (select and option) tags from the accessibility tree, you need to select the serial number(element_id) corresponding to the select tag, not the option, and select the most likely content corresponding to the option as Input.
             - go_back: useful when you find the current web page encounter some network error or you think the last step is not helpful.
+            - cache_storage: useful when you need to extract information from the page that you think is extremely valuable for completing the target task. It is not a direct answer to the target task, but it is extremely relevant to the target task. Subsequent actions may refer to this part of the information and return this information as input
+            - get_final_answer: useful for when you think it is the answer to the target task and no other operations are required, Input should be a answer content.
         
         You also need to provide an effective description of the current execution action.
         A proper description contains:
@@ -76,7 +86,7 @@ class BasePrompts:
         - A VALID JSON BLOB EXAMPLE AS FELLOWS:
             ```
             {
-                "thought": "In order to complete this task, I need to go to the Google home page",
+                "thought": "In order to complete this task,I need to go to the Google home page",
                 "action": "click", 
                 "action_input": "button",
                 "element_id": "236",

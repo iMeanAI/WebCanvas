@@ -16,13 +16,13 @@ json_models = ["gpt-4-turbo",
 
 
 [steps]
-interaction_mode = false             #  Whether human control of task execution status is required
+interaction_mode = true             #  Whether human control of task execution status is required
 single_task_action_step = 10     
 batch_tasks_max_action_step = 10
 batch_tasks_condition_step_increase = 5
 
 [files]
-batch_tasks_file_path = "./data/example/example_130.json" # The input data path
+batch_tasks_file_path = "./data/example/test.json" # The input data path
 ground_truth_file_path = "./data/human_labeled_reward_reference/GT_instructions_202404161811_for_all_data_0328.json"  # the ground_truth data path
 out_file_path = "./batch_tasks_results/example"   # YOUR OUT FILE PATH 
 

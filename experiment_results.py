@@ -32,7 +32,9 @@ def enum_to_action_str():
         ("SELECT_OPTION", 8),
         ("HOVER", 9),
         ("SCROLL_DOWN", 10),
-        ("SCROLL_UP", 11)
+        ("SCROLL_UP", 11),
+        ("CACHE_STORE",12),
+        ("GET_FINAL_ANSWER",13)
     ]
     action_dict = {str(value): name for name,
                    value in action_types if name.isupper()}

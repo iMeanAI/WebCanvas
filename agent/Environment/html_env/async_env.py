@@ -460,6 +460,20 @@ class AsyncHTMLEnvironment:
                     error_message = f"An error({e}) occur"
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
+            case ActionTypes.CACHE_STORE:
+                try:
+                    self.html_content = await self.page.content()
+                except:
+                    error_message = f"An error({e}) occur"
+                    raise ActionExecutionError(
+                        action['action_type'], error_message) from e
+            case ActionTypes.GET_FINAL_ANSWER:
+                try:
+                    self.html_content = await self.page.content()
+                except:
+                    error_message = f"An error({e}) occur"
+                    raise ActionExecutionError(
+                        action['action_type'], error_message) from e
             case _:
                 raise ValueError(
                     f"Unknown action type {action['action_type']}"

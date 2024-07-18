@@ -24,3 +24,4 @@ data/*
 !data/raw_data_processor.py
 
 test.py
+test_dom_tree.py
