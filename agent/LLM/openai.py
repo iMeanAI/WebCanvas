@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from sanic.log import logger
 from agent.Utils import *
 from .token_cal import truncate_messages_based_on_estimated_tokens
-
+from .token_calculation import calculation_of_token, save_token_count_to_file
 
 class GPTGenerator:
     def __init__(self, model=None):
@@ -16,9 +16,12 @@ class GPTGenerator:
         self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7) -> (str, str):
+        filename = "token_counts.json"
         try:
             if "gpt-3.5" in self.model:
                 messages = truncate_messages_based_on_estimated_tokens(messages, max_tokens=16385)
+            # input_token_count = calculation_of_token(messages, model=self.model)
+            # save_token_count_to_file(filename, input_token_count, "input")
             cpu_count = multiprocessing.cpu_count()
             with ThreadPoolExecutor(max_workers=cpu_count * 2) as pool:
                 future_answer = pool.submit(self.chat, messages, max_tokens, temperature)
@@ -27,6 +30,12 @@ class GPTGenerator:
                 if choice.finish_reason == 'length':
                     logger.warning("Response may be truncated due to length. Be cautious when parsing JSON.")
                 openai_response = choice.message.content
+                # output_token_count = calculation_of_token(openai_response, model=self.model)
+                # save_token_count_to_file(filename, output_token_count, "output")
+                output_token_count = future_answer_result.usage.completion_tokens
+                input_token_count = future_answer_result.usage.prompt_tokens
+                save_token_count_to_file(filename, input_token_count, "prompt_tokens")
+                save_token_count_to_file(filename, output_token_count, "completion_tokens")
                 return openai_response, ""
         except Exception as e:
             logger.error(f"Error in GPTGenerator.request: {e}")
