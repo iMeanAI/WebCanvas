@@ -204,31 +204,30 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                         #       element_value, "*", evaluate["reference_answer"])
                 else:
                     score = 0
-            elif match_function == "text_exact_match":
+            elif match_function == "cache_data_exact_match":
                 if text_content is not None and text_content != "":
                     score = TextEvaluator.text_exact_match(
                         text_content, evaluate["reference_answer"])
-            elif match_function == "text_included_match":
+            elif match_function == "cache_data_included_match":
                 if text_content is not None and text_content != "":
                     score = TextEvaluator.text_included_match(
                         text_content, evaluate["reference_answer"])
-            elif match_function == "text_semantic_match":
+            elif match_function == "cache_data_semantic_match":
                 if text_content is not None and text_content != "":
                     score = TextEvaluator.text_semantic_match(
                         text_content, evaluate["reference_answer"])
-            elif match_function == "text_exact_match":
+            elif match_function == "finial_answer_exact_match":
                 if text_content is not None and text_content != "":
                     score = TextEvaluator.text_exact_match(
                         text_content, evaluate["reference_answer"])
-            elif match_function == "text_included_match":
+            elif match_function == "finial_answer_included_match":
                 if text_content is not None and text_content != "":
                     score = TextEvaluator.text_included_match(
                         text_content, evaluate["reference_answer"])
-            elif match_function == "text_semantic_match":
+            elif match_function == "finial_answer_semantic_match":
                 if text_content is not None and text_content != "":
                     score = TextEvaluator.text_semantic_match(
                         text_content, evaluate["reference_answer"])
-
 
             evaluate["score"] = max(evaluate["score"], score)
         if evaluate["score"] >= 1:
@@ -271,7 +270,7 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: 
                 "Failed to obtain element_id from the accessibility tree.")
             element_id = 0
             action_type = "None"
-    elif action_type in ["get_final_answer", "cache_storage"]:
+    elif action_type in ["get_final_answer", "cache_data"]:
         selector = None
         element_id = 0
         text_content = acton_input
@@ -357,6 +356,7 @@ async def run_task(
     encountered_errors = set()
     current_info = {"URL": env.page.url}
     num_steps = 0
+    step_index = 0
     if task_mode == "single_task":
         max_steps = int(reference_task_length)
     elif task_mode == "batch_tasks":
@@ -419,7 +419,7 @@ async def run_task(
 
         if out_put:
             each_step_dict = {}
-            each_step_dict["step_index"] = num_steps
+            each_step_dict["step_index"] = step_index
             each_step_dict["dict_result"] = out_put
             execute_action, current_trace, path, element_value, text_content = parse_current_trace(
                 out_put, env, step_reward)
@@ -430,6 +430,7 @@ async def run_task(
             each_step_dict["selector"] = selector
             each_step_dict["execute_action"] = execute_action
             each_step_dict["element_value"] = element_value
+            each_step_dict["text_content"] = text_content
 
             logger.info(f"-- Planning output: {out_put}")
             logger.info(f"-- Current trace: {current_trace}")
@@ -440,8 +441,12 @@ async def run_task(
             logger.info(
                 "**🤖 The agent is in the process of starting evaluation 🤖**")
             if task_mode == "batch_tasks":
-                evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps,
-                                                                   input_path=selector, element_value=element_value, text_content=text_content)
+                try:
+                    evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps,
+                                                                       input_path=selector, element_value=element_value, text_content=text_content)
+                except Exception as ee:
+                    logger.info(f"Current step evaluate error :{ee}")
+
                 for evaluate in evaluate_steps:
                     total_step_score += evaluate["score"]
 
@@ -516,11 +521,11 @@ async def run_task(
             step_increase, encountered_errors = await adjust_max_action_step(
                 conditions, current_info, encountered_errors, increase_step)
             additional_steps += step_increase
-            num_steps += 1
             steps_list.append(each_step_dict)
+            step_index += 1
             if num_steps >= 25 or task_global_status == "finished" or task_finished:
                 break
-
+        num_steps += 1
         if interaction_mode:
             logger.info(
                 "Press Enter to proceed to the next action, or type 'q' to quit the task. If you encounter any unexpected issues such as network connection errors or captcha challenges, please resolve them manually now.")

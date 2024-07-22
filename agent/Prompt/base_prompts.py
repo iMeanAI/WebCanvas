@@ -46,7 +46,7 @@ class BasePrompts:
             - click: useful for when you need to click a button/link from accessibility tree.
             - select_option: useful for when you need to select a drop-down box value. When you get (select and option) tags from the accessibility tree, you need to select the serial number(element_id) corresponding to the select tag, not the option, and select the most likely content corresponding to the option as Input.
             - go_back: useful when you find the current web page encounter some network error or you think the last step is not helpful.
-            - cache_storage: useful when you need to extract information from the page that you think is extremely valuable for completing the target task. It is not a direct answer to the target task, but it is extremely relevant to the target task. Subsequent actions may refer to this part of the information and return this information as input
+            - cache_data: useful when you need to extract information from the page that you think is extremely valuable for completing the target task. It is not a direct answer to the target task, but it is extremely relevant to the target task. Subsequent actions may refer to this part of the information and return this information as input
             - get_final_answer: useful for when you think it is the answer to the target task and no other operations are required, Input should be a answer content.
         
         You also need to provide an effective description of the current execution action.

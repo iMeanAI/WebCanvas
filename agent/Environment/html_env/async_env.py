@@ -167,8 +167,6 @@ class AsyncHTMLEnvironment:
                 raise e
 
     async def goto(self, action):
-        # self.last_page = self.page
-        # self.page = await self.context.new_page()
         await self.load_page_with_retry(action['url'])
         self.html_content = await self.page.content()
 
@@ -460,7 +458,7 @@ class AsyncHTMLEnvironment:
                     error_message = f"An error({e}) occur"
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
-            case ActionTypes.CACHE_STORE:
+            case ActionTypes.CACHE_DATA:
                 try:
                     self.html_content = await self.page.content()
                 except:

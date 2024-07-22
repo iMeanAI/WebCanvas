@@ -33,8 +33,8 @@ def enum_to_action_str():
         ("HOVER", 9),
         ("SCROLL_DOWN", 10),
         ("SCROLL_UP", 11),
-        ("CACHE_STORE",12),
-        ("GET_FINAL_ANSWER",13)
+        ("CACHE_DATA", 12),
+        ("GET_FINAL_ANSWER", 13)
     ]
     action_dict = {str(value): name for name,
                    value in action_types if name.isupper()}
@@ -80,6 +80,10 @@ def to_dict(input_string):
         action = "go_back" + "[" + str(extracted_fields["element_id"]) + "]"
     elif "none" in extracted_fields["action_type"].lower():
         action = "None"
+    elif "cache_data" in extracted_fields["action_type"].lower():
+        action = "cache_data" + "[" + extracted_fields["fill_text"] + "]"
+    elif "final_answer" in extracted_fields["action_type"].lower():
+        action = "get_final_answer" + "[" + extracted_fields["fill_text"] + "]"
     return action
 
 
@@ -234,7 +238,7 @@ def evaluate(file_path):
     all_data = read_json_result(input_file_path)
     df = pd.DataFrame(all_data)
     df["step_score"] = df["task_score"].apply(lambda x: float(x.split("/")[0]))
-    df["efficiency_score"] =  df["steps"] / df["step_score"]
+    df["efficiency_score"] = df["step_score"] / df["steps"]
     df["score_df_1"] = df["task_score"].apply(lambda x: float(
         x.split("/")[1]) - float(x.split("/")[0]) == 1.0)
 
