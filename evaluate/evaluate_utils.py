@@ -68,7 +68,16 @@ def read_file(file_path="./data/example/example_130.json"):
                     logger.error(
                         f"element_value error in task {task_name_id}, step {i}, match_function: {match_function}")
                     exit(1)
-            elif "text" in match_function:
+            elif "final_answer" in match_function:
+                try:
+                    reference_answer = evaluation["content"]["reference_answer"]
+                    reference_evaluate_steps.append({"match_function": match_function,
+                                                     "reference_answer": reference_answer, "score": 0})
+                except:
+                    logger.error(
+                        f"element_value error in task {task_name_id}, step {i}, match_function: {match_function}")
+                    exit(1)
+            elif "cache_data" in match_function:
                 try:
                     reference_answer = evaluation["content"]["reference_answer"]
                     reference_evaluate_steps.append({"match_function": match_function,
