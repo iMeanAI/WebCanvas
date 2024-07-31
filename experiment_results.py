@@ -239,17 +239,18 @@ def evaluate(file_path):
     df = pd.DataFrame(all_data)
     df["step_score"] = df["task_score"].apply(lambda x: float(x.split("/")[0]))
     df["efficiency_score"] = df["step_score"] / df["steps"]
-    df["score_df_1"] = df["task_score"].apply(lambda x: float(
+    # The agent is only one key node away from completing the task
+    df["task_near_success"] = df["task_score"].apply(lambda x: float(
         x.split("/")[1]) - float(x.split("/")[0]) == 1.0)
 
     df_evaluate = df[["task_name", "status", "steps", "task_score",
-                      "task_score_rate", "step_score", "efficiency_score", "score_df_1"]]
+                      "task_score_rate", "step_score", "efficiency_score", "task_near_success"]]
 
-    step_score_rate = calculate_total_score(df_evaluate['task_score'])
-    completion_rate = df_evaluate[df_evaluate["status"]
-                                  == "finished"].shape[0] / df_evaluate.shape[0]
-    score_df_1 = df_evaluate[df_evaluate["score_df_1"]
-                             == True].shape[0] / df_evaluate.shape[0]
+    key_node_completion_rate = calculate_total_score(df_evaluate['task_score'])
+    task_success_rate = df_evaluate[df_evaluate["status"]
+                                    == "finished"].shape[0] / df_evaluate.shape[0]
+    task_near_success_rate = df_evaluate[df_evaluate["task_near_success"]
+                                         == True].shape[0] / df_evaluate.shape[0]
 
     average_step_score_rate = df_evaluate["task_score_rate"].mean()
     average_efficiency_score = df_evaluate["efficiency_score"].mean()
@@ -258,9 +259,9 @@ def evaluate(file_path):
     result_dict["task_counts"] = df_evaluate.shape[0]
     result_dict["average_step_score_rate"] = average_step_score_rate
     result_dict["average_efficiency_score"] = average_efficiency_score
-    result_dict["step_score_rate"] = step_score_rate
-    result_dict["completion_rate"] = completion_rate
-    result_dict["score_df_1"] = score_df_1
+    result_dict["key_node_completion_rate"] = key_node_completion_rate
+    result_dict["task_success_rate"] = task_success_rate
+    result_dict["task_near_success_rate"] = task_near_success_rate
 
     with open(result_file_path, 'w') as json_file:
         json.dump(result_dict, json_file)
