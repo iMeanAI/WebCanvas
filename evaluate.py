@@ -149,7 +149,8 @@ async def run_experiment(task_range, experiment_config):
                        ground_truth_data=experiment_config.ground_truth_data,
                        interaction_mode=experiment_config.config['steps']['interaction_mode'],
                        task_index=task_index,
-                       record_time=experiment_config.record_time)
+                       record_time=experiment_config.record_time,
+                       token_pricing=experiment_config.config['token_pricing'])
 
         await env.close()
         del env
@@ -210,8 +211,8 @@ if __name__ == "__main__":
     parser.add_argument("--index", type=str, default=-1)
     parser.add_argument("--single_task_name", type=str,
                         default="Find Dota 2 game and add all DLC to cart in steam.")
-    parser.add_argument("--planning_text_model", type=str, default="gpt-3.5-turbo")
-    parser.add_argument("--global_reward_text_model", type=str, default="gpt-3.5-turbo")
+    parser.add_argument("--planning_text_model", type=str, default="gpt-4o")
+    parser.add_argument("--global_reward_text_model", type=str, default="gpt-4o")
 
     args = parser.parse_args()
 

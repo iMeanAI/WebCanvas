@@ -1,18 +1,16 @@
 [basic]
 task_mode = "batch_tasks"    # single_task or batch_tasks
-global_reward = false        # with global reward
+global_reward = true        # with global reward
 max_time_step = 25           # For all tasks, set the maximum step length
 
 [model]
 json_model_response = false      # Whether to require a model that serves restrict json output
 json_models = ["gpt-4-turbo",
                    "gpt-4-turbo-2024-04-09",
-                   "gpt-4-turbo-preview",
                    "gpt-4-0125-preview",
                    "gpt-4-1106-preview",
                    "gpt-3.5-turbo",
-                   "gpt-3.5-turbo-0125",
-                   "gpt-3.5-turbo-preview"]
+                   "gpt-3.5-turbo-0125"]
 
 
 [steps]
@@ -28,3 +26,47 @@ out_file_path = "./batch_tasks_results/example"   # YOUR OUT FILE PATH
 
 [conditions]
 URL = ["error"]
+
+[token_pricing]
+pricing_models = [
+    "gpt-4o",
+    "gpt-4o-2024-05-13",
+    "gpt-4o-mini",
+    "gpt-4o-mini-2024-07-18",
+    "gpt-4-turbo",
+    "gpt-4-turbo-2024-04-09",
+    "gpt-4",
+    "gpt-4-32k",
+    "gpt-4-0125-preview",
+    "gpt-4-1106-preview",
+    "gpt-4-vision-preview",
+    "gpt-3.5-turbo-0125",
+    "gpt-3.5-turbo-1106"]
+
+# The price of each model for input and output, the unit is $/token
+gpt-4o_input_price                  = 0.000005
+gpt-4o_output_price                 = 0.000015
+gpt-4o-2024-05-13_input_price       = 0.000005
+gpt-4o-2024-05-13_output_price      = 0.000015
+gpt-4o-mini_input_price             = 0.00000015
+gpt-4o-mini_output_price            = 0.0000006
+gpt-4o-mini-2024-07-18_input_price  = 0.00000015
+gpt-4o-mini-2024-07-18_output_price = 0.0000006
+gpt-4-turbo_input_price             = 0.00001
+gpt-4-turbo_output_price            = 0.00003
+gpt-4-turbo-2024-04-09_input_price  = 0.00001
+gpt-4-turbo-2024-04-09_output_price = 0.00003
+gpt-4_input_price                   = 0.00003
+gpt-4_output_price                  = 0.00006
+gpt-4-32k_input_price               = 0.00006
+gpt-4-32k_output_price              = 0.00012
+gpt-4-0125-preview_input_price      = 0.00001
+gpt-4-0125-preview_output_price     = 0.00003
+gpt-4-1106-preview_input_price      = 0.00001
+gpt-4-1106-preview_output_price     = 0.00003
+gpt-4-vision-preview_input_price    = 0.00001
+gpt-4-vision-preview_output_price   = 0.00003
+gpt-3.5-turbo-0125_input_price      = 0.0000005
+gpt-3.5-turbo-0125_output_price     = 0.0000015
+gpt-3.5-turbo-1106_input_price      = 0.000001
+gpt-3.5-turbo-1106_output_price     = 0.000002
