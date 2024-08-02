@@ -271,24 +271,25 @@ def read_config(toml_path=None):
 
 
 async def run_task(
-    mode,
-    task_mode,
-    task_name,
-    task_uuid,
-    config,
-    write_result_file_path,
-    reference_task_length,
-    evaluate_steps,
-    reference_evaluate_steps,
-    env,
-    global_reward_mode,
-    global_reward_text_model,
-    planning_text_model,
-    ground_truth_mode,
-    ground_truth_data,
-    interaction_mode,
-    task_index,
-    record_time=None
+        mode,
+        task_mode,
+        task_name,
+        task_uuid,
+        config,
+        write_result_file_path,
+        reference_task_length,
+        evaluate_steps,
+        reference_evaluate_steps,
+        env,
+        global_reward_mode,
+        global_reward_text_model,
+        planning_text_model,
+        ground_truth_mode,
+        ground_truth_data,
+        interaction_mode,
+        task_index,
+        record_time=None,
+        token_pricing=None
 ):
     await env.reset("about:blank")
 
@@ -331,17 +332,31 @@ async def run_task(
     task_result["reference_task_length"] = reference_task_length
     steps_list = []
 
+    # Store the token counts of each step
+    steps_token_counts = 0
+    step_tokens = {"steps_tokens_record": [], "steps_token_counts": steps_token_counts}
+    steps_planning_input_token_counts = 0
+    steps_reward_input_token_counts = 0
+    steps_planning_output_token_counts = 0
+    steps_reward_output_token_counts = 0
+    steps_input_token_counts = 0
+    steps_output_token_counts = 0
+    token_counts_filename = f"token_counts_{record_time}_{planning_text_model}_{global_reward_text_model}.json"
+
     while num_steps < max_steps + additional_steps:
         error_message = ""
         total_step_score = 0
         step_reward = {}
         status_description = ""
+        planning_input_token_count = 0
+        planning_output_token_count = 0
+        reward_token_count = [0, 0]
 
         logger.info(
             "**🤖 The agent is in the process of starting planning 🤖**")
 
         if config["basic"]["global_reward"] and len(previous_trace) > 0:
-            step_reward, status_description = await GlobalReward.evaluate(
+            step_reward, status_description, reward_token_count = await GlobalReward.evaluate(
                 config=config,
                 model_name=global_reward_text_model,
                 user_request=task_name,
@@ -378,6 +393,8 @@ async def run_task(
                 continue
 
         if out_put:
+            planning_input_token_count += out_put.get("planning_token_count", [0, 0])[0]
+            planning_output_token_count += out_put.get("planning_token_count", [0, 0])[1]
             each_step_dict = {}
             each_step_dict["step_index"] = num_steps
             each_step_dict["dict_result"] = out_put
@@ -490,6 +507,44 @@ async def run_task(
                 human_interaction_stop_status = True
                 break
 
+        planning_token_count_number = planning_input_token_count + planning_output_token_count
+        reward_token_count_number = reward_token_count[0] + reward_token_count[1]
+        step_input_token_count = planning_input_token_count + reward_token_count[0]
+        step_output_token_count = planning_output_token_count + reward_token_count[1]
+        step_token_count = planning_token_count_number + reward_token_count_number
+        single_step_tokens = {
+            "planning_input_token_count": planning_input_token_count,
+            "planning_output_token_count": planning_output_token_count,
+            "planning_token_count": planning_token_count_number,
+            "reward_input_token_count": reward_token_count[0],
+            "reward_output_token_count": reward_token_count[1],
+            "reward_token_count": reward_token_count_number,
+            "input_token_count": step_input_token_count,
+            "output_token_count": step_output_token_count,
+            "token_count": step_token_count
+        }
+
+        step_tokens["steps_tokens_record"].append(single_step_tokens)
+
+        steps_planning_input_token_counts += planning_input_token_count
+        steps_planning_output_token_counts += planning_output_token_count
+        steps_reward_input_token_counts += reward_token_count[0]
+        steps_reward_output_token_counts += reward_token_count[1]
+        steps_input_token_counts += step_input_token_count
+        steps_output_token_counts += step_output_token_count
+        steps_token_counts += step_token_count
+
+    step_tokens["steps_planning_input_token_counts"] = steps_planning_input_token_counts
+    step_tokens["steps_planning_output_token_counts"] = steps_planning_output_token_counts
+    step_tokens["steps_reward_input_token_counts"] = steps_reward_input_token_counts
+    step_tokens["steps_reward_output_token_counts"] = steps_reward_output_token_counts
+    step_tokens["steps_input_token_counts"] = steps_input_token_counts
+    step_tokens["steps_output_token_counts"] = steps_output_token_counts
+    step_tokens["steps_token_counts"] = steps_token_counts
+
+    save_token_count_to_file(token_counts_filename, step_tokens, task_name, global_reward_text_model,
+                             planning_text_model, config["token_pricing"])
+
     # ! 3. Task evaluation and scoring
     if task_mode == "batch_tasks":
         # step score
@@ -536,4 +591,3 @@ async def run_task(
         logger.info(f"Write results to json file: {json_out_file_path}")
         with open(json_out_file_path, 'w') as json_file:
             json.dump(task_result, json_file)
-
