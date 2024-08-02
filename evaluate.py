@@ -149,7 +149,8 @@ async def run_experiment(task_range, experiment_config):
                        ground_truth_data=experiment_config.ground_truth_data,
                        interaction_mode=experiment_config.config['steps']['interaction_mode'],
                        task_index=task_index,
-                       record_time=experiment_config.record_time)
+                       record_time=experiment_config.record_time,
+                       token_pricing=experiment_config.config['token_pricing'])
 
         await env.close()
         del env
