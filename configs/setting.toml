@@ -44,6 +44,8 @@ pricing_models = [
     "gpt-3.5-turbo-1106"]
 
 # The price of each model for input and output, the unit is $/token
+# The name of input token price: model_name + "_input_price", such as gpt-4o_input_price
+# The name of output token price: model_name + "_output_price", such as gpt-4o_output_price
 gpt-4o_input_price                  = 0.000005
 gpt-4o_output_price                 = 0.000015
 gpt-4o-2024-05-13_input_price       = 0.000005
