@@ -454,21 +454,21 @@ class AsyncHTMLEnvironment:
             case ActionTypes.NONE:
                 try:
                     self.html_content = await self.page.content()
-                except:
+                except Exception as e:
                     error_message = f"An error({e}) occur"
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
             case ActionTypes.CACHE_DATA:
                 try:
                     self.html_content = await self.page.content()
-                except:
+                except Exception as e:
                     error_message = f"An error({e}) occur"
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
             case ActionTypes.GET_FINAL_ANSWER:
                 try:
                     self.html_content = await self.page.content()
-                except:
+                except Exception as e:
                     error_message = f"An error({e}) occur"
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
