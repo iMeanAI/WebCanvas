@@ -238,7 +238,7 @@ def evaluate(file_path):
     all_data = read_json_result(input_file_path)
     df = pd.DataFrame(all_data)
     df["step_score"] = df["task_score"].apply(lambda x: float(x.split("/")[0]))
-    df["efficiency_score"] = df["step_score"] / df["steps"]
+    df["efficiency_score"] = [s/sc if sc != 0 else 0 for s, sc in zip(df['steps'], df['step_score'])]
     # The agent is only one key node away from completing the task
     df["task_near_success"] = df["task_score"].apply(lambda x: float(
         x.split("/")[1]) - float(x.split("/")[0]) == 1.0)
@@ -266,7 +266,7 @@ def evaluate(file_path):
     with open(result_file_path, 'w') as json_file:
         json.dump(result_dict, json_file)
 
-    logger.info(f'\033[31mAll reuslts write to {result_file_path} !\033[0m')
+    logger.info(f'\033[31mAll results write to {result_file_path} !\033[0m')
 
 
 def get_evaluate_result(input_result_path):

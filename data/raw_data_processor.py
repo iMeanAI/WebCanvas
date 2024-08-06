@@ -137,6 +137,11 @@ def process_file(input_file, output_file):
                             "url": step["href"]
                         }
                         key = unquote(key)
+                    elif "cache_data_exact" in temp["match_function_name"]:
+                        temp["content"] = {
+                            "reference_answer": step["value"],
+                            "url": step["href"]
+                        }
                     elif "cache_data_include" in temp["match_function_name"]:
                         temp["content"] = {
                             "reference_answer": unquote(func["required"]),
@@ -145,6 +150,11 @@ def process_file(input_file, output_file):
                     elif "cache_data_semantic" in temp["match_function_name"]:
                         temp["content"] = {
                             "reference_answer": unquote(func["optional"]),
+                            "url": step["href"]
+                        }
+                    elif "final_answer_exact" in temp["match_function_name"]:
+                        temp["content"] = {
+                            "reference_answer": step["value"],
                             "url": step["href"]
                         }
                     elif "final_answer_semantic" in temp["match_function_name"]:

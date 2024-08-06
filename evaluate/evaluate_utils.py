@@ -225,15 +225,15 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                 if text_content is not None and text_content != "":
                     score = TextEvaluator.text_semantic_match(
                         text_content, evaluate["reference_answer"])
-            elif match_function == "finial_answer_exact_match":
+            elif match_function == "final_answer_exact_match":
                 if text_content is not None and text_content != "":
                     score = TextEvaluator.text_exact_match(
                         text_content, evaluate["reference_answer"])
-            elif match_function == "finial_answer_included_match":
+            elif match_function == "final_answer_included_match":
                 if text_content is not None and text_content != "":
                     score = TextEvaluator.text_included_match(
                         text_content, evaluate["reference_answer"])
-            elif match_function == "finial_answer_semantic_match":
+            elif match_function == "final_answer_semantic_match":
                 if text_content is not None and text_content != "":
                     score = TextEvaluator.text_semantic_match(
                         text_content, evaluate["reference_answer"])
@@ -245,7 +245,6 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
         step_score += evaluate["score"]
 
     return evaluate_steps, match_result
-    # print(evaluate_steps)
 
 
 def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: dict):
@@ -389,7 +388,7 @@ async def run_task(
         logger.info(
             "**🤖 The agent is in the process of starting planning 🤖**")
 
-        if config["basic"]["global_reward"] and len(previous_trace) > 0:
+        if global_reward_mode != 'no_global_reward' and len(previous_trace) > 0:
             step_reward, status_description = await GlobalReward.evaluate(
                 config=config,
                 model_name=global_reward_text_model,

@@ -206,7 +206,7 @@ if __name__ == "__main__":
     parser.add_argument("--global_reward_mode",
                         choices=["dom_vision_reward", "dom_reward",
                                  "vision_reward", "no_global_reward"],
-                        default="dom_reward", help="Choose the mode of global reward.")
+                        default="no_global_reward", help="Choose the mode of global reward.")
     parser.add_argument("--index", type=str, default=-1)
     parser.add_argument("--single_task_name", type=str,
                         default="What is the most searched news on Yahoo? What field is the news about?")
