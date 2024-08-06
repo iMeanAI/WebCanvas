@@ -19,7 +19,7 @@ class TogetherAIGenerator:
     async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7
                       ) -> (str, str):
         try:
-            openai_response = await self.chat(messages)
+            openai_response = await self.chat(messages, max_tokens, temperature)
             return openai_response, ""
         except Exception as e:
             logger.error(f"Error in TogetherAIGenerator.request: {e}")
