@@ -389,8 +389,6 @@ async def run_task(
     steps_reward_output_token_counts = 0
     steps_input_token_counts = 0
     steps_output_token_counts = 0
-    if not os.path.exists("token_results"):
-        os.makedirs("token_results")
     token_counts_filename = f"token_results/token_counts_{record_time}_{planning_text_model}_{global_reward_text_model}.json"
 
     while num_steps < max_steps + additional_steps:

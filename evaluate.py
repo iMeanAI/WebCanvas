@@ -132,6 +132,10 @@ async def run_experiment(task_range, experiment_config):
 
         env = create_html_environment(experiment_config.mode)
 
+        if not os.path.exists("token_results"):
+            os.makedirs("token_results")
+        token_counts_filename = f"token_results/token_counts_{experiment_config.record_time}_{experiment_config.planning_text_model}_{experiment_config.global_reward_text_model}.json"
+
         await run_task(mode=experiment_config.mode,
                        task_mode=experiment_config.config['basic']['task_mode'],
                        task_name=task_name,
@@ -155,7 +159,10 @@ async def run_experiment(task_range, experiment_config):
         await env.close()
         del env
 
-    get_evaluate_result(experiment_config.config["files"]["out_file_path"])
+    data = json.load(token_counts_filename)
+    total_token_cost = data.get("total_token_cost", 0)
+
+    get_evaluate_result(experiment_config.config["files"]["out_file_path"], total_token_cost)
     logger.info('\033[31mAll tasks finished!\033[0m')
     logger.info('\033[31mPress Enter to exit...\033[0m')
 
@@ -211,7 +218,7 @@ if __name__ == "__main__":
     parser.add_argument("--index", type=str, default=-1)
     parser.add_argument("--single_task_name", type=str,
                         default="What is the most searched news on Yahoo? What field is the news about?")
-    parser.add_argument("--planning_text_model", type=str, default="gemini-1.5-pro-latest")
+    parser.add_argument("--planning_text_model", type=str, default="gpt-4o")
     parser.add_argument("--global_reward_text_model", type=str, default="gpt-3.5-turbo")
 
     args = parser.parse_args()

@@ -232,7 +232,7 @@ def calculate_total_score(scores):
     return final_score
 
 
-def evaluate(file_path):
+def evaluate(file_path, total_token_cost):
     input_file_path = file_path + "/out.json"
     result_file_path = file_path + "/result.json"
     all_data = read_json_result(input_file_path)
@@ -254,11 +254,15 @@ def evaluate(file_path):
 
     average_step_score_rate = df_evaluate["task_score_rate"].mean()
     average_efficiency_score = df_evaluate["efficiency_score"].mean()
+    if total_token_cost != 0:
+        average_usd_efficiency_score = total_token_cost / df_evaluate["steps"].sum()
 
     result_dict = {}
     result_dict["task_counts"] = df_evaluate.shape[0]
     result_dict["average_step_score_rate"] = average_step_score_rate
     result_dict["average_efficiency_score"] = average_efficiency_score
+    if total_token_cost != 0:
+        result_dict["average_usd_efficiency_score"] = average_usd_efficiency_score
     result_dict["key_node_completion_rate"] = key_node_completion_rate
     result_dict["task_success_rate"] = task_success_rate
     result_dict["task_near_success_rate"] = task_near_success_rate
@@ -269,6 +273,6 @@ def evaluate(file_path):
     logger.info(f'\033[31mAll results write to {result_file_path} !\033[0m')
 
 
-def get_evaluate_result(input_result_path):
+def get_evaluate_result(input_result_path, total_token_cost):
     out_file_path = get_result(input_result_path)
-    evaluate(file_path=out_file_path)
+    evaluate(file_path=out_file_path, total_token_cost=total_token_cost)
