@@ -199,6 +199,15 @@ Replace the placeholders with your actual values:
 
 You can also submit through our platform. We will conduct an official check on your submission to prevent cheating.
 
+### Token Consumption Calculation
+
+We provide a token consumption calculation functionality for evaluating the efficiency of your agent, and it is enabled automatically.
+The token consumption is calculated based on the number of tokens consumed by planning module and global reward reasoning module during the evaluation process. 
+We use the `tiktoken` package to calculate the consumption of tokens. For those models whose encodings cannot be obtained, the default encoding "cl100k_base" is used. Therefore, for non-OPENAI models, the calculated tokens may have certain deviations.
+The amount spent on tokens is only available when the model name is provided in the 'token_pricing' under setting.toml; otherwise, only the quantity of tokens will be counted.
+The token consumption calculation results of each experiment will be saved in the `token_results` folder in JSON format.  
+If you want to calculate the monetary expenditure of models not listed in 'token_pricing', you should first add the full name of the model (such as "gpt-4o-2024-05-13") to the 'pricing_models' list. Then, add the unit price of input and output for this model below the list, such as "gpt-4o-2024-05-13_input_price = 0.000005" and "gpt-4o-2024-05-13_output_price = 0.000015".
+
 ## 📊 Create Your Own Benchmark Dataset
 
 You can follow instructions on this [documentation](https://webcanvas.gitbook.io/webcanvas-docs) about how to create your own challenging benchmark for web agents.
