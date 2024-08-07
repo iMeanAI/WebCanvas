@@ -219,7 +219,7 @@ if __name__ == "__main__":
     parser.add_argument("--single_task_name", type=str,
                         default="What is the most searched news on Yahoo? What field is the news about?")
     parser.add_argument("--planning_text_model", type=str, default="gpt-4o")
-    parser.add_argument("--global_reward_text_model", type=str, default="gpt-3.5-turbo")
+    parser.add_argument("--global_reward_text_model", type=str, default="gpt-4o")
 
     args = parser.parse_args()
 
