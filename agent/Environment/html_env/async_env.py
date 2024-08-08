@@ -66,6 +66,9 @@ class AsyncHTMLEnvironment:
         self.context = None
         self.browser = None
 
+    async def page_on_handler(self, page):
+        self.page = page
+
     async def setup(self, start_url: str) -> None:
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(
@@ -76,6 +79,7 @@ class AsyncHTMLEnvironment:
             device_scale_factor=1,
             locale=self.locale
         )
+        self.context.on("page", self.page_on_handler)
         if start_url:
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
