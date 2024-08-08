@@ -159,7 +159,8 @@ async def run_experiment(task_range, experiment_config):
         await env.close()
         del env
 
-    data = json.load(token_counts_filename)
+    with open(token_counts_filename, 'r') as file:
+        data = json.load(file)
     total_token_cost = data.get("total_token_cost", 0)
 
     get_evaluate_result(experiment_config.config["files"]["out_file_path"], total_token_cost)
