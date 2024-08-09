@@ -26,7 +26,7 @@ Existing benchmarks for web agent tasks are either offline and static, or operat
 
 ## 🔥 News
 
-- **[2024, August 9]** We're excited to announce the release of v0.0.3 of WebCanvas! This update introduces support for evaluation of data operations, such as caching data in process and outputting the final answer. You can now define and evaluate a broader range of web tasks using iMean Builder and WebCanvas. Additionally, we've introduced a new metric: ***US dollar consumption / key node completion***. We believe that an agent's efficiency is crucial for online web tasks, and this metric will help quantify that efficiency.
+- **[2024, August 9]** We're excited to announce the release of v0.0.3 of WebCanvas! This update introduces support for evaluation of data operations, such as caching data in process and outputting the final answer. You can now define and evaluate a broader range of web tasks using iMean Builder and WebCanvas. Additionally, we've introduced a new metric: ***US dollar consumption / key node completion(usd_efficiency_score)***. We believe that an agent's efficiency is crucial for online web tasks, and this metric will help quantify that efficiency.
 - **[2024, July 13]** We've released v0.0.2 of WebCanvas. This update brings the ability to call different base model services, including OpenAI, Claude, Gemini, and together.ai. Now, you can choose any of these model services for testing on our platform. Additionally, we've launched a new repository: [WebCanvas Showcase](https://github.com/iMeanAI/WebCanvas_showcase), which demonstrates how different agent frameworks can be integrated with the WebCanvas framework for online evaluation. We're kicking things off with the integration of SEEACT[^5] and WebCanvas. Play with it and explore the possibilities!
 - **[2024, June 18]** Our paper will be presented at [agentic markets workshop](https://sites.google.com/view/amw-2024/home?authuser=0) in ICML 2024 and [natural language reasoning and structured explanations workshop](https://nl-reasoning-workshop.github.io/) in ACL 2024. See you in Vienna and Bangkok!
 - **[2024, June 18]** Our pre-print [paper](https://arxiv.org/abs/2406.12373) "WebCanvas: Benchmarking Web Agents in Online Environments" is available!
@@ -203,9 +203,11 @@ You can also submit through our platform. We will conduct an official check on y
 
 We provide a token consumption calculation functionality for evaluating the efficiency of your agent, and it is enabled automatically.
 The token consumption is calculated based on the number of tokens consumed by planning module and global reward reasoning module during the evaluation process. 
-We use the `tiktoken` package to calculate the consumption of tokens. For those models whose encodings cannot be obtained, the default encoding "cl100k_base" is used. Therefore, for non-OPENAI models, the calculated tokens may have certain deviations.
-The amount spent on tokens is only available when the model name is provided in the 'token_pricing' under setting.toml; otherwise, only the quantity of tokens will be counted.
 The token consumption calculation results of each experiment will be saved in the `token_results` folder in JSON format.  
+
+We use the `tiktoken` package to calculate the consumption of tokens. For those models whose encodings cannot be obtained, the default encoding "cl100k_base" is used. Therefore, for non-OPENAI models, the calculated tokens may have certain deviations. 
+
+The amount spent on tokens is only available when the model name is provided in the 'token_pricing' under setting.toml; otherwise, only the quantity of tokens will be counted.
 If you want to calculate the monetary expenditure of models not listed in 'token_pricing', you should first add the full name of the model (such as "gpt-4o-2024-05-13") to the 'pricing_models' list. Then, add the unit price of input and output for this model below the list, such as "gpt-4o-2024-05-13_input_price = 0.000005" and "gpt-4o-2024-05-13_output_price = 0.000015".
 
 ## 📊 Create Your Own Benchmark Dataset
