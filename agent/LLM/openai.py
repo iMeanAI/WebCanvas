@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from sanic.log import logger
 from agent.Utils import *
 from .token_cal import truncate_messages_based_on_estimated_tokens
+from .token_calculation import calculation_of_token, save_token_count_to_file
 
 
 class GPTGenerator:
@@ -23,10 +24,12 @@ class GPTGenerator:
             with ThreadPoolExecutor(max_workers=cpu_count * 2) as pool:
                 future_answer = pool.submit(self.chat, messages, max_tokens, temperature)
                 future_answer_result = await future_answer.result()
-                choice = future_answer_result.choices[0]  # 获取第一个选项
+                choice = future_answer_result.choices[0]
                 if choice.finish_reason == 'length':
                     logger.warning("Response may be truncated due to length. Be cautious when parsing JSON.")
                 openai_response = choice.message.content
+                # output_token_count = future_answer_result.usage.completion_tokens
+                # input_token_count = future_answer_result.usage.prompt_tokens
                 return openai_response, ""
         except Exception as e:
             logger.error(f"Error in GPTGenerator.request: {e}")

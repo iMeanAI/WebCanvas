@@ -31,5 +31,6 @@ class HistoryMemory:
             {stringfy_thought_and_action_output}.\n\nYou have done the things above.\n\n"
         return previous_trace_prompt
 
-    def construct_cache_trace(self):
+    @staticmethod
+    def construct_cache(cache_info: list):
         pass

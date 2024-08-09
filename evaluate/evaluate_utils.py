@@ -68,6 +68,25 @@ def read_file(file_path="./data/example/example_130.json"):
                     logger.error(
                         f"element_value error in task {task_name_id}, step {i}, match_function: {match_function}")
                     exit(1)
+            elif "final_answer" in match_function:
+                try:
+                    reference_answer = evaluation["content"]["reference_answer"]
+                    reference_evaluate_steps.append({"match_function": match_function,
+                                                     "reference_answer": reference_answer, "score": 0})
+                except:
+                    logger.error(
+                        f"element_value error in task {task_name_id}, step {i}, match_function: {match_function}")
+                    exit(1)
+            elif "cache_data" in match_function:
+                try:
+                    reference_answer = evaluation["content"]["reference_answer"]
+                    reference_evaluate_steps.append({"match_function": match_function,
+                                                     "reference_answer": reference_answer, "score": 0})
+                except:
+                    logger.error(
+                        f"element_value error in task {task_name_id}, step {i}, match_function: {match_function}")
+                    exit(1)
+
         return_list.append(
             [task_name, task_name_id, reference_task_length, reference_evaluate_steps])
 
@@ -99,11 +118,12 @@ def get_netloc(url: str) -> str:
     return netloc
 
 
-async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_value=None):
+async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_value=None, text_content=None):
     """Evaluate step score"""
     step_score = 0
     match_result = []
     for evaluate in evaluate_steps:
+        score = 0
         if evaluate["score"] != 1:
             match_function = evaluate["match_function"]
             if match_function == "url_exactly_match":
@@ -193,36 +213,54 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                         #       element_value, "*", evaluate["reference_answer"])
                 else:
                     score = 0
-            elif match_function == "text_exact_match":
-                pass  # TODO
-            elif match_function == "text_include_match":
-                pass
-            elif match_function == "text_semantic_match":
-                pass
+            elif match_function == "cache_data_exact_match":
+                if text_content is not None and text_content != "":
+                    score = TextEvaluator.text_exact_match(
+                        text_content, evaluate["reference_answer"])
+            elif match_function == "cache_data_included_match":
+                if text_content is not None and text_content != "":
+                    score = TextEvaluator.text_included_match(
+                        text_content, evaluate["reference_answer"])
+            elif match_function == "cache_data_semantic_match":
+                if text_content is not None and text_content != "":
+                    score = TextEvaluator.text_semantic_match(
+                        text_content, evaluate["reference_answer"])
+            elif match_function == "final_answer_exact_match":
+                if text_content is not None and text_content != "":
+                    score = TextEvaluator.text_exact_match(
+                        text_content, evaluate["reference_answer"])
+            elif match_function == "final_answer_included_match":
+                if text_content is not None and text_content != "":
+                    score = TextEvaluator.text_included_match(
+                        text_content, evaluate["reference_answer"])
+            elif match_function == "final_answer_semantic_match":
+                if text_content is not None and text_content != "":
+                    score = TextEvaluator.text_semantic_match(
+                        text_content, evaluate["reference_answer"])
 
             evaluate["score"] = max(evaluate["score"], score)
         if evaluate["score"] >= 1:
             match_result.append(
                 {evaluate["match_function"]: evaluate["reference_answer"]})
         step_score += evaluate["score"]
-    # print("current step score:", step_score, "/", len(evaluate_steps))
-    # print("current step match result:", match_result)
+
     return evaluate_steps, match_result
-    # print(evaluate_steps)
 
 
 def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: dict):
     thought = response["description"].get("thought")
-    action_type = response['action_type']
-    acton_input = response['value']
+    action_type = response.get(
+        'action_type') if response.get('action_type') else ""
+    acton_input = response['value'] if response.get(
+        'value') and isinstance(response.get('value'), str) else ""
     action = response["description"].get("action")
     reflection = step_reward.get(
         "description") if step_reward else ""
     current_trace = {"thought": thought,
                      "action": action, "reflection": reflection}
     element_value = ""
+    text_content = ""
     selector = None
-
     try:
         element_id = int(response['id'])
     except:
@@ -240,12 +278,21 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: 
                 "Failed to obtain element_id from the accessibility tree.")
             element_id = 0
             action_type = "None"
+    elif action_type in ["get_final_answer", "cache_data"]:
+        selector = None
+        element_id = 0
+        text_content = acton_input
     else:
         selector = None
         element_id = 0
-    execute_action = create_action(
-        elementid=element_id, action_type=action_type, action_input=acton_input)
-    return execute_action, current_trace, selector, element_value
+    try:
+        execute_action = create_action(
+            elementid=element_id, action_type=action_type, action_input=acton_input)
+    except Exception as e:
+        logger.error(f"Create action error: {e}")
+        execute_action = create_action(
+            elementid=element_id, action_type="None", action_input="")
+    return execute_action, current_trace, selector, element_value, text_content
 
 
 def read_config(toml_path=None):
@@ -271,24 +318,25 @@ def read_config(toml_path=None):
 
 
 async def run_task(
-    mode,
-    task_mode,
-    task_name,
-    task_uuid,
-    config,
-    write_result_file_path,
-    reference_task_length,
-    evaluate_steps,
-    reference_evaluate_steps,
-    env,
-    global_reward_mode,
-    global_reward_text_model,
-    planning_text_model,
-    ground_truth_mode,
-    ground_truth_data,
-    interaction_mode,
-    task_index,
-    record_time=None
+        mode,
+        task_mode,
+        task_name,
+        task_uuid,
+        config,
+        write_result_file_path,
+        reference_task_length,
+        evaluate_steps,
+        reference_evaluate_steps,
+        env,
+        global_reward_mode,
+        global_reward_text_model,
+        planning_text_model,
+        ground_truth_mode,
+        ground_truth_data,
+        interaction_mode,
+        task_index,
+        record_time=None,
+        token_pricing=None
 ):
     await env.reset("about:blank")
 
@@ -317,6 +365,7 @@ async def run_task(
     encountered_errors = set()
     current_info = {"URL": env.page.url}
     num_steps = 0
+    step_index = 0
     if task_mode == "single_task":
         max_steps = int(reference_task_length)
     elif task_mode == "batch_tasks":
@@ -331,17 +380,31 @@ async def run_task(
     task_result["reference_task_length"] = reference_task_length
     steps_list = []
 
+    # Store the token counts of each step
+    steps_token_counts = 0
+    step_tokens = {"steps_tokens_record": [], "steps_token_counts": steps_token_counts}
+    steps_planning_input_token_counts = 0
+    steps_reward_input_token_counts = 0
+    steps_planning_output_token_counts = 0
+    steps_reward_output_token_counts = 0
+    steps_input_token_counts = 0
+    steps_output_token_counts = 0
+    token_counts_filename = f"token_results/token_counts_{record_time}_{planning_text_model}_{global_reward_text_model}.json"
+
     while num_steps < max_steps + additional_steps:
         error_message = ""
         total_step_score = 0
         step_reward = {}
         status_description = ""
+        planning_input_token_count = 0
+        planning_output_token_count = 0
+        reward_token_count = [0, 0]
 
         logger.info(
             "**🤖 The agent is in the process of starting planning 🤖**")
 
-        if config["basic"]["global_reward"] and len(previous_trace) > 0:
-            step_reward, status_description = await GlobalReward.evaluate(
+        if global_reward_mode != 'no_global_reward' and len(previous_trace) > 0:
+            step_reward, status_description, reward_token_count = await GlobalReward.evaluate(
                 config=config,
                 model_name=global_reward_text_model,
                 user_request=task_name,
@@ -378,10 +441,12 @@ async def run_task(
                 continue
 
         if out_put:
+            planning_input_token_count += out_put.get("planning_token_count", [0, 0])[0]
+            planning_output_token_count += out_put.get("planning_token_count", [0, 0])[1]
             each_step_dict = {}
-            each_step_dict["step_index"] = num_steps
+            each_step_dict["step_index"] = step_index
             each_step_dict["dict_result"] = out_put
-            execute_action, current_trace, path, element_value = parse_current_trace(
+            execute_action, current_trace, path, element_value, text_content = parse_current_trace(
                 out_put, env, step_reward)
             selector, xpath = (
                 path[0], path[1]) if path is not None else (None, None)
@@ -390,6 +455,7 @@ async def run_task(
             each_step_dict["selector"] = selector
             each_step_dict["execute_action"] = execute_action
             each_step_dict["element_value"] = element_value
+            each_step_dict["text_content"] = text_content
 
             logger.info(f"-- Planning output: {out_put}")
             logger.info(f"-- Current trace: {current_trace}")
@@ -400,8 +466,12 @@ async def run_task(
             logger.info(
                 "**🤖 The agent is in the process of starting evaluation 🤖**")
             if task_mode == "batch_tasks":
-                evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps,
-                                                                   input_path=selector, element_value=element_value)
+                try:
+                    evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps,
+                                                                       input_path=selector, element_value=element_value, text_content=text_content)
+                except Exception as ee:
+                    logger.info(f"Current step evaluate error :{ee}")
+
                 for evaluate in evaluate_steps:
                     total_step_score += evaluate["score"]
 
@@ -476,11 +546,11 @@ async def run_task(
             step_increase, encountered_errors = await adjust_max_action_step(
                 conditions, current_info, encountered_errors, increase_step)
             additional_steps += step_increase
-            num_steps += 1
             steps_list.append(each_step_dict)
+            step_index += 1
             if num_steps >= 25 or task_global_status == "finished" or task_finished:
                 break
-
+        num_steps += 1
         if interaction_mode:
             logger.info(
                 "Press Enter to proceed to the next action, or type 'q' to quit the task. If you encounter any unexpected issues such as network connection errors or captcha challenges, please resolve them manually now.")
@@ -489,6 +559,44 @@ async def run_task(
                 logger.info("User requested to quit the program.")
                 human_interaction_stop_status = True
                 break
+
+        planning_token_count_number = planning_input_token_count + planning_output_token_count
+        reward_token_count_number = reward_token_count[0] + reward_token_count[1]
+        step_input_token_count = planning_input_token_count + reward_token_count[0]
+        step_output_token_count = planning_output_token_count + reward_token_count[1]
+        step_token_count = planning_token_count_number + reward_token_count_number
+        single_step_tokens = {
+            "planning_input_token_count": planning_input_token_count,
+            "planning_output_token_count": planning_output_token_count,
+            "planning_token_count": planning_token_count_number,
+            "reward_input_token_count": reward_token_count[0],
+            "reward_output_token_count": reward_token_count[1],
+            "reward_token_count": reward_token_count_number,
+            "input_token_count": step_input_token_count,
+            "output_token_count": step_output_token_count,
+            "token_count": step_token_count
+        }
+
+        step_tokens["steps_tokens_record"].append(single_step_tokens)
+
+        steps_planning_input_token_counts += planning_input_token_count
+        steps_planning_output_token_counts += planning_output_token_count
+        steps_reward_input_token_counts += reward_token_count[0]
+        steps_reward_output_token_counts += reward_token_count[1]
+        steps_input_token_counts += step_input_token_count
+        steps_output_token_counts += step_output_token_count
+        steps_token_counts += step_token_count
+
+    step_tokens["steps_planning_input_token_counts"] = steps_planning_input_token_counts
+    step_tokens["steps_planning_output_token_counts"] = steps_planning_output_token_counts
+    step_tokens["steps_reward_input_token_counts"] = steps_reward_input_token_counts
+    step_tokens["steps_reward_output_token_counts"] = steps_reward_output_token_counts
+    step_tokens["steps_input_token_counts"] = steps_input_token_counts
+    step_tokens["steps_output_token_counts"] = steps_output_token_counts
+    step_tokens["steps_token_counts"] = steps_token_counts
+
+    save_token_count_to_file(token_counts_filename, step_tokens, task_name, global_reward_text_model,
+                             planning_text_model, config["token_pricing"])
 
     # ! 3. Task evaluation and scoring
     if task_mode == "batch_tasks":
@@ -536,4 +644,3 @@ async def run_task(
         logger.info(f"Write results to json file: {json_out_file_path}")
         with open(json_out_file_path, 'w') as json_file:
             json.dump(task_result, json_file)
-
