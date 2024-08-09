@@ -37,7 +37,7 @@ def enum_to_action_str():
         ("GET_FINAL_ANSWER", 13)
     ]
     action_dict = {str(value): name for name,
-                   value in action_types if name.isupper()}
+    value in action_types if name.isupper()}
     return action_dict
 
 
@@ -62,16 +62,16 @@ def to_dict(input_string):
         action = "google_search" + "[" + extracted_fields["fill_text"] + "]"
     elif "fill_search" in extracted_fields["action_type"].lower():
         action = "fill_search" + \
-            "[" + str(extracted_fields["element_id"]) + "," + \
-            extracted_fields["fill_text"] + "]"
+                 "[" + str(extracted_fields["element_id"]) + "," + \
+                 extracted_fields["fill_text"] + "]"
     elif "fill_form" in extracted_fields["action_type"].lower():
         action = "fill_search" + \
-            "[" + str(extracted_fields["element_id"]) + "," + \
-            extracted_fields["fill_text"] + "]"
+                 "[" + str(extracted_fields["element_id"]) + "," + \
+                 extracted_fields["fill_text"] + "]"
     elif "select_option" in extracted_fields["action_type"].lower():
         action = "select_option" + \
-            "[" + str(extracted_fields["element_id"]) + "," + \
-            extracted_fields["fill_text"] + "]"
+                 "[" + str(extracted_fields["element_id"]) + "," + \
+                 extracted_fields["fill_text"] + "]"
     elif "goto" in extracted_fields["action_type"].lower() and extracted_fields.get('url'):
         action = "goto" + "[" + extracted_fields["url"] + "]"
     elif "click" in extracted_fields["action_type"].lower():
@@ -175,6 +175,7 @@ def write_to_json(df):
         }
         # print(dic["match_result"])
         return dic
+
     step_list = []
     df_copy.apply(lambda x: step_list.append(summary(x)), axis=1)
     return step_list
@@ -217,7 +218,7 @@ def read_json_result(file_path):
         data_dic["task_id"] = items["task_id"]
         data_dic["task_name"] = items["task_name"]
         data_dic["status"] = items["task_status"]
-        data_dic["steps"] = items["step_list"][-1]["step_index"]
+        data_dic["steps"] = items["step_list"][-1]["step_index"] + 1
         data_dic["task_score"] = items["step_list"][-1]["task_score"]
         data_dic["task_score_rate"] = items["step_list"][-1]["task_score_rate"]
         data_dic["reward_count"] = len(items["evaluation"])
@@ -238,7 +239,7 @@ def evaluate(file_path, total_token_cost):
     all_data = read_json_result(input_file_path)
     df = pd.DataFrame(all_data)
     df["step_score"] = df["task_score"].apply(lambda x: float(x.split("/")[0]))
-    df["efficiency_score"] = [s/sc if sc != 0 else 0 for s, sc in zip(df['steps'], df['step_score'])]
+    df["efficiency_score"] = [s / sc if sc != 0 else 0 for s, sc in zip(df['steps'], df['step_score'])]
     # The agent is only one key node away from completing the task
     df["task_near_success"] = df["task_score"].apply(lambda x: float(
         x.split("/")[1]) - float(x.split("/")[0]) == 1.0)
@@ -247,6 +248,7 @@ def evaluate(file_path, total_token_cost):
                       "task_score_rate", "step_score", "efficiency_score", "task_near_success"]]
 
     key_node_completion_rate = calculate_total_score(df_evaluate['task_score'])
+    key_node_completion_sum = df_evaluate['step_score'].sum()
     task_success_rate = df_evaluate[df_evaluate["status"]
                                     == "finished"].shape[0] / df_evaluate.shape[0]
     task_near_success_rate = df_evaluate[df_evaluate["task_near_success"]
@@ -255,14 +257,14 @@ def evaluate(file_path, total_token_cost):
     average_step_score_rate = df_evaluate["task_score_rate"].mean()
     average_efficiency_score = df_evaluate["efficiency_score"].mean()
     if total_token_cost != 0:
-        average_usd_efficiency_score = total_token_cost / df_evaluate["steps"].sum()
+        usd_efficiency_score = total_token_cost / key_node_completion_sum
 
     result_dict = {}
     result_dict["task_counts"] = df_evaluate.shape[0]
     result_dict["average_step_score_rate"] = average_step_score_rate
     result_dict["average_efficiency_score"] = average_efficiency_score
     if total_token_cost != 0:
-        result_dict["average_usd_efficiency_score"] = average_usd_efficiency_score
+        result_dict["usd_efficiency_score"] = usd_efficiency_score
     result_dict["key_node_completion_rate"] = key_node_completion_rate
     result_dict["task_success_rate"] = task_success_rate
     result_dict["task_near_success_rate"] = task_near_success_rate
