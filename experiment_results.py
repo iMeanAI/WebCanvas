@@ -32,7 +32,9 @@ def enum_to_action_str():
         ("SELECT_OPTION", 8),
         ("HOVER", 9),
         ("SCROLL_DOWN", 10),
-        ("SCROLL_UP", 11)
+        ("SCROLL_UP", 11),
+        ("CACHE_DATA", 12),
+        ("GET_FINAL_ANSWER", 13)
     ]
     action_dict = {str(value): name for name,
                    value in action_types if name.isupper()}
@@ -78,6 +80,10 @@ def to_dict(input_string):
         action = "go_back" + "[" + str(extracted_fields["element_id"]) + "]"
     elif "none" in extracted_fields["action_type"].lower():
         action = "None"
+    elif "cache_data" in extracted_fields["action_type"].lower():
+        action = "cache_data" + "[" + extracted_fields["fill_text"] + "]"
+    elif "final_answer" in extracted_fields["action_type"].lower():
+        action = "get_final_answer" + "[" + extracted_fields["fill_text"] + "]"
     return action
 
 
@@ -226,42 +232,47 @@ def calculate_total_score(scores):
     return final_score
 
 
-def evaluate(file_path):
+def evaluate(file_path, total_token_cost):
     input_file_path = file_path + "/out.json"
     result_file_path = file_path + "/result.json"
     all_data = read_json_result(input_file_path)
     df = pd.DataFrame(all_data)
     df["step_score"] = df["task_score"].apply(lambda x: float(x.split("/")[0]))
-    df["efficiency_score"] =  df["steps"] / df["step_score"]
-    df["score_df_1"] = df["task_score"].apply(lambda x: float(
+    df["efficiency_score"] = [s/sc if sc != 0 else 0 for s, sc in zip(df['steps'], df['step_score'])]
+    # The agent is only one key node away from completing the task
+    df["task_near_success"] = df["task_score"].apply(lambda x: float(
         x.split("/")[1]) - float(x.split("/")[0]) == 1.0)
 
     df_evaluate = df[["task_name", "status", "steps", "task_score",
-                      "task_score_rate", "step_score", "efficiency_score", "score_df_1"]]
+                      "task_score_rate", "step_score", "efficiency_score", "task_near_success"]]
 
-    step_score_rate = calculate_total_score(df_evaluate['task_score'])
-    completion_rate = df_evaluate[df_evaluate["status"]
-                                  == "finished"].shape[0] / df_evaluate.shape[0]
-    score_df_1 = df_evaluate[df_evaluate["score_df_1"]
-                             == True].shape[0] / df_evaluate.shape[0]
+    key_node_completion_rate = calculate_total_score(df_evaluate['task_score'])
+    task_success_rate = df_evaluate[df_evaluate["status"]
+                                    == "finished"].shape[0] / df_evaluate.shape[0]
+    task_near_success_rate = df_evaluate[df_evaluate["task_near_success"]
+                                         == True].shape[0] / df_evaluate.shape[0]
 
     average_step_score_rate = df_evaluate["task_score_rate"].mean()
     average_efficiency_score = df_evaluate["efficiency_score"].mean()
+    if total_token_cost != 0:
+        average_usd_efficiency_score = total_token_cost / df_evaluate["steps"].sum()
 
     result_dict = {}
     result_dict["task_counts"] = df_evaluate.shape[0]
     result_dict["average_step_score_rate"] = average_step_score_rate
     result_dict["average_efficiency_score"] = average_efficiency_score
-    result_dict["step_score_rate"] = step_score_rate
-    result_dict["completion_rate"] = completion_rate
-    result_dict["score_df_1"] = score_df_1
+    if total_token_cost != 0:
+        result_dict["average_usd_efficiency_score"] = average_usd_efficiency_score
+    result_dict["key_node_completion_rate"] = key_node_completion_rate
+    result_dict["task_success_rate"] = task_success_rate
+    result_dict["task_near_success_rate"] = task_near_success_rate
 
     with open(result_file_path, 'w') as json_file:
         json.dump(result_dict, json_file)
 
-    logger.info(f'\033[31mAll reuslts write to {result_file_path} !\033[0m')
+    logger.info(f'\033[31mAll results write to {result_file_path} !\033[0m')
 
 
-def get_evaluate_result(input_result_path):
+def get_evaluate_result(input_result_path, total_token_cost):
     out_file_path = get_result(input_result_path)
-    evaluate(file_path=out_file_path)
+    evaluate(file_path=out_file_path, total_token_cost=total_token_cost)

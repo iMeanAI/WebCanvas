@@ -15,6 +15,9 @@ class InteractionMode:
     async def get_global_reward(self, user_request, previous_trace, observation, current_info, ground_truth_mode,
                                 global_reward_mode, ground_truth_data=None, task_name_id=None):
         reward_response = None
+        reward_input_token_count = 0
+        reward_output_token_count = 0
+        reward_token_count = [reward_input_token_count, reward_output_token_count]
         if len(previous_trace) > 0:
             stringfy_thought_and_action_output = PlanningPromptConstructor().stringfy_thought_and_action(
                 previous_trace)
@@ -62,6 +65,11 @@ class InteractionMode:
                         response_str, error_message = await self.text_model.request(reward_request)
                     reward_response = ActionParser().extract_status_and_description(
                         response_str)
+                    input_token_count = calculation_of_token(reward_request, model=self.text_model.model)
+                    output_token_count = calculation_of_token(response_str, model=self.text_model.model)
+                    reward_input_token_count += input_token_count
+                    reward_output_token_count += output_token_count
+                    reward_token_count = [reward_input_token_count, reward_output_token_count]
                     break
                 except Exception as e:
                     logger.error(traceback.format_exc())
@@ -74,7 +82,7 @@ class InteractionMode:
                 f"\033[34mGlobal_response_str:\n{response_str}\033[34m")
         else:
             response_str = ""
-        return response_str, reward_response
+        return response_str, reward_response, reward_token_count
 
 
 class GlobalReward:
@@ -101,10 +109,10 @@ class GlobalReward:
         llm_global_reward_text = create_llm_instance(
             model_name, is_json_response, all_json_models)
         
-        _, reward_response = await InteractionMode(text_model=llm_global_reward_text, visual_model=gpt4v).get_global_reward(
+        _, reward_response, reward_token_count = await InteractionMode(text_model=llm_global_reward_text, visual_model=gpt4v).get_global_reward(
             user_request=user_request, previous_trace=previous_trace, observation=observation,
             current_info=current_info, ground_truth_mode=ground_truth_mode, global_reward_mode=global_reward_mode,
             ground_truth_data=ground_truth_data, task_name_id=task_name_id)
         description = reward_response.get(
             "description") if reward_response and reward_response.get("description") else ""
-        return reward_response, description
+        return reward_response, description, reward_token_count

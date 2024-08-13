@@ -28,7 +28,14 @@ class DomMode(InteractionMode):
             f"\033[32mDOM_based_planning_request:\n{planning_request}\033[0m\n")
         logger.info(f"planning_text_model: {self.text_model.model}")
         planning_response, error_message = await self.text_model.request(planning_request)
-        return planning_response, error_message, None, None
+        # if "gpt" in self.text_model.model:
+        #     output_token_count = future_answer_result.usage.completion_tokens
+        #     input_token_count = future_answer_result.usage.prompt_tokens
+        input_token_count = calculation_of_token(planning_request, model=self.text_model.model)
+        output_token_count = calculation_of_token(planning_response, model=self.text_model.model)
+        planning_token_count = [input_token_count, output_token_count]
+
+        return planning_response, error_message, None, None, planning_token_count
 
 
 class DomVDescMode(InteractionMode):
@@ -193,7 +200,7 @@ class Planning:
         }
 
         # planning_response_thought, planning_response_action
-        planning_response, error_message, planning_response_thought, planning_response_action = await modes[mode].execute(
+        planning_response, error_message, planning_response_thought, planning_response_action, planning_token_count = await modes[mode].execute(
             status_description=status_description,
             user_request=user_request,
             previous_trace=previous_trace,
@@ -247,5 +254,6 @@ class Planning:
             dict_to_write['action'] = planning_response_action['action']
         dict_to_write['description'] = planning_response_action['description']
         dict_to_write['error_message'] = error_message
+        dict_to_write['planning_token_count'] = planning_token_count
 
         return dict_to_write

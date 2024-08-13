@@ -180,12 +180,16 @@ class TextEvaluator(StepEvaluator):
     '''Text evaluation and scoring'''
     @staticmethod
     def text_exact_match(input_answer, reference_answer):
+        input_answer = input_answer.lower()
+        reference_answer = reference_answer.lower()
         result_score = MatchFunction.exact_match(
             input_answer, reference_answer)
         return result_score
 
     @staticmethod
     def text_included_match(input_answer, reference_answer):
+        input_answer = input_answer.lower()
+        reference_answer = reference_answer.lower()
         result_score = MatchFunction.include_match(
             input_answer, reference_answer)
         return result_score
@@ -193,7 +197,7 @@ class TextEvaluator(StepEvaluator):
     @staticmethod
     def text_semantic_match(input_answer, semantic_method):
         result_score = MatchFunction.semantic_match(
-            input_answer, semantic_method, semantic_method)
+            input_answer, semantic_method)
         return result_score
 
 

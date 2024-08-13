@@ -24,6 +24,29 @@ class ActionTypes(IntEnum):
     HOVER = 9
     SCROLL_DOWN = 10
     SCROLL_UP = 11
+    CACHE_DATA = 12
+    GET_FINAL_ANSWER = 13
+
+@beartype
+def create_cache_data_action(elementid: int,fill_text: str) -> Action:
+    return {
+        "action_type": ActionTypes.CACHE_DATA,
+        "element_id": elementid,
+        "url": "",
+        "fill_text": fill_text,
+        "element_name": ""
+    }
+
+
+@beartype
+def create_get_final_answer(elementid: int,fill_text: str) -> Action:
+    return {
+        "action_type": ActionTypes.GET_FINAL_ANSWER,
+        "element_id": elementid,
+        "url": "",
+        "fill_text": fill_text,
+        "element_name": ""
+    }
 
 
 @beartype
@@ -165,6 +188,10 @@ def create_action(elementid: int, action_type: str, action_input: str) -> Action
         return create_scroll_down_action(elementid=elementid)
     elif action_type == "scroll_up":
         return create_scroll_up_action(elementid=elementid)
+    elif action_type == "cache_storage":
+        return create_cache_data_action(elementid=elementid,fill_text=action_input)
+    elif action_type == "get_final_answer":
+        return create_get_final_answer(elementid=elementid,fill_text=action_input)
     else:
         return create_none_action(elementid=elementid)
 
@@ -183,5 +210,7 @@ __all__ = [
     "create_hover_action",
     "create_scroll_down_action",
     "create_scroll_up_action",
+    "create_cache_data_action",
+    "create_get_final_answer",
     "create_action"
 ]
