@@ -218,9 +218,9 @@ if __name__ == "__main__":
                         default="no_global_reward", help="Choose the mode of global reward.")
     parser.add_argument("--index", type=str, default=-1)
     parser.add_argument("--single_task_name", type=str,
-                        default="What is the most searched news on Yahoo? What field is the news about?")
-    parser.add_argument("--planning_text_model", type=str, default="gpt-4o")
-    parser.add_argument("--global_reward_text_model", type=str, default="gpt-4o")
+                        default="Find Dota 2 game and add all DLC to cart in steam.")
+    parser.add_argument("--planning_text_model", type=str, default="gpt-4o-mini")
+    parser.add_argument("--global_reward_text_model", type=str, default="gpt-4o-mini")
 
     args = parser.parse_args()
 
