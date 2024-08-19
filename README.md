@@ -168,11 +168,11 @@ This program supports several command-line arguments to customize its behavior:
 
 - `--planning_text_model`: Specifies the model used for planning module.
   - Type: String
-  - Default: `gpt-3.5-turbo`
+  - Default: `gpt-4o-mini`
 
 - `--global_reward_text_model`: Specifies the model used for global reward reasoning.
   - Type: String
-  - Default: `gpt-3.5-turbo`
+  - Default: `gpt-4o-mini`
 
 #### Interaction Mode
 
