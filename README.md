@@ -80,7 +80,7 @@ conda activate webcanvas
 pip install -r requirements.txt
 ```
 
-Before running the repos, you need to set up the required API keys as using features dependent on external APIs. Please refer to this [docs](agent/LLM/README.md).
+Before running the repos, you need to set up the required API keys as using features dependent on external APIs. Please refer to this [docs](WebCanvas/agent/LLM/README.md).
 
 #### Recommended Environment for Mind2Web-Live
 

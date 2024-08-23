@@ -2,11 +2,10 @@ import re
 from urllib.parse import parse_qs, urlparse, unquote
 from bs4 import BeautifulSoup
 
-import requests
 from lxml import html
-from agent.LLM import *
-from agent.Prompt import *
-from agent.Environment.html_env.utils import MapTagNameList
+from WebCanvas.agent.LLM import *
+from WebCanvas.agent.Prompt import *
+from WebCanvas.agent.Environment.html_env.utils import MapTagNameList
 
 
 class StepEvaluator():
