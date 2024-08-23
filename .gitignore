@@ -1,6 +1,6 @@
 .vscode/
 
-agent/LLM/claude.py
+WebCanvas/agent/LLM/claude.py
 
 
 **/__pycache__
