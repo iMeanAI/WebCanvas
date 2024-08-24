@@ -16,7 +16,7 @@
     <img src="https://img.icons8.com/?size=100&id=qGwgMt9xZDy5&format=png&color=000000" alt="Paper" width="17" height="17" style="vertical-align: middle;"/> <a href="https://arxiv.org/abs/2406.12373">Paper</a> • 
     <img src="https://img.icons8.com/color/48/000000/database.png" alt="Dataset" width="15" height="15" style="vertical-align: middle;"/> <a href="https://huggingface.co/datasets/iMeanAI/Mind2Web-Live">Dataset</a> • 
     <img src="https://img.icons8.com/color/48/000000/discord-logo.png" alt="Discord" width="15" height="15" style="vertical-align: middle;"/> <a href="https://discord.gg/dhtgvJ52">Discord</a> • 
-    <img src="https://img.icons8.com/?size=100&id=13963&format=png&color=000000" alt="Twitter" width="18" height="18" style="vertical-align: middle;"/> <a href="https://x.com/iMeanAI">Twitter</a> • 
+    <img src="https://img.icons8.com/?size=100&id=13963&format=png&color=000000" alt="Twitter" width="18" height="18" style="vertical-align: middle;"/> <a href="https://x.com/DehanKong285793">Twitter</a> • 
     <img src="https://img.icons8.com/?size=100&id=19977&format=png&color=000000" alt="WeChat" width="18" height="18" style="vertical-align: middle;"/> <a href="https://postimg.cc/CZP9djG9">WeChat</a>
 </p>
 
@@ -26,7 +26,7 @@ Existing benchmarks for web agent tasks are either offline and static, or operat
 
 ## 🔥 News
 
-- **[2024, August 9]** We're excited to announce the release of v0.0.3 of WebCanvas! This update introduces support for evaluation of data operations, such as caching data in process and outputting the final answer. You can now define and evaluate a broader range of web tasks using iMean Builder and WebCanvas. Additionally, we've introduced a new metric: ***US dollar consumption / key node completion***. We believe that an agent's efficiency is crucial for online web tasks, and this metric will help quantify that efficiency.
+- **[2024, August 9]** We're excited to announce the release of v0.0.3 of WebCanvas! This update introduces support for evaluation of data operations, such as caching data in process and outputting the final answer. You can now define and evaluate a broader range of web tasks using iMean Builder and WebCanvas. Additionally, we've introduced a new metric: ***US dollar consumption / key node completion(usd_efficiency_score)***, detailed in [this section](#usd_efficiency). We believe that an agent's efficiency is crucial for online web tasks, and this metric will help quantify that efficiency.
 - **[2024, July 13]** We've released v0.0.2 of WebCanvas. This update brings the ability to call different base model services, including OpenAI, Claude, Gemini, and together.ai. Now, you can choose any of these model services for testing on our platform. Additionally, we've launched a new repository: [WebCanvas Showcase](https://github.com/iMeanAI/WebCanvas_showcase), which demonstrates how different agent frameworks can be integrated with the WebCanvas framework for online evaluation. We're kicking things off with the integration of SEEACT[^5] and WebCanvas. Play with it and explore the possibilities!
 - **[2024, June 18]** Our paper will be presented at [agentic markets workshop](https://sites.google.com/view/amw-2024/home?authuser=0) in ICML 2024 and [natural language reasoning and structured explanations workshop](https://nl-reasoning-workshop.github.io/) in ACL 2024. See you in Vienna and Bangkok!
 - **[2024, June 18]** Our pre-print [paper](https://arxiv.org/abs/2406.12373) "WebCanvas: Benchmarking Web Agents in Online Environments" is available!
@@ -35,16 +35,16 @@ Existing benchmarks for web agent tasks are either offline and static, or operat
 
 ## 🌟Features
 
-- **Base Agent Framework**: Includes a universal agent framework with four key modules: Planning, Observation, Memory, and Reward, designed to perform complex tasks within real-world online web environments effectively.
-- **Dynamic and Real-time Web Environment Interaction**: Utilizes live web environments to provide a realistic assessment and feedback of web agents.
-- **Key Nodes Annotation**: Introduces the concept of "key nodes" to offer in-progress feedback and a granular, phase-based assessment system that adapts to frequent changes in real-world web navigation.
-- **Enhanced Granularity of Progress Reward**: Allows for a thorough assessment of the reward module within the framework of autonomous web agents, focusing on the pivotal influence of reward signal quality.
-- **Easy to Scale with Online Web Environment**: Connected to a comprehensive suite of toolkits with accurate observation capture and rich action space to define demonstration trajectories and intermediate states for real-time, open-ended web tasks, allowing for robust evaluation in dynamic web environments. Check out our [browser plugin and data platform](https://builder.imean.ai/).
+- **Base Agent Framework**: Includes a base agent framework with several key modules - *Planning*, *Observation*, *Memory*, *Reward*, *Action Execution*, *Evaluation*, designed to be plug-and-play, enabling developers to easily test and iterate on their own LLM-based web agents.
+- **Dynamic and Real-time Web Environment Interaction**: Utilizes live web environments to provide a realistic assessment and feedback of web agents, thus addressing key challenges for web agents such as error handling, CAPTCHA solving, key-node based evaluation, metrics for agent efficiency etc..
+- **Key Nodes Annotation**: Introduces the concept of "key nodes" to offer in-progress feedback and a granular, phase-based assessment system that rigorously evaluate web agents in the wild.
+- **Scale Web Agent Evaluation in Live Web Environments**: Connected to a comprehensive suite of toolkits with accurate observation capture and rich action space to define demonstration trajectories and intermediate states for real-time, open-ended web tasks, allowing for robust evaluation in dynamic web environments. Check out our [How to guide](https://webcanvas.gitbook.io/webcanvas-docs).
 - **Mind2Web-Live Dataset**: Presents a refined version of the original Mind2Web[^1] static dataset, containing 542 tasks with 2439 intermediate evaluation states, serving as the foundation general purpose benchmark.
+- **Open Data Access**: Raw data of all challenges can be downloaded, including raw html(ready), screenshot(ready), DOM tree(soon), Axtree(soon), captured action(ready), element position(ready), etc., refer to [challenge propose](#challenge) and [data download](#download). We plan to open the data to the community free for research use.
 
 ## 🚀 Roadmap
 
-- **Better Modularity and More Flexible Integration**: To help easier integration of WebCanvas evaluation, connect offline agents to online environment.
+- **Better Modularity and More Flexible Integration**: To help easier integration of WebCanvas evaluation, connect offline agents to online web environment.
 - **Better Observation**: Faster in computing, more accurate, and combine more modality(text, code, vision, conversation, etc.)
 - **Broader Action Space**: Add actions like cache in memory, output final answer, code execution etc. to develop a better interface for web agent, which may differ from human's.
 - **Dynamic Evaluation Function**: Provide toolkit for community to define dynamic evaluation functions(for example, model-based evaluation) as supplementary of current static evaluation functions.
@@ -95,7 +95,7 @@ From our experiments, the experimental environment plays a crucial role in agent
 | gpt-3.5-turbo-0125        | Singapore    | Windows | Chrome  | 42.3%           | 21.2%             | 2.95             |
 
 
-### Download Raw Data of a Challenge(includes all open challenges on WebCanvas platform)
+### <a id="download"></a>Download Raw Data of a Challenge(includes all open challenges on WebCanvas platform)
 
 Register on the platform [here](https://www.imean.ai/web-canvas).
 
@@ -137,8 +137,8 @@ python evaluate.py \
     --global_reward_mode dom_reward \
     --index -1 \
     --single_task_name "Find Dota 2 game and add all DLC to cart in steam." \
-    --planning_text_model gpt-3.5-turbo \
-    --global_reward_text_model gpt-3.5-turbo
+    --planning_text_model gpt-4o-mini \
+    --global_reward_text_model gpt-4o-mini
 ```
 
 This command runs the script with DOM-based self-reward, processing the default task "Find Dota 2 game and add all DLC to cart in steam" or using the default data index -1. It also uses the GPT-3.5 Turbo model for both observation and global reward processing. The evaluation mode is controlled by the `task_mode` parameter in `configs/setting.toml`, allowing you to choose between batch mode and single mode(without automatic evaluation). Remember to specify your path to the test file in `configs/setting.toml`.
@@ -168,11 +168,11 @@ This program supports several command-line arguments to customize its behavior:
 
 - `--planning_text_model`: Specifies the model used for planning module.
   - Type: String
-  - Default: `gpt-3.5-turbo`
+  - Default: `gpt-4o-mini`
 
 - `--global_reward_text_model`: Specifies the model used for global reward reasoning.
   - Type: String
-  - Default: `gpt-3.5-turbo`
+  - Default: `gpt-4o-mini`
 
 #### Interaction Mode
 
@@ -199,16 +199,59 @@ Replace the placeholders with your actual values:
 
 You can also submit through our platform. We will conduct an official check on your submission to prevent cheating.
 
-### Token Consumption Calculation
+### <a id="usd_efficiency"></a>Token Consumption Calculation
 
 We provide a token consumption calculation functionality for evaluating the efficiency of your agent, and it is enabled automatically.
-The token consumption is calculated based on the number of tokens consumed by planning module and global reward reasoning module during the evaluation process. 
-We use the `tiktoken` package to calculate the consumption of tokens. For those models whose encodings cannot be obtained, the default encoding "cl100k_base" is used. Therefore, for non-OPENAI models, the calculated tokens may have certain deviations.
-The amount spent on tokens is only available when the model name is provided in the 'token_pricing' under setting.toml; otherwise, only the quantity of tokens will be counted.
+The token consumption is calculated based on the number of tokens consumed by planning module and global reward reasoning module(if applicable) during the evaluation process. 
 The token consumption calculation results of each experiment will be saved in the `token_results` folder in JSON format.  
+
+We use the `tiktoken` package to calculate the consumption of tokens. For those models whose encodings cannot be obtained, the default encoding "cl100k_base" is used. Therefore, for non-OPENAI models, the calculated tokens may have certain deviations. 
+
+The amount spent on tokens is only available when the model name is provided in the 'token_pricing' under setting.toml; otherwise, only the quantity of tokens will be counted.
 If you want to calculate the monetary expenditure of models not listed in 'token_pricing', you should first add the full name of the model (such as "gpt-4o-2024-05-13") to the 'pricing_models' list. Then, add the unit price of input and output for this model below the list, such as "gpt-4o-2024-05-13_input_price = 0.000005" and "gpt-4o-2024-05-13_output_price = 0.000015".
 
-## 📊 Create Your Own Benchmark Dataset
+Few example results on Mind2Web-Live test set:
+<table>
+    <tr>
+        <td style="width: 180px;"><strong>Planning Model</strong></td>
+        <td style="width: 100px;"><strong>Completion Score</strong></td>
+        <td style="width: 100px;"><strong>Task Success Rate</strong></td>
+        <td style="width: 120px;"><strong>USD Efficiency Score</strong></td>
+    </tr>
+    <tr>
+        <td>GPT-4o-2024-05-13</td>
+        <td>51.4%</td>
+        <td>28.8% </td>
+        <td>0.142</td>
+    </tr>
+    <tr>
+        <td>Llama-3.1-405B-Instruct-Turbo</td>
+        <td>47.8%</td>
+        <td>24.0%</td>
+        <td>0.174</td>
+    </tr>
+    <tr>
+        <td>Llama-3.1-70B-Instruct-Turbo</td>
+        <td>44.8%</td>
+        <td>20.2%</td>
+        <td>0.031</td>
+    </tr>
+    <tr>
+        <td>GPT-4o-mini-2024-07-18</td>
+        <td>42.9%</td>
+        <td>21.2%</td>
+        <td><strong><span style="color:red;">0.004</span></strong></td>
+    </tr>
+    <tr>
+        <td>GPT-3.5-turbo-0125</td>
+        <td>42.5%</td>
+        <td>17.3%</td>
+        <td>0.092</td>
+    </tr>
+</table>
+
+
+## 📊 <a id="challenge"></a>Create Your Own Benchmark Dataset
 
 You can follow instructions on this [documentation](https://webcanvas.gitbook.io/webcanvas-docs) about how to create your own challenging benchmark for web agents.
 
