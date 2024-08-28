@@ -1,11 +1,9 @@
-from ..Utils.utils import print_info, print_limited_json
-from agent.Prompt import *
-from agent.LLM import *
+from WebCanvas.agent.LLM import *
 from .action import *
-import time
 import json5
 from .action import ResponseError
-from logs import logger
+from WebCanvas.logs import logger
+from ..Prompt import *
 
 
 class InteractionMode:

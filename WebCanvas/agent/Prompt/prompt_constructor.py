@@ -9,7 +9,7 @@ from .vision_prompts import VisionPrompts
 from jinja2 import Template
 
 
-from agent.Memory.short_memory.history import HistoryMemory
+from WebCanvas.agent.Memory.short_memory.history import HistoryMemory
 
 
 class BasePromptConstructor:

@@ -1,4 +1,4 @@
-from typing import Tuple, Any, Union
+from typing import Tuple, Union
 
 from playwright.async_api import async_playwright, Page
 from playwright.async_api import Error as PlaywrightError
@@ -11,15 +11,13 @@ from PIL import Image
 from io import BytesIO
 import asyncio
 import base64
-import re
 
 from .actions import Action, ActionTypes
 from .build_tree import HTMLTree
 from .utils import stringfy_value
-import time
 
-from agent.Prompt import *
-from logs import logger
+from WebCanvas.agent.Prompt import *
+from WebCanvas.logs import logger
 
 
 class ActionExecutionError(Exception):

@@ -58,7 +58,7 @@ class URLEvaluator(StepEvaluator):
         return result_score
 
     @staticmethod
-    async def url_semantic_match(input_url, semantic_method, key=False):
+    def url_semantic_match(input_url, semantic_method, key=False):
         if key:
             try:
                 parsed_url = urlparse(input_url)
@@ -69,14 +69,15 @@ class URLEvaluator(StepEvaluator):
         else:
             input_answer = input_url
         input_answer = unquote(input_answer)
-        result_score = await MatchFunction.semantic_match(input_answer, semantic_method)
+        result_score = MatchFunction.semantic_match(
+            input_answer, semantic_method)
         return result_score
 
 
 class ElementEvaluator(StepEvaluator):
     '''Element evaluation and scoring'''
     @staticmethod
-    def path_exact_match(input_answer, reference_answer, method, html_content, input_netloc, reference_netloc):
+    def path_exact_match(input_answer, reference_answer, method, page, input_netloc, reference_netloc):
         score = 0
         if method == "xpath":
             if reference_netloc != input_netloc:
@@ -84,6 +85,7 @@ class ElementEvaluator(StepEvaluator):
                 #       "input_netloc:", input_netloc)
                 return 0
             try:
+                html_content = page.content()
                 tree = html.fromstring(html_content)
                 input_elements = tree.xpath(input_answer)
                 reference_elements = tree.xpath(reference_answer)
@@ -98,37 +100,41 @@ class ElementEvaluator(StepEvaluator):
                         while trace_up_count < 3 and score == 0:
                             trace_up_count += 1
                             current_element = current_element.getparent()
-                            score_parent = input_elements[0] is current_element
-                            score = max(score, score_parent)
+                            parent_score = input_elements[0] is current_element
+                            score = max(score, parent_score)
                 except:
                     pass
             else:
                 score = 0
         elif method == "selector":
             if reference_netloc != input_netloc:
-                # print("reference_netloc:", reference_netloc,
-                #       "input_netloc:", input_netloc)
                 return 0
             try:
-                soup = BeautifulSoup(html_content, 'html.parser')
-                input_element = soup.select_one(input_answer)
-                reference_element = soup.select_one(reference_answer)
+                input_element = input_answer
+                reference_element = page.locator(reference_answer)
+                input_element_handle = input_element.element_handle()
+                reference_element_handle = reference_element.element_handle()
                 if (input_element is not None) and (reference_element is not None):
-                    score = input_element is reference_element
-
+                    score = ElementEvaluator.is_same_element(page, input_element_handle=input_element_handle,
+                                                             reference_element_handle=reference_element_handle)
                     try:
-                        if reference_element.name in MapTagNameList:
-                            # parent_elements = reference_element.parent
-                            # score_parent = input_element is parent_elements
-                            # score = max(score, score_parent)
+                        reference_tag = page.evaluate(
+                            "(element) => element.tagName.toLowerCase()", reference_element_handle)
+                        if reference_tag in MapTagNameList:
                             trace_up_count = 0
                             current_element = reference_element
                             while trace_up_count < 3 and score == 0:
                                 trace_up_count += 1
-                                current_element = current_element.parent
-                                score_parent = input_element is current_element
-                                score = max(score, score_parent)
-                    except:
+                                parent_element = current_element.locator(
+                                    "xpath=..")
+                                parent_element_handle = parent_element.element_handle()
+                                current_element = parent_element
+                                if parent_element:
+                                    parent_score = ElementEvaluator.is_same_element(page, input_element_handle=input_element_handle,
+                                                                                    reference_element_handle=parent_element_handle)
+                                    score = max(score, parent_score)
+                    except Exception as e:
+                        print(e)
                         pass
             except:
                 score = 0
@@ -171,7 +177,7 @@ class ElementEvaluator(StepEvaluator):
             return 0
         if len(input_answer) == 0:
             return 0
-        result_score = await MatchFunction.semantic_match(input_answer, semantic_method)
+        result_score = MatchFunction.semantic_match(input_answer, semantic_method)
         return result_score
 
 
