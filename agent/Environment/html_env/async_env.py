@@ -69,6 +69,22 @@ class AsyncHTMLEnvironment:
     async def page_on_handler(self, page):
         self.page = page
 
+    async def assign_unique_ids(self):
+        await self.page.evaluate("""
+            () => {
+                const elements = document.querySelectorAll('*');
+                elements.forEach((element, index) => {
+                    const uniqueId = `element-id-${index + 1}`;
+                    element.setAttribute('data-unique-id', uniqueId);
+                });
+            }
+        """)
+
+    async def locate_by_id(self, uniqueId):
+        element = self.page.locator(f'[data-unique-id="{uniqueId}"]')
+        # await element.click()
+        return element
+
     async def setup(self, start_url: str) -> None:
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(
@@ -85,10 +101,12 @@ class AsyncHTMLEnvironment:
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
             await self.page.goto(start_url, timeout=10000)
             await self.page.wait_for_timeout(500)
+            await self.assign_unique_ids()
             self.html_content = await self.page.content()
         else:
             self.page = await self.context.new_page()
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
+            await self.assign_unique_ids()
             self.html_content = await self.page.content()
         # self.last_page = self.page
 
@@ -139,6 +157,7 @@ class AsyncHTMLEnvironment:
                 # self.page = await self.context.new_page()
                 await self.page.goto(url, timeout=10000)
                 await self.page.wait_for_timeout(2000)
+                await self.assign_unique_ids()
                 self.html_content = await self.page.content()
             except:
                 try:
@@ -150,6 +169,7 @@ class AsyncHTMLEnvironment:
                             element.click();   
                         }} 
                     }}''', selector)
+                    await self.assign_unique_ids()
                     self.html_content = await self.page.content()
                 except Exception as e:
                     raise e
@@ -166,12 +186,14 @@ class AsyncHTMLEnvironment:
                         }} 
                     }}''', selector)
                 await self.page.wait_for_timeout(1000)
+                await self.assign_unique_ids()
                 self.html_content = await self.page.content()
             except Exception as e:
                 raise e
 
     async def goto(self, action):
         await self.load_page_with_retry(action['url'])
+        await self.assign_unique_ids()
         self.html_content = await self.page.content()
 
     async def fill_search(self, action):
@@ -189,6 +211,7 @@ class AsyncHTMLEnvironment:
             value = stringfy_value(action['fill_text'])
             await self.page.locator(selector).fill(value)
             await self.page.locator(selector).press("Enter")
+            await self.assign_unique_ids()
             self.html_content = await self.page.content()
         except:
             try:
@@ -204,6 +227,7 @@ class AsyncHTMLEnvironment:
                         }}
                     }}
                 ''', selector)
+                await self.assign_unique_ids()
                 self.html_content = await self.page.content()
             except Exception as e:
                 raise e
@@ -242,6 +266,7 @@ class AsyncHTMLEnvironment:
     async def search(self, action):
         await self.page.goto("https://www.google.com/search?q="+action["fill_text"], timeout=30000)
         await self.page.wait_for_timeout(2000)
+        await self.assign_unique_ids()
         self.html_content = await self.page.content()
 
     async def go_back_last_page(self, action):
@@ -249,6 +274,7 @@ class AsyncHTMLEnvironment:
         # self.last_page = self.page
         await self.page.go_back()
         await self.page.wait_for_timeout(2000)
+        await self.assign_unique_ids()
         self.html_content = await self.page.content()
 
     async def select_option(self, action):
@@ -309,6 +335,7 @@ class AsyncHTMLEnvironment:
                 }}
             }}''', selector)
             await self.page.wait_for_timeout(2000)
+            await self.assign_unique_ids()
             self.html_content = await self.page.content()
         except Exception as e:
             raise e
@@ -326,6 +353,7 @@ class AsyncHTMLEnvironment:
                 f"selector:{selector},label_name:{label},element_id: {element_id},error ({e}) in hover action.")
         try:
             await self.page.hover(selector)
+            await self.assign_unique_ids()
             self.html_content = await self.page.content()
         except:
             hover = '''() => {
@@ -336,6 +364,7 @@ class AsyncHTMLEnvironment:
                     }
                 ''' % selector
             await self.page.evaluate(hover)
+            await self.assign_unique_ids()
             self.html_content = await self.page.content()
 
     async def scroll_down(self):
@@ -344,6 +373,7 @@ class AsyncHTMLEnvironment:
             viewport_height = await self.page.evaluate("window.innerHeight")
             if total_height < viewport_height:
                 await self.page.evaluate("window.scrollBy(0, 500)")
+                await self.assign_unique_ids()
                 self.html_content = await self.page.content()
             current_scroll = await self.page.evaluate("window.pageYOffset")
             remaining_height = total_height - current_scroll - viewport_height
@@ -352,9 +382,11 @@ class AsyncHTMLEnvironment:
             else:
                 scroll_amount = current_scroll + viewport_height * 0.75
                 await self.page.evaluate(f"window.scrollTo(0, {scroll_amount})")
+            await self.assign_unique_ids()
             self.html_content = await self.page.content()
         except:
             await self.page.mouse.wheel(0, 100)
+            await self.assign_unique_ids()
             self.html_content = await self.page.content()
 
     async def scroll_up(self):
@@ -367,9 +399,11 @@ class AsyncHTMLEnvironment:
                 else:
                     scroll_amount = current_scroll - viewport_height / 2
                 await self.page.evaluate(f"window.scrollTo(0, {scroll_amount})")
+            await self.assign_unique_ids()
             self.html_content = await self.page.content()
         except:
             await self.page.mouse.wheel(0, -100)
+            await self.assign_unique_ids()
             self.html_content = await self.page.content()
 
     async def execute_action(self, action: Action) -> Union[str, Tuple[str, str]]:
@@ -457,6 +491,7 @@ class AsyncHTMLEnvironment:
                         action['action_type'], error_message) from e
             case ActionTypes.NONE:
                 try:
+                    await self.assign_unique_ids()
                     self.html_content = await self.page.content()
                 except Exception as e:
                     error_message = f"An error({e}) occur"
@@ -464,6 +499,7 @@ class AsyncHTMLEnvironment:
                         action['action_type'], error_message) from e
             case ActionTypes.CACHE_DATA:
                 try:
+                    await self.assign_unique_ids()
                     self.html_content = await self.page.content()
                 except Exception as e:
                     error_message = f"An error({e}) occur"
@@ -471,6 +507,7 @@ class AsyncHTMLEnvironment:
                         action['action_type'], error_message) from e
             case ActionTypes.GET_FINAL_ANSWER:
                 try:
+                    await self.assign_unique_ids()
                     self.html_content = await self.page.content()
                 except Exception as e:
                     error_message = f"An error({e}) occur"

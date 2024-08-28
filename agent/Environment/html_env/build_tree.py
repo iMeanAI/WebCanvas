@@ -15,6 +15,7 @@ class HTMLTree:
         self.rawNode2id: dict = {}
         self.element2id: dict = {}
         self.id2rawNode: dict = {}
+        self.uniqueId2nodeId: dict = {}
         self.valid: list[bool] = [False] * 100000
         self.nodeCounts: int
         self.nodeDict = {}
@@ -42,6 +43,8 @@ class HTMLTree:
         elementNode["siblingId"] = ""
         elementNode["twinId"] = ""
         elementNode["depth"] = 1
+        elementNode["data-unique-id"] = elementNode["attributes"].get(
+            "data-unique-id")
         elementNode["htmlContents"] = etree.tostring(
             node, pretty_print=True).decode()
         return elementNode
@@ -58,13 +61,19 @@ class HTMLTree:
         while node_queue:
             node = node_queue.popleft()
             self.elementNodes[node_id] = HTMLTree().build_node(node, node_id)
+            element_node = self.elementNodes[node_id]
             self.rawNode2id[node] = node_id
+            self.uniqueId2nodeId[element_node.get("data-unique-id")] = node_id
             node_id += 1
             for child in node.getchildren():
                 node_queue.append(child)
         self.build_mapping()
         self.nodeCounts = node_id
         self.valid = self.valid[:self.nodeCounts + 1]
+
+    def get_selector_by_id(self, element_unique_id):
+        nodeId = self.uniqueId2nodeId[element_unique_id]
+        return self.get_selector_and_xpath(nodeId)[0]
 
     def build_html_tree(self, root) -> None:
         node_queue = deque([root])
