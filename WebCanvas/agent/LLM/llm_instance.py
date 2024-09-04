@@ -1,4 +1,4 @@
-from .openai import GPTGenerator, GPTGeneratorWithJSON
+from .openai import GPTGenerator, GPTGeneratorWithJSON, SyncGPTGenerator
 from .claude import ClaudeGenerator
 from .gemini import GeminiGenerator
 from .togetherai import TogetherAIGenerator

@@ -4,7 +4,7 @@ import json5
 import json
 import re
 import os
-from logs import logger
+from .logs import logger
 
 
 def parse_thought_action(dict_str):
