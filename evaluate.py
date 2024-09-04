@@ -1,18 +1,17 @@
-from agent.Environment.html_env.async_env import AsyncHTMLEnvironment
-from evaluate import *
-from agent.Plan import *
+from WebCanvas.agent.Environment import AsyncHTMLEnvironment
+from WebCanvas.agent.Plan import *
 from dataclasses import dataclass
-
+import time
 import re
 import asyncio
 import argparse
 import logging
 
 # universal tools
-from agent.Utils.utils import *
+from WebCanvas.agent.Utils.utils import *
 # evaluate tools
-from evaluate.evaluate_utils import run_task, read_config, read_file, read_json_file
-from experiment_results import get_evaluate_result
+from WebCanvas.evaluate.evaluate_utils import run_task, read_config, read_file, read_json_file
+from WebCanvas.experiment_results import get_evaluate_result
 
 logger = logging.getLogger(__name__)
 

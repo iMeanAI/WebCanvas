@@ -1,19 +1,21 @@
-from evaluate import *
-from agent.Plan import *
+import playwright
+
+from WebCanvas.evaluate import *
+from WebCanvas.agent.Plan import *
 from playwright.async_api import Page
-from agent.Environment.html_env.async_env import AsyncHTMLEnvironment, ActionExecutionError
+from WebCanvas.agent.Environment.html_env.async_env import AsyncHTMLEnvironment
 
 import re
 import toml
 import json
 import traceback
 import os
-from agent.Environment import ActionExecutionError, create_action
-from agent.Plan import Planning
-from agent.Utils.utils import save_screenshot, is_valid_base64
-from agent.Reward.global_reward import GlobalReward
-from evaluate import FinishTaskEvaluator, TaskLengthEvaluator, URLEvaluator, ElementEvaluator
-from logs import logger
+from WebCanvas.agent.Environment import ActionExecutionError, create_action
+from WebCanvas.agent.Plan import Planning
+from WebCanvas.agent.Utils.utils import save_screenshot, is_valid_base64
+from WebCanvas.agent.Reward import GlobalReward
+from WebCanvas.evaluate import FinishTaskEvaluator, TaskLengthEvaluator, URLEvaluator, ElementEvaluator
+from WebCanvas.logs import logger
 
 
 def read_file(file_path="./data/example/example_130.json"):
