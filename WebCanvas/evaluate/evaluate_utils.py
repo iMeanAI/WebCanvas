@@ -319,6 +319,50 @@ def read_config(toml_path=None):
     return config
 
 
+def single_step_evaluate(task_index, env: AsyncHTMLEnvironment, evaluate_file_path, acton_input, action_type,
+                         element_id, total_step_score):
+    file = read_file(evaluate_file_path)
+    task = file[task_index]
+    evaluate_steps = task[3]
+    reference_evaluate_steps = evaluate_steps
+    reference_task_length = task[2]
+    selector = None
+    element_value = ""
+    text_content = ""
+    task_finished = False
+    if action_type in ["get_final_answer", "cache_data"]:
+        text_content = acton_input
+    elif action_type in ["fill_form", "fill_search", "click", "select_option"]:
+        try:
+            path = env.tree.get_selector_and_xpath(
+                env.tree.nodeDict[element_id])
+            selector = path[0] if path is not None else None
+            element_value = env.tree.get_element_value(
+                env.tree.nodeDict[element_id])
+            if action_type in ["fill_form", "fill_search"]:
+                element_value = acton_input
+        except:
+            logger.info(
+                "Failed to obtain element_id from the accessibility tree.")
+            element_id = 0
+            action_type = "None"
+
+    try:
+        evaluate_steps, match_result = step_evaluate(page=env.page, evaluate_steps=evaluate_steps,
+                                                     input_path=selector, element_value=element_value,
+                                                     text_content=text_content)
+    except Exception as ee:
+        logger.info(f"Current step evaluate error :{ee}")
+
+    for evaluate in evaluate_steps:
+        total_step_score += evaluate["score"]
+
+    if total_step_score == len(reference_evaluate_steps):
+        task_finished = True
+
+    return total_step_score, reference_task_length, task_finished, evaluate_steps, match_result
+
+
 async def run_task(
         mode,
         task_mode,
@@ -468,14 +512,16 @@ async def run_task(
             logger.info(
                 "**🤖 The agent is in the process of starting evaluation 🤖**")
             if task_mode == "batch_tasks":
+                evaluate_file_path = config['files']['batch_tasks_file_path']
+                acton_input = out_put['value'] if out_put.get('value') and isinstance(out_put.get('value'), str) else ""
+                action_type = out_put.get('action_type') if out_put.get('action_type') else ""
                 try:
-                    evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps,
-                                                                       input_path=selector, element_value=element_value, text_content=text_content)
-                except Exception as ee:
-                    logger.info(f"Current step evaluate error :{ee}")
-
-                for evaluate in evaluate_steps:
-                    total_step_score += evaluate["score"]
+                    element_id = int(out_put['id'])
+                except:
+                    element_id = 0
+                total_step_score, reference_task_length, task_finished, evaluate_steps, match_result = single_step_evaluate(
+                    task_index, env, evaluate_file_path, acton_input,
+                    action_type, element_id, total_step_score)
 
                 each_step_dict["score"] = str(
                     total_step_score) + " / " + str(len(reference_evaluate_steps))
@@ -493,9 +539,6 @@ async def run_task(
                 else:
                     each_step_dict["step_reward"] = {}
 
-                if total_step_score == len(reference_evaluate_steps):
-                    # steps_list.append(each_step_dict)
-                    task_finished = True
                     # break
 
             logger.info(

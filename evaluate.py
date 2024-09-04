@@ -112,7 +112,33 @@ def create_html_environment(mode):
     )
 
 
+def get_all_scores(total_step_score, reference_evaluate_steps, total_reference_evaluate_steps, number,
+                   sum_efficiency_score, total_task_score, success_number,
+                   total_token_cost):
+    usd_efficiency_score = 0
+    total_task_score += total_step_score
+    total_reference_evaluate_steps += len(reference_evaluate_steps)
+    number += 1
+    sum_efficiency_score += total_step_score / len(reference_evaluate_steps)
+    average_efficiency_score = sum_efficiency_score / number
+    key_node_completion_rate = total_task_score / total_reference_evaluate_steps
+    if total_step_score == len(reference_evaluate_steps):
+        success_number += 1
+    task_success_rate = success_number / number
+    if total_token_cost != 0:
+        usd_efficiency_score = total_token_cost / total_reference_evaluate_steps
+
+    return (average_efficiency_score, key_node_completion_rate, task_success_rate, usd_efficiency_score,
+            total_reference_evaluate_steps, number, sum_efficiency_score, total_task_score, success_number)
+
+
 async def run_experiment(task_range, experiment_config):
+    total_task_score = 0
+    total_reference_evaluate_steps = 0
+    number = 0
+    success_number = 0
+    sum_efficiency_score = 0
+    total_token_cost = 0
     for task_index in task_range:
         task_uuid = None
         if experiment_config.config['basic']['task_mode'] == "batch_tasks":
@@ -135,28 +161,35 @@ async def run_experiment(task_range, experiment_config):
             os.makedirs("token_results")
         token_counts_filename = f"token_results/token_counts_{experiment_config.record_time}_{experiment_config.planning_text_model}_{experiment_config.global_reward_text_model}.json"
 
-        await run_task(mode=experiment_config.mode,
-                       task_mode=experiment_config.config['basic']['task_mode'],
-                       task_name=task_name,
-                       task_uuid=task_uuid,
-                       config=experiment_config.config,
-                       write_result_file_path=experiment_config.write_result_file_path,
-                       reference_task_length=reference_task_length,
-                       evaluate_steps=evaluate_steps,
-                       reference_evaluate_steps=reference_evaluate_steps,
-                       env=env,
-                       global_reward_mode=experiment_config.global_reward_mode,
-                       global_reward_text_model=experiment_config.global_reward_text_model,
-                       planning_text_model=experiment_config.planning_text_model,
-                       ground_truth_mode=experiment_config.ground_truth_mode,
-                       ground_truth_data=experiment_config.ground_truth_data,
-                       interaction_mode=experiment_config.config['steps']['interaction_mode'],
-                       task_index=task_index,
-                       record_time=experiment_config.record_time,
-                       token_pricing=experiment_config.config['token_pricing'])
+        total_step_score = await run_task(
+            mode=experiment_config.mode,
+            task_mode=experiment_config.config['basic']['task_mode'],
+            task_name=task_name,
+            task_uuid=task_uuid,
+            config=experiment_config.config,
+            write_result_file_path=experiment_config.write_result_file_path,
+            reference_task_length=reference_task_length,
+            evaluate_steps=evaluate_steps,
+            reference_evaluate_steps=reference_evaluate_steps,
+            env=env,
+            global_reward_mode=experiment_config.global_reward_mode,
+            global_reward_text_model=experiment_config.global_reward_text_model,
+            planning_text_model=experiment_config.planning_text_model,
+            ground_truth_mode=experiment_config.ground_truth_mode,
+            ground_truth_data=experiment_config.ground_truth_data,
+            interaction_mode=experiment_config.config['steps']['interaction_mode'],
+            task_index=task_index,
+            record_time=experiment_config.record_time,
+            token_pricing=experiment_config.config['token_pricing'])
 
         await env.close()
         del env
+
+        average_efficiency_score, key_node_completion_rate, task_success_rate, usd_efficiency_score, \
+            total_reference_evaluate_steps, number, sum_efficiency_score, total_task_score, success_number = get_all_scores(
+            total_step_score, reference_evaluate_steps, total_reference_evaluate_steps, number,
+            sum_efficiency_score, total_task_score, success_number,
+            total_token_cost)
 
     with open(token_counts_filename, 'r') as file:
         data = json.load(file)
@@ -227,6 +260,7 @@ if __name__ == "__main__":
                      planning_text_model=args.planning_text_model,
                      global_reward_text_model=args.global_reward_text_model,
                      single_task_name=args.single_task_name,
-                     raw_data_index=args.index
+                     raw_data_index=args.index,
+                     toml_path="your/path/to/settings.toml"
                      )
                 )
