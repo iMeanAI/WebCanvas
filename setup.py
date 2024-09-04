@@ -16,7 +16,7 @@ setup(
     author="Cheng Cui, Sida Zhou, Dehan Kong, Yichen Pan",
     author_email="dehan@imean.ai",
     description="A universal agent framework with four key modules: Planning, Observation, Memory, and Reward, designed to perform complex tasks within real-world online web environments effectively.",
-    long_description=open('README.md').read(),
+    long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type='text/markdown',
     url="https://github.com/iMeanAI/WebCanvas",
     classifiers=[
