@@ -157,9 +157,10 @@ async def run_experiment(task_range, experiment_config):
 
         env = create_html_environment(experiment_config.mode)
 
-        if not os.path.exists("token_results"):
-            os.makedirs("token_results")
-        token_counts_filename = f"token_results/token_counts_{experiment_config.record_time}_{experiment_config.planning_text_model}_{experiment_config.global_reward_text_model}.json"
+        out_dirname = experiment_config.config['files']['out_file_path']
+        if not os.path.exists(f"{out_dirname}/token_results"):
+            os.makedirs(f"{out_dirname}/token_results")
+        token_counts_filename = f"{out_dirname}/token_results/token_counts_{experiment_config.record_time}_{experiment_config.planning_text_model}_{experiment_config.global_reward_text_model}.json"
 
         total_step_score = await run_task(
             mode=experiment_config.mode,

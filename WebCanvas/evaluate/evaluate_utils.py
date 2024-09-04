@@ -435,7 +435,7 @@ async def run_task(
     steps_reward_output_token_counts = 0
     steps_input_token_counts = 0
     steps_output_token_counts = 0
-    token_counts_filename = f"token_results/token_counts_{record_time}_{planning_text_model}_{global_reward_text_model}.json"
+    token_counts_filename = f"{config['files']['out_file_path']}/token_results/token_counts_{record_time}_{planning_text_model}_{global_reward_text_model}.json"
 
     while num_steps < max_steps + additional_steps:
         error_message = ""
@@ -689,3 +689,5 @@ async def run_task(
         logger.info(f"Write results to json file: {json_out_file_path}")
         with open(json_out_file_path, 'w') as json_file:
             json.dump(task_result, json_file)
+
+        return total_step_score
