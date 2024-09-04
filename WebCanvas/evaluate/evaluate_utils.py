@@ -120,7 +120,7 @@ def get_netloc(url: str) -> str:
     return netloc
 
 
-async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_value=None, text_content=None):
+def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_value=None, text_content=None):
     """Evaluate step score"""
     step_score = 0
     match_result = []
@@ -135,14 +135,14 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                 score = URLEvaluator.url_include_match(
                     page.url, evaluate["reference_answer"], evaluate["key"])
             elif match_function == "url_semantic_match":
-                score = await URLEvaluator.url_semantic_match(
+                score = URLEvaluator.url_semantic_match(
                     page.url, evaluate["reference_answer"], evaluate["key"])
                 # print(score, "url_semantic_match")
             elif match_function == "element_path_exactly_match":
                 input_netloc = get_netloc(page.url)
                 method = evaluate["method"]
                 score = ElementEvaluator.path_exact_match(
-                    input_path, evaluate["reference_answer"], method, await page.content(), input_netloc,
+                    input_path, evaluate["reference_answer"], method, page, input_netloc,
                     evaluate["netloc"])
                 # print(score, "path_exact_match:", input_path,
                 #       "***", evaluate["reference_answer"])
@@ -158,7 +158,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                     # print(await page.locator(input_path).input_value())
                     if "path" in evaluate.keys():
                         path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
-                                                                       await page.content(), input_netloc,
+                                                                       page, input_netloc,
                                                                        evaluate["netloc"])
                         if path_score == 0:
                             # print("Path mismatch in value evaluation")
@@ -178,7 +178,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                     input_netloc = get_netloc(page.url)
                     if "path" in evaluate.keys():
                         path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
-                                                                       await page.content(), input_netloc,
+                                                                       page, input_netloc,
                                                                        evaluate["netloc"])
                         if path_score == 0:
                             # print("Path mismatch in value evaluation")
@@ -200,16 +200,16 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                     if len(element_value) > 0:
                         if "path" in evaluate.keys():
                             path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
-                                                                           await page.content(), input_netloc,
+                                                                           page, input_netloc,
                                                                            evaluate["netloc"])
                             if path_score == 0:
                                 # print("Path mismatch in value evaluation")
                                 score = 0
                             else:
-                                score = await ElementEvaluator.element_value_semantic_match(
+                                score = ElementEvaluator.element_value_semantic_match(
                                     element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
                         else:
-                            score = await ElementEvaluator.element_value_semantic_match(
+                            score = ElementEvaluator.element_value_semantic_match(
                                 element_value, evaluate["reference_answer"], input_netloc, evaluate["netloc"])
                         # print(score, "element_value_semantic_match",
                         #       element_value, "*", evaluate["reference_answer"])
