@@ -29,6 +29,7 @@ def create_llm_instance(model, json_mode=False, all_json_models=None):
         else:
             return TogetherAIGenerator(model)
 
-async def semantic_match_llm_request(messages: list = None):
-    GPT35 = GPTGenerator(model="gpt-3.5-turbo")
-    return await GPT35.request(messages)
+
+def semantic_match_llm_request(messages: list = None):
+    GPT35 = SyncGPTGenerator(model="gpt-3.5-turbo")
+    return GPT35.request(messages)

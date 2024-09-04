@@ -227,7 +227,7 @@ class MatchFunction():
         for i in range(3):
             try:
                 # response, _ = await GPT35.request(semantic_request)
-                response, _ = await semantic_match_llm_request(semantic_request)
+                response, _ = semantic_match_llm_request(semantic_request)
                 score = re.findall("```(.*?)```", response, re.S)[0]
                 score = eval(score)
                 # Limit the score between 0 and 1

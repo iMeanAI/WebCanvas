@@ -8,6 +8,34 @@ from WebCanvas.agent.Utils import *
 from .token_cal import truncate_messages_based_on_estimated_tokens
 
 
+class SyncGPTGenerator:
+    def __init__(self, model=None):
+        self.model = model
+        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7) -> (str, str):
+        try:
+            answer = self.chat(messages, max_tokens, temperature)
+            choice = answer.choices[0]
+            openai_response = choice.message.content
+            return openai_response, ""
+        except Exception as e:
+            logger.error(f"Error in SyncGPTGenerator.request: {e}")
+            return "", str(e)
+
+    def chat(self, messages, max_tokens=500, temperature=0.7):
+        data = {
+            'model': self.model,
+            'max_tokens': max_tokens,
+            'temperature': temperature,
+            'messages': messages,
+        }
+        if hasattr(self, 'response_format'):
+            data['response_format'] = self.response_format
+
+        return self.client.chat.completions.create(**data)
+
+
 class GPTGenerator:
     def __init__(self, model=None):
         self.model = model
