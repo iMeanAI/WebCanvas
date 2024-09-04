@@ -309,12 +309,16 @@ def read_config(toml_path=None):
     Returns:
         dict: The content of the configuration file.
     """
-    if toml_path is None:
-        # default_path = os.path.join(os.path.dirname(__file__), 'default_settings.toml')
-        toml_path = 'configs/setting.toml'
+    # if not toml_path:
+    #     # current_dir = os.path.dirname(__file__)
+    #     # default_path = os.path.join(current_dir, '..', 'configs', 'default_settings.toml')
+    #     # toml_path = default_path
 
-    with open(toml_path, 'r') as f:
-        config = toml.load(f)
+    try:
+        with open(toml_path, 'r') as f:
+            config = toml.load(f)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Configuration file not found: {toml_path}")
 
     return config
 
