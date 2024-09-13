@@ -20,9 +20,17 @@ class GPTGenerator:
         try:
             if "gpt-3.5" in self.model:
                 messages = truncate_messages_based_on_estimated_tokens(messages, max_tokens=16385)
+            if "o1" in self.model:
+                messages = [
+                    {**msg, "role": "user"} if msg["role"] == "system" else msg
+                    for msg in messages
+                ]
             cpu_count = multiprocessing.cpu_count()
             with ThreadPoolExecutor(max_workers=cpu_count * 2) as pool:
-                future_answer = pool.submit(self.chat, messages, max_tokens, temperature)
+                if "o1" in self.model:
+                    future_answer = pool.submit(self.chat, messages)
+                else:
+                    future_answer = pool.submit(self.chat, messages, max_tokens, temperature)
                 future_answer_result = await future_answer.result()
                 choice = future_answer_result.choices[0]
                 if choice.finish_reason == 'length':
@@ -37,9 +45,15 @@ class GPTGenerator:
 
     async def chat(self, messages, max_tokens=500, temperature=0.7):
         loop = asyncio.get_event_loop()
-        data = {
-            'model': self.model,
-            'max_tokens': max_tokens,
+        if "o1" in self.model:
+            data = {
+                'model': self.model,
+                'messages': messages,
+            }
+        else:
+            data = {
+                'model': self.model,
+                'max_tokens': max_tokens,
             'temperature': temperature,
             'messages': messages,
         }
