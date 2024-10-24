@@ -77,7 +77,26 @@ class URLEvaluator(StepEvaluator):
 class ElementEvaluator(StepEvaluator):
     '''Element evaluation and scoring'''
     @staticmethod
-    def path_exact_match(input_answer, reference_answer, method, html_content, input_netloc, reference_netloc):
+    def is_same_element(page, input_coord, reference_element_handle):
+        x,y=input_coord
+        # Get the bounding box of the element, usually 2s is enough, but set to 5s here
+        bounding_box = reference_element_handle.bounding_box(timeout=5000)
+        if bounding_box:
+            element_x = bounding_box['x']
+            element_y = bounding_box['y']
+            element_width = bounding_box['width']
+            element_height = bounding_box['height']
+            # Check if the given (x, y) is within the bounding box
+            if (element_x <= x <= element_x + element_width and
+                element_y <= y <= element_y + element_height):
+                return True
+         return False
+
+
+    @staticmethod
+    def path_exact_match(input_answer, reference_answer, method, page, input_netloc, reference_netloc,input_coords=None):
+        # input_coords should be (x,y) in pixels, if not None
+        # and will be used in ElementEvaluator.path_exact_match()
         score = 0
         if method == "xpath":
             if reference_netloc != input_netloc:
@@ -85,6 +104,7 @@ class ElementEvaluator(StepEvaluator):
                 #       "input_netloc:", input_netloc)
                 return 0
             try:
+                html_content = await page.content()
                 tree = html.fromstring(html_content)
                 input_elements = tree.xpath(input_answer)
                 reference_elements = tree.xpath(reference_answer)
@@ -105,32 +125,16 @@ class ElementEvaluator(StepEvaluator):
                     pass
             else:
                 score = 0
-        elif method == "selector":
+        elif method == "selector": #modified to use coords
             if reference_netloc != input_netloc:
                 # print("reference_netloc:", reference_netloc,
                 #       "input_netloc:", input_netloc)
                 return 0
             try:
-                soup = BeautifulSoup(html_content, 'html.parser')
-                input_element = soup.select_one(input_answer)
-                reference_element = soup.select_one(reference_answer)
+                input_element = input_coords#input element is input coord
+                reference_element = page.locator(reference_answer)
                 if (input_element is not None) and (reference_element is not None):
-                    score = input_element is reference_element
-
-                    try:
-                        if reference_element.name in MapTagNameList:
-                            # parent_elements = reference_element.parent
-                            # score_parent = input_element is parent_elements
-                            # score = max(score, score_parent)
-                            trace_up_count = 0
-                            current_element = reference_element
-                            while trace_up_count < 3 and score == 0:
-                                trace_up_count += 1
-                                current_element = current_element.parent
-                                score_parent = input_element is current_element
-                                score = max(score, score_parent)
-                    except:
-                        pass
+                    score = ElementEvaluator().is_same_element(page, input_coord=input_element, reference_element_handle=reference_element)
             except:
                 score = 0
         # result_score = MatchFunction.include_match(
