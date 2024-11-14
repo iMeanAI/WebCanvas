@@ -1,4 +1,4 @@
-<h1 align="center">WebCanvas: Streamline Your Web Agent Development and Evaluation</h1>
+<h1 align="center"> WebCanvas: Streamline Your Web Agent Development and Evaluation</h1>
 
 
 <p align="center">
