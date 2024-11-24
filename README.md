@@ -142,7 +142,7 @@ python evaluate.py \
     --global_reward_text_model gpt-4o-mini
 ```
 
-This command runs the script with DOM-based self-reward, processing the default task "Find Dota 2 game and add all DLC to cart in steam" or using the default data index -1. It also uses the GPT-3.5 Turbo model for both observation and global reward processing. The evaluation mode is controlled by the `task_mode` parameter in `configs/setting.toml`, allowing you to choose between batch mode and single mode(without automatic evaluation). Remember to specify your path to the test file in `configs/setting.toml`.
+This command runs the script with DOM-based self-reward, processing the default task "Find Dota 2 game and add all DLC to cart in steam" or using the default data index -1. It also uses the gpt-4o-mini model for both observation and global reward processing. The evaluation mode is controlled by the `task_mode` parameter in `configs/setting.toml`, allowing you to choose between batch mode and single mode(without automatic evaluation). Remember to specify your path to the test file in `configs/setting.toml`.
 
 
 ### Parameter Descriptions
