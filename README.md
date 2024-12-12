@@ -25,7 +25,7 @@ Existing benchmarks for web agent tasks are either offline and static, or operat
 ![Main Figure](src/main_figure.png)
 
 ## 🔥 News
-
+- **[2024, December 11]** Update a universal event listener that uses vision as input and can also perform evaluations.
 - **[2024, September 9]** Support evaluation for OpenAI new o1 models, includes o1-preview and o1-mini. Just set the 'planning_text_model' parameter to 'o1-preview' or 'o1-mini'.
 - **[2024, August 9]** We're excited to announce the release of v0.0.3 of WebCanvas! This update introduces support for evaluation of data operations, such as caching data in process and outputting the final answer. You can now define and evaluate a broader range of web tasks using iMean Builder and WebCanvas. Additionally, we've introduced a new metric: ***US dollar consumption / key node completion(usd_efficiency_score)***, detailed in [this section](#usd_efficiency). We believe that an agent's efficiency is crucial for online web tasks, and this metric will help quantify that efficiency.
 - **[2024, July 13]** We've released v0.0.2 of WebCanvas. This update brings the ability to call different base model services, including OpenAI, Claude, Gemini, and together.ai. Now, you can choose any of these model services for testing on our platform. Additionally, we've launched a new repository: [WebCanvas Showcase](https://github.com/iMeanAI/WebCanvas_showcase), which demonstrates how different agent frameworks can be integrated with the WebCanvas framework for online evaluation. We're kicking things off with the integration of SEEACT[^5] and WebCanvas. Play with it and explore the possibilities!
@@ -60,9 +60,9 @@ Existing benchmarks for web agent tasks are either offline and static, or operat
 - [x] Support more base model calling(Claude, Gemini, Open-source Models from together.ai, etc.). *(Done)*
 - [x] Add information extraction related actions and relative evaluation metrics. *(Done)*
 - [x] Enable token consumption calculation. *(Done)*
+- [x] Add vision as an extra observation and implement various grounding strategies. *(Done)*
 - [ ] Add more brilliant web agent benchmarking data as showcase: webarena[^2], GAIA[^3], workarena[^4], etc. *(in progress)*
 - [ ] Better modularity to ease integration. *(in progress)*
-- [ ] Add vision as an extra observation and implement various grounding strategies. *(in progress)*
 - [ ] Keep updating error handling module.
 - [ ] Develop up-to-date visualizations of current live websites agent performance.
 - [ ] Enable script-based actions and evaluation.
@@ -142,7 +142,7 @@ python evaluate.py \
     --global_reward_text_model gpt-4o-mini
 ```
 
-This command runs the script with DOM-based self-reward, processing the default task "Find Dota 2 game and add all DLC to cart in steam" or using the default data index -1. It also uses the GPT-3.5 Turbo model for both observation and global reward processing. The evaluation mode is controlled by the `task_mode` parameter in `configs/setting.toml`, allowing you to choose between batch mode and single mode(without automatic evaluation). Remember to specify your path to the test file in `configs/setting.toml`.
+This command runs the script with DOM-based self-reward, processing the default task "Find Dota 2 game and add all DLC to cart in steam" or using the default data index -1. It also uses the gpt-4o-mini model for both observation and global reward processing. The evaluation mode is controlled by the `task_mode` parameter in `configs/setting.toml`, allowing you to choose between batch mode and single mode(without automatic evaluation). Remember to specify your path to the test file in `configs/setting.toml`.
 
 
 ### Parameter Descriptions
