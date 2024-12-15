@@ -20,8 +20,8 @@ import time
 
 from agent.Prompt import *
 from logs import logger
-import json
-import os
+
+
 class ActionExecutionError(Exception):
     """Custom action execution exception class"""
 
@@ -31,9 +31,11 @@ class ActionExecutionError(Exception):
         self.selector = selector
         super().__init__(message)
 
+
 class SelectorExecutionError(Exception):
     def __init__(self, message, selector=None):
         super().__init__(message)
+
 
 class AsyncHTMLEnvironment:
     @beartype
@@ -89,125 +91,6 @@ class AsyncHTMLEnvironment:
             # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
             self.html_content = await self.page.content()
         # self.last_page = self.page
-
-        # js event listener
-        await self.context.expose_binding(
-            "handleEvent",
-            lambda source, selector, event_type, element_info: self._handle_event(selector, event_type, element_info)
-        )
-
-    async def _event_listener(self):
-        """Add universal event listener"""
-        logger.info("Setting up event listeners...")  # Add debug log
-        try:
-            # Then set up event listeners
-            await self.page.evaluate("""
-                () => {
-                    const allEvents = [
-                        'click', 'input', 'change', 'keydown', 'keyup',
-                        'mouseover', 'mouseout', 'mousedown', 'mouseup', 'focus', 'blur'
-                    ];
-
-                    function getElementSelector(element) {
-                        if (!element) return null;
-                        // Try to get unique selector for the element
-                        try {
-                            let path = [];
-                            while (element && element.nodeType === Node.ELEMENT_NODE) {
-                                let selector = element.nodeName.toLowerCase();
-                                if (element.id) {
-                                    selector += '#' + element.id;
-                                    path.unshift(selector);
-                                    break;
-                                } else {
-                                    let sibling = element;
-                                    let nth = 1;
-                                    while (sibling.previousElementSibling) {
-                                        sibling = sibling.previousElementSibling;
-                                        if (sibling.nodeName === element.nodeName) nth++;
-                                    }
-                                    if (nth > 1) selector += `:nth-child(${nth})`;
-                                }
-                                path.unshift(selector);
-                                element = element.parentNode;
-                            }
-                            return path.join(' > ');
-                        } catch (e) {
-                            return null;
-                        }
-                    }
-
-                    function getElementInfo(element) {
-                        return {
-                            textContent: element.textContent || '',
-                            value: element.value || '',
-                            tagName: element.tagName.toLowerCase()
-                        };
-                    }
-
-                    allEvents.forEach(eventType => {
-                        document.addEventListener(eventType, (event) => {
-                            const element = event.target;
-                            const selector = getElementSelector(element);
-                            const elementInfo = getElementInfo(element);
-
-                            window.handleEvent(
-                                selector,
-                                eventType,
-                                JSON.stringify(elementInfo)
-                            );
-                        }, true);
-                    });
-                }
-            """)
-            logger.info("Event listeners setup completed")
-        except Exception as e:
-            logger.error(f"Failed to setup event listeners: {str(e)}")
-
-
-    async def _handle_event(self,selector, event_type, element_info_str):
-        """
-        Handle DOM events by updating task events
-        """
-        def clean_text(text):
-            return text.replace("\n", "").replace("\t", "")
-        try:
-            element_info = json.loads(element_info_str)
-            logger.info(f"Event received - selector: {selector}, type: {event_type}, info: {element_info}")
-            # Create current event
-            current_event = {
-                "selector": selector,
-                "status": True,
-                "target_value": element_info.get("value") or element_info.get("textContent", ""),
-                "target_value_clean": clean_text(element_info.get("value") or element_info.get("textContent", "")),
-                "event_type": event_type
-            }
-
-            directory_path = os.path.join(os.path.dirname(__file__), '..', 'js_event')
-            os.makedirs(directory_path, exist_ok=True)  # Ensure the directory exists
-            file_path = os.path.join(directory_path, "current_event.json")
-
-            logger.info(f"Saving event to file: {file_path}")
-
-            if os.path.exists(file_path):
-                with open(file_path, "r", encoding="utf-8") as json_file:
-                    try:
-                        events = json.load(json_file)
-                    except json.JSONDecodeError:
-                        events = []
-            else:
-                events = []
-            events.append(current_event)
-            logger.info("Appended new event to the list.")
-
-            with open(file_path, "w", encoding="utf-8") as json_file:
-                json.dump(events, json_file, indent=4, ensure_ascii=False)
-                logger.info("Saved updated events to file.")
-
-        except json.JSONDecodeError:
-            logger.error(f"Failed to parse element info: {element_info_str}")
-        except Exception as e:
-            logger.error(f"Error handling event: {str(e)}")
 
     async def get_obs(self) -> Union[str, Tuple[str, str]]:
         observation = ""
@@ -492,7 +375,6 @@ class AsyncHTMLEnvironment:
     async def execute_action(self, action: Action) -> Union[str, Tuple[str, str]]:
         """
         """
-        await self._event_listener()
         if "element_id" in action and action["element_id"] != 0:
             # logger.info(f'action["element_id"]:{action["element_id"]}')
             # logger.info(
@@ -598,6 +480,7 @@ class AsyncHTMLEnvironment:
                 raise ValueError(
                     f"Unknown action type {action['action_type']}"
                 )
+
     async def get_page(self, element_id: int) -> Tuple[Page, str]:
         try:
             selector = self.tree.get_selector(element_id)
