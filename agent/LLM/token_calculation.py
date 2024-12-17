@@ -1,8 +1,7 @@
 import json
 
 import tiktoken
-
-
+from .token_cal import is_model_supported
 def calculation_of_token(messages, model='gpt-3.5-turbo', max_tokens=4096):
     """
     Calculate the number of tokens in the messages.
@@ -11,6 +10,9 @@ def calculation_of_token(messages, model='gpt-3.5-turbo', max_tokens=4096):
     :param max_tokens: Maximum number of tokens allowed
     :return: Number of tokens in the messages
     """
+    if not is_model_supported(model):
+        print(f"Message: Model {model} not in pricing configuration. Skipping token calculation.")
+        return 0
     # Load encoding for the model
     try:
         encoding = tiktoken.encoding_for_model(model)
@@ -79,7 +81,10 @@ def save_token_count_to_file(filename, step_tokens, task_name, global_reward_tex
     :param planning_text_model: Model used for planning
     :param token_pricing: Pricing information for models
     """
-
+    if not is_model_supported(planning_text_model) or not is_model_supported(global_reward_text_model):
+        print(
+            f"Message: One or both models ({planning_text_model}, {global_reward_text_model}) not in pricing configuration. Skipping token saving.")
+        return
     try:
         with open(filename, 'r') as file:
             data = json.load(file)

@@ -1,5 +1,21 @@
 import json
 
+# Token
+import toml
+def read_config(toml_path=None):
+    if toml_path is None:
+        toml_path = 'configs/setting.toml'
+    with open(toml_path, 'r') as f:
+        config = toml.load(f)
+    return config
+
+
+def is_model_supported(model_name):
+    try:
+        config = read_config()
+        return model_name in config["token_pricing"]["pricing_models"]
+    except:
+        return False
 
 def estimate_tokens(text):
     """Estimate the number of tokens for a given text."""
