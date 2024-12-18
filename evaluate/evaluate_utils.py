@@ -118,7 +118,9 @@ def get_netloc(url: str) -> str:
     return netloc
 
 
-async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_value=None, text_content=None):
+async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_value=None, text_content=None,input_coords=None):
+    # input_coords should be (x,y) in pixels, if not None
+    # and will be used in ElementEvaluator.path_exact_match()
     """Evaluate step score"""
     step_score = 0
     match_result = []
@@ -135,15 +137,12 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
             elif match_function == "url_semantic_match":
                 score = await URLEvaluator.url_semantic_match(
                     page.url, evaluate["reference_answer"], evaluate["key"])
-                # print(score, "url_semantic_match")
             elif match_function == "element_path_exactly_match":
                 input_netloc = get_netloc(page.url)
                 method = evaluate["method"]
-                score = ElementEvaluator.path_exact_match(
-                    input_path, evaluate["reference_answer"], method, await page.content(), input_netloc,
-                    evaluate["netloc"])
-                # print(score, "path_exact_match:", input_path,
-                #       "***", evaluate["reference_answer"])
+                score = await ElementEvaluator.path_exact_match(
+                    input_path, evaluate["reference_answer"], method, page, input_netloc,
+                    evaluate["netloc"],input_coords=input_coords)
             elif match_function == "element_path_included_match":
                 pass
                 # * Temporarily not doing
@@ -155,9 +154,9 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                     # print(element_value)
                     # print(await page.locator(input_path).input_value())
                     if "path" in evaluate.keys():
-                        path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
-                                                                       await page.content(), input_netloc,
-                                                                       evaluate["netloc"])
+                        path_score = await ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
+                                                                       page, input_netloc,
+                                                                       evaluate["netloc"],input_coords=input_coords)
                         if path_score == 0:
                             # print("Path mismatch in value evaluation")
                             score = 0
@@ -172,12 +171,12 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                 else:
                     score = 0
             elif match_function == "element_value_included_match":
-                if input_path is not None and element_value is not None:
+                if (input_path is not None or input_coords is not None) and element_value is not None:
                     input_netloc = get_netloc(page.url)
                     if "path" in evaluate.keys():
-                        path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
-                                                                       await page.content(), input_netloc,
-                                                                       evaluate["netloc"])
+                        path_score = await ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
+                                                                       page, input_netloc,
+                                                                       evaluate["netloc"],input_coords=input_coords)
                         if path_score == 0:
                             # print("Path mismatch in value evaluation")
                             score = 0
@@ -192,14 +191,14 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
                 else:
                     score = 0
             elif match_function == "element_value_semantic_match":
-                if input_path is not None and element_value is not None:
+                if (input_path is not None or input_coords is not None) and element_value is not None:
                     input_netloc = get_netloc(page.url)
 
                     if len(element_value) > 0:
                         if "path" in evaluate.keys():
-                            path_score = ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
-                                                                           await page.content(), input_netloc,
-                                                                           evaluate["netloc"])
+                            path_score = await ElementEvaluator.path_exact_match(input_path, evaluate["path"], "selector",
+                                                                           page, input_netloc,
+                                                                           evaluate["netloc"],input_coords=input_coords)
                             if path_score == 0:
                                 # print("Path mismatch in value evaluation")
                                 score = 0
@@ -245,6 +244,7 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
         step_score += evaluate["score"]
 
     return evaluate_steps, match_result
+
 
 
 def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: dict):
