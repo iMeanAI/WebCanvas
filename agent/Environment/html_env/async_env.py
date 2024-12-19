@@ -69,28 +69,24 @@ class AsyncHTMLEnvironment:
 
     async def setup(self, start_url: str) -> None:
         self.playwright = await async_playwright().start()
-        self.browser = await self.playwright.chromium.launch(
-            headless=self.headless, slow_mo=self.slow_mo
-        )
-        self.context = await self.browser.new_context(
-            viewport=self.viewport_size,
-            device_scale_factor=1,
-            locale=self.locale
-        )
+        # Connect to browser using BrowserBase
+        logger.info("Browserbase Cloud Environment Start...")
+        browser_cdp_url = f"wss://connect.browserbase.com?apiKey={os.environ['BROWSERBASE_API_KEY']}"
+        self.browser = await self.playwright.chromium.connect_over_cdp(browser_cdp_url)
+        self.context = self.browser.contexts[0]  # Use the existing context from BrowserBase
         self.context.on("page", self.page_on_handler)
+
         if start_url:
-            self.page = await self.context.new_page()
-            # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
+            # Use the first page from the BrowserBase connection
+            self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
             await self.page.goto(start_url, timeout=10000)
             await self.page.wait_for_timeout(500)
             self.html_content = await self.page.content()
         else:
-            self.page = await self.context.new_page()
-            # await self.page.set_viewport_size({"width": 1080, "height": 720}) if not self.mode == "dom" else None
+            self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
             self.html_content = await self.page.content()
-        # self.last_page = self.page
 
-        # js event listener
+        # JS event listener
         await self.context.expose_binding(
             "handleEvent",
             lambda source, selector, event_type, element_info: self._handle_event(selector, event_type, element_info)
