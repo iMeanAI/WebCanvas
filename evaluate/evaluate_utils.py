@@ -37,7 +37,7 @@ def read_file(file_path="./data/example/example_130.json"):
                                                      "key": key, "reference_answer": reference_answer, "score": 0})
                 except:
                     logger.error(
-                        f"url error in task {task_name_id}, step {i}, match_function: {match_function}")
+                        f"URL error in task {task_name_id}, step {i}, match_function: {match_function}")
                     exit(1)
             elif "element_path" in match_function:
                 try:
@@ -49,7 +49,7 @@ def read_file(file_path="./data/example/example_130.json"):
                                                      "score": 0})
                 except:
                     logger.error(
-                        f"element_path error in task {task_name_id}, step {i}, match_function: {match_function}")
+                        f"Element path error in task {task_name_id}, step {i}, match_function: {match_function}")
                     exit(1)
             elif "element_value" in match_function:
                 try:
@@ -66,7 +66,7 @@ def read_file(file_path="./data/example/example_130.json"):
                                                          "score": 0})
                 except:
                     logger.error(
-                        f"element_value error in task {task_name_id}, step {i}, match_function: {match_function}")
+                        f"Element value error in task {task_name_id}, step {i}, match_function: {match_function}")
                     exit(1)
             elif "final_answer" in match_function:
                 try:
@@ -75,7 +75,7 @@ def read_file(file_path="./data/example/example_130.json"):
                                                      "reference_answer": reference_answer, "score": 0})
                 except:
                     logger.error(
-                        f"element_value error in task {task_name_id}, step {i}, match_function: {match_function}")
+                        f"Final answer error in task {task_name_id}, step {i}, match_function: {match_function}")
                     exit(1)
             elif "cache_data" in match_function:
                 try:
@@ -84,7 +84,7 @@ def read_file(file_path="./data/example/example_130.json"):
                                                      "reference_answer": reference_answer, "score": 0})
                 except:
                     logger.error(
-                        f"element_value error in task {task_name_id}, step {i}, match_function: {match_function}")
+                        f"Cache data error in task {task_name_id}, step {i}, match_function: {match_function}")
                     exit(1)
 
         return_list.append(
@@ -94,6 +94,7 @@ def read_file(file_path="./data/example/example_130.json"):
 
 
 async def adjust_max_action_step(conditions, current_info, encountered_errors, increase_step):
+    """Adjust maximum action steps based on conditions"""
     total_increase = 0
     for condition_type, keywords in conditions.items():
         for keyword in keywords:
@@ -106,7 +107,10 @@ async def adjust_max_action_step(conditions, current_info, encountered_errors, i
 
 
 def get_netloc(url: str) -> str:
-    """Extract the domain name, for example, extract 'zhihu' from 'zhihu.com', extract 'google' from 'www.google.com.hk' """
+    """Extract the domain name from URL
+    
+    Example: extract 'zhihu' from 'zhihu.com', extract 'google' from 'www.google.com.hk'
+    """
     url = urlparse(url)
     try:
         if url.netloc.startswith("www"):
@@ -119,7 +123,7 @@ def get_netloc(url: str) -> str:
 
 
 async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_value=None, text_content=None):
-    """Evaluate step score"""
+    """Evaluate step score using traditional method"""
     step_score = 0
     match_result = []
     for evaluate in evaluate_steps:
@@ -246,12 +250,23 @@ async def step_evaluate(page: Page, evaluate_steps=[], input_path=None, element_
 
     return evaluate_steps, match_result
 
-async def step_event_evaluate(page, evaluate_steps, event):
+async def step_event_evaluate(page: Page, evaluate_steps, env):
+    """Evaluate step score using event-based method"""
     step_score = 0
     match_result = []
+    
+    # Get latest events
+    latest_events = env.get_latest_events()
+    if not latest_events:
+        return evaluate_steps, match_result
+        
+    event = latest_events[-1]  # Use the latest event
+    
     for evaluate in evaluate_steps:
         if evaluate["score"] != 1:
             match_function = evaluate["match_function"]
+            score = 0
+            
             if match_function == "url_exactly_match":
                 score = URLEvaluator.url_exact_match(
                     page.url, evaluate["reference_answer"], evaluate["key"]
@@ -267,7 +282,10 @@ async def step_event_evaluate(page, evaluate_steps, event):
 
             elif match_function == "element_path_exactly_match":
                 score = ElementEvaluator.path_exact_match(
-                    event["selector"], evaluate["reference_answer"], evaluate["method"], page
+                    event["selector"], 
+                    evaluate["reference_answer"],
+                    evaluate["method"],
+                    page
                 )
 
             elif match_function == "element_path_included_match":
@@ -275,7 +293,8 @@ async def step_event_evaluate(page, evaluate_steps, event):
 
             elif match_function == "element_value_exactly_match":
                 score = ElementEvaluator.element_value_exact_match(
-                    event["target_value"], evaluate["reference_answer"]
+                    event["target_value"],
+                    evaluate["reference_answer"]
                 )
 
             elif match_function == "element_value_included_match":
@@ -289,23 +308,21 @@ async def step_event_evaluate(page, evaluate_steps, event):
                 )
 
             evaluate["score"] = max(evaluate["score"], score)
+            
         if evaluate["score"] >= 1:
             match_result.append({evaluate["match_function"]: evaluate["reference_answer"]})
         step_score += evaluate["score"]
-
+    
     return evaluate_steps, match_result
 
 def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: dict):
+    """Parse current execution trace and prepare for evaluation"""
     thought = response["description"].get("thought")
-    action_type = response.get(
-        'action_type') if response.get('action_type') else ""
-    acton_input = response['value'] if response.get(
-        'value') and isinstance(response.get('value'), str) else ""
+    action_type = response.get('action_type') if response.get('action_type') else ""
+    acton_input = response['value'] if response.get('value') and isinstance(response.get('value'), str) else ""
     action = response["description"].get("action")
-    reflection = step_reward.get(
-        "description") if step_reward else ""
-    current_trace = {"thought": thought,
-                     "action": action, "reflection": reflection}
+    reflection = step_reward.get("description") if step_reward else ""
+    current_trace = {"thought": thought, "action": action, "reflection": reflection}
     element_value = ""
     text_content = ""
     selector = None
@@ -344,19 +361,16 @@ def parse_current_trace(response: dict, env: AsyncHTMLEnvironment, step_reward: 
 
 
 def read_config(toml_path=None):
-    """
-    Reads a TOML configuration file from the given path or the default path
-    and returns its content as a dictionary.
-
+    """Read configuration from TOML file
+    
     Args:
-        toml_path (str, optional): The path to the TOML configuration file.
-                                           If None, use the default path.
+        toml_path (str, optional): Path to the TOML configuration file.
+                                 If None, use the default path.
 
     Returns:
-        dict: The content of the configuration file.
+        dict: Configuration content
     """
     if toml_path is None:
-        # default_path = os.path.join(os.path.dirname(__file__), 'default_settings.toml')
         toml_path = 'configs/setting.toml'
 
     with open(toml_path, 'r') as f:
@@ -515,8 +529,23 @@ async def run_task(
                 "**🤖 The agent is in the process of starting evaluation 🤖**")
             if task_mode == "batch_tasks":
                 try:
-                    evaluate_steps, match_result = await step_evaluate(page=env.page, evaluate_steps=evaluate_steps,
-                                                                       input_path=selector, element_value=element_value, text_content=text_content)
+                    # Use event-based evaluation
+                    evaluate_steps, match_result = await step_event_evaluate(
+                        page=env.page,
+                        evaluate_steps=evaluate_steps,
+                        env=env
+                    )
+                    
+                    # If event-based evaluation fails, revert to traditional evaluation
+                    if not match_result:
+                        evaluate_steps, match_result = await step_evaluate(
+                            page=env.page,
+                            evaluate_steps=evaluate_steps,
+                            input_path=selector,
+                            element_value=element_value,
+                            text_content=text_content
+                        )
+
                 except Exception as ee:
                     logger.info(f"Current step evaluate error :{ee}")
 

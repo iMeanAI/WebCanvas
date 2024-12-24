@@ -1,8 +1,5 @@
 .vscode/
 
-agent/LLM/claude.py
-
-
 **/__pycache__
 
 **/*.json
@@ -18,10 +15,12 @@ batch_tasks_results/*
 data/*
 !data/example/
 !data/example/example_130.json
-!data/example/mind2web-test_104tasks_20240528.json
+!data/example/mind2web-live_test_20241024.json
 !data/human_labeled_reward_reference/*
 !data/dataset_io.py
 !data/raw_data_processor.py
 
 test.py
 test_dom_tree.py
+
+agent/Environment/html_env/js_event/

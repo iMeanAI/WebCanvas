@@ -63,34 +63,65 @@ class AsyncHTMLEnvironment:
         self.locale = locale
         self.context = None
         self.browser = None
+        self.current_events = []  # Add event queue
+        self.events_directory = os.path.join(os.path.dirname(__file__), '..', 'js_event')
+        os.makedirs(self.events_directory, exist_ok=True)
 
     async def page_on_handler(self, page):
         self.page = page
 
     async def setup(self, start_url: str) -> None:
         self.playwright = await async_playwright().start()
-        # Connect to browser using BrowserBase
-        logger.info("Browserbase Cloud Environment Start...")
-        browser_cdp_url = f"wss://connect.browserbase.com?apiKey={os.environ['BROWSERBASE_API_KEY']}"
-        self.browser = await self.playwright.chromium.connect_over_cdp(browser_cdp_url)
-        self.context = self.browser.contexts[0]  # Use the existing context from BrowserBase
-        self.context.on("page", self.page_on_handler)
+        
+        try:
+            # Try to connect to BrowserBase first
+            browserbase_api_key = os.environ.get('BROWSERBASE_API_KEY')
+            if browserbase_api_key:
+                logger.info("Attempting to connect to BrowserBase Cloud Environment...")
+                browser_cdp_url = f"wss://connect.browserbase.com?apiKey={browserbase_api_key}"
+                self.browser = await self.playwright.chromium.connect_over_cdp(browser_cdp_url)
+                self.context = self.browser.contexts[0]  # Use the existing context from BrowserBase
+                logger.info("Successfully connected to BrowserBase")
+            else:
+                # Fallback to local browser if no API key found
+                logger.info("No BrowserBase API key found, launching local browser...")
+                self.browser = await self.playwright.chromium.launch(
+                    headless=self.headless,
+                    slow_mo=self.slow_mo
+                )
+                self.context = await self.browser.new_context(
+                    viewport=self.viewport_size,
+                    locale=self.locale
+                )
+                logger.info("Local browser launched successfully")
 
-        if start_url:
-            # Use the first page from the BrowserBase connection
-            self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
-            await self.page.goto(start_url, timeout=10000)
-            await self.page.wait_for_timeout(500)
-            self.html_content = await self.page.content()
-        else:
-            self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
-            self.html_content = await self.page.content()
+            # Set up page handler for both scenarios
+            self.context.on("page", self.page_on_handler)
 
-        # JS event listener
-        await self.context.expose_binding(
-            "handleEvent",
-            lambda source, selector, event_type, element_info: self._handle_event(selector, event_type, element_info)
-        )
+            if start_url:
+                # Use existing or create new page
+                self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
+                await self.page.goto(start_url, timeout=10000)
+                await self.page.wait_for_timeout(500)
+                self.html_content = await self.page.content()
+            else:
+                self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
+                self.html_content = await self.page.content()
+
+            # JS event listener setup
+            await self.context.expose_binding(
+                "handleEvent",
+                lambda source, selector, event_type, element_info: self._handle_event(selector, event_type, element_info)
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to setup browser environment: {str(e)}")
+            # Cleanup in case of failure
+            if hasattr(self, 'browser') and self.browser:
+                await self.browser.close()
+            if hasattr(self, 'playwright') and self.playwright:
+                await self.playwright.stop()
+            raise
 
     async def _event_listener(self):
         """Add universal event listener"""
@@ -161,7 +192,7 @@ class AsyncHTMLEnvironment:
             logger.error(f"Failed to setup event listeners: {str(e)}")
 
 
-    async def _handle_event(self,selector, event_type, element_info_str):
+    async def _handle_event(self, selector, event_type, element_info_str):
         """
         Handle DOM events by updating task events
         """
@@ -169,41 +200,45 @@ class AsyncHTMLEnvironment:
             return text.replace("\n", "").replace("\t", "")
         try:
             element_info = json.loads(element_info_str)
-            logger.info(f"Event received - selector: {selector}, type: {event_type}, info: {element_info}")
             # Create current event
             current_event = {
                 "selector": selector,
                 "status": True,
                 "target_value": element_info.get("value") or element_info.get("textContent", ""),
                 "target_value_clean": clean_text(element_info.get("value") or element_info.get("textContent", "")),
-                "event_type": event_type
+                "event_type": event_type,
+                "timestamp": time.time()
             }
-
-            directory_path = os.path.join(os.path.dirname(__file__), '..', 'js_event')
-            os.makedirs(directory_path, exist_ok=True)  # Ensure the directory exists
-            file_path = os.path.join(directory_path, "current_event.json")
-
-            logger.info(f"Saving event to file: {file_path}")
-
-            if os.path.exists(file_path):
-                with open(file_path, "r", encoding="utf-8") as json_file:
-                    try:
-                        events = json.load(json_file)
-                    except json.JSONDecodeError:
-                        events = []
-            else:
-                events = []
-            events.append(current_event)
-            logger.info("Appended new event to the list.")
-
-            with open(file_path, "w", encoding="utf-8") as json_file:
-                json.dump(events, json_file, indent=4, ensure_ascii=False)
-                logger.info("Saved updated events to file.")
-
-        except json.JSONDecodeError:
-            logger.error(f"Failed to parse element info: {element_info_str}")
+            
+            # Add event to memory queue
+            self.current_events.append(current_event)
+            
+            # Keep queue size within reasonable limits
+            if len(self.current_events) > 100:  # Configurable maximum event count
+                self.current_events = self.current_events[-100:]
+            
+            # Save to file for debugging purposes
+            self._save_event_to_file(current_event)
+            
         except Exception as e:
             logger.error(f"Error handling event: {str(e)}")
+
+    def _save_event_to_file(self, current_event):
+        file_path = os.path.join(self.events_directory, "current_event.json")
+        try:
+            events = []
+            if os.path.exists(file_path):
+                with open(file_path, "r", encoding="utf-8") as json_file:
+                    events = json.load(json_file)
+            events.append(current_event)
+            with open(file_path, "w", encoding="utf-8") as json_file:
+                json.dump(events, json_file, indent=4, ensure_ascii=False)
+        except Exception as e:
+            logger.error(f"Error saving event to file: {str(e)}")
+
+    def get_latest_events(self, count=1):
+        """Get the latest events"""
+        return self.current_events[-count:] if self.current_events else []
 
     async def get_obs(self) -> Union[str, Tuple[str, str]]:
         observation = ""
@@ -697,6 +732,7 @@ class AsyncHTMLEnvironment:
         await self.page.wait_for_timeout(20000)
 
     async def test_select_option_action(self, selector, value):
+        # Get all option values from select element including optgroups
         optgroup_values = await self.page.evaluate(f'''(selector) => {{
                 var values = [];
                 var selectElement = document.querySelector(selector);
@@ -713,11 +749,15 @@ class AsyncHTMLEnvironment:
                 }}
                 return values;
             }}''', selector)
+
+        # Find best matching option using string similarity
         best_option = [-1, "", -1]
         for i, option in enumerate(optgroup_values):
             similarity = SequenceMatcher(None, option, value).ratio()
             if similarity > best_option[2]:
                 best_option = [i, option, similarity]
+
+        # Select the best matching option and trigger change event
         await self.page.evaluate(f'''(selector) => {{
             var selectElement = document.querySelector(selector);
             var options = selectElement.querySelectorAll('option');
@@ -743,6 +783,7 @@ class AsyncHTMLEnvironment:
         await self.page.wait_for_timeout(2000)
 
     async def test_fill_form_action(self, selector, value):
+        # Set input value and trigger input event
         selector = rf"{selector}"
         await self.page.evaluate(f'''(selector) => {{
                 var element = document.querySelector(selector);
