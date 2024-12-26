@@ -97,6 +97,17 @@ From our experiments, the experimental environment plays a crucial role in agent
 | gpt-3.5-turbo-0125        | United Kingdom| Windows | Chrome | 23.6%           | 8.65%             | 7.78             |
 | gpt-3.5-turbo-0125        | Singapore    | Windows | Chrome  | 42.3%           | 21.2%             | 2.95             |
 
+### Configure cloud environment
+[Browserbase](https://www.browserbase.com/) offers a reliable, high performance serverless developer platform to run, manage, and monitor headless browsers at scale. Leverage our infrastructure to power your web automation and AI agents.
+
+
+
+Get your API Key, go over the [Dashboard’s Settings tab](https://www.browserbase.com/settings),
+Then copy your API Key directly from the input and update your `.env` by adding the `BROWSERBASE_API_KEY` entry
+
+Alternatively, you can temporarily set the environment variable for a single bash command by prefixing it with `BROWSERBASE_API_KEY=<your_api_key>` in your terminal.
+
+You can find all the recent sessions on the Dashboard’s Overview, along with essential metrics, select your Session to inspect it with the [Session Inspector](https://docs.browserbase.com/features/session-inspector).
 
 ### <a id="download"></a>Download Raw Data of a Challenge(includes all open challenges on WebCanvas platform)
 
@@ -130,17 +141,6 @@ python data/raw_data_processor.py \
     --input-file path/to/input/file \
     --output-file path/to/output/file
 ```
-### Configure cloud environment
-[Browserbase](https://www.browserbase.com/) offers a reliable, high performance serverless developer platform to run, manage, and monitor headless browsers at scale. Leverage our infrastructure to power your web automation and AI agents.
-
-
-
-Get your API Key, go over the [Dashboard’s Settings tab](https://www.browserbase.com/settings),
-Then copy your API Key directly from the input and update your `.env` by adding the `BROWSERBASE_API_KEY` entry
-
-Alternatively, you can temporarily set the environment variable for a single bash command by prefixing it with `BROWSERBASE_API_KEY=<your_api_key>` in your terminal.
-
-You can find all the recent sessions on the Dashboard’s Overview, along with essential metrics, select your Session to inspect it with the [Session Inspector](https://docs.browserbase.com/features/session-inspector).
 
 ### Run the Evaluation
 
