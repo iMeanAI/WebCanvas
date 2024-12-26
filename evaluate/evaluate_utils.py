@@ -1,13 +1,12 @@
-from evaluate import *
-from agent.Plan import *
 from playwright.async_api import Page
-from agent.Environment.html_env.async_env import AsyncHTMLEnvironment, ActionExecutionError
-
 import re
 import toml
-import json
+import json5
 import traceback
 import os
+from typing import List
+
+from agent.Environment.html_env.async_env import AsyncHTMLEnvironment, ActionExecutionError
 from agent.Environment import ActionExecutionError, create_action
 from agent.Plan import Planning
 from agent.Utils.utils import save_screenshot, is_valid_base64
@@ -16,11 +15,26 @@ from evaluate import FinishTaskEvaluator, TaskLengthEvaluator, URLEvaluator, Ele
 from logs import logger
 
 
-def read_file(file_path="./data/example/example_130.json"):
-    """Read labeled data"""
+def read_file(file_path: str = "./data/example/example_130.json") -> List[List]:
+    """Read labeled data
+    
+    Args:
+        file_path: Path to the JSON file containing labeled data
+        
+    Returns:
+        List of tasks with their evaluation data
+    """
     return_list = []
-    with open(file_path, encoding='utf-8') as f:
-        test_data = json5.load(f)
+    try:
+        with open(file_path, encoding='utf-8') as f:
+            test_data = json5.load(f)
+    except FileNotFoundError:
+        logger.error(f"File not found: {file_path}")
+        raise
+    except json5.JSONDecodeError:
+        logger.error(f"Invalid JSON format in file: {file_path}")
+        raise
+
     for task in test_data:
         task_name = task["task"]
         evaluation_data = task["evaluation"]
@@ -672,6 +686,7 @@ async def run_task(
     step_tokens["steps_output_token_counts"] = steps_output_token_counts
     step_tokens["steps_token_counts"] = steps_token_counts
 
+    # Update token counting
     save_token_count_to_file(token_counts_filename, step_tokens, task_name, global_reward_text_model,
                              planning_text_model, config["token_pricing"])
 

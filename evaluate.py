@@ -11,12 +11,15 @@ import logging
 # universal tools
 from agent.Utils.utils import *
 # evaluate tools
-from evaluate.evaluate_utils import run_task, read_config, read_file, read_json_file
+from evaluate.evaluate_utils import run_task, read_config, read_file
+from agent.Utils.utils import read_json_file
 from experiment_results import get_evaluate_result
 
 logger = logging.getLogger(__name__)
 
-from agent.LLM.token_cal import *
+from agent.LLM.token_utils import is_model_supported
+
+
 @dataclass
 class ExperimentConfig:
     mode: str

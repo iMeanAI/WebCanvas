@@ -7,8 +7,7 @@ import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
 from sanic.log import logger
 from agent.Utils import *
-from .token_cal import truncate_messages_based_on_estimated_tokens
-from .token_calculation import calculation_of_token, save_token_count_to_file
+from .token_utils import truncate_messages_based_on_estimated_tokens
 
 
 class GPTGenerator:
