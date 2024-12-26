@@ -19,10 +19,6 @@ def download_data(url, dest_path):
     with open(dest_path, 'wb') as file:
         file.write(response.content)
 
-# def upload_result(url, data):
-#     response = requests.post(url, json=data)
-#     return response.status_code, response.text
-
 
 def upload_result(url, data):
     headers = {'Content-Type': 'application/json'}

@@ -1,5 +1,5 @@
 [basic]
-task_mode = "single_task"    # single_task or batch_tasks
+task_mode = "batch_tasks"    # single_task or batch_tasks
 max_time_step = 25           # For all tasks, set the maximum step length
 
 [model]
@@ -21,7 +21,7 @@ batch_tasks_max_action_step = 10
 batch_tasks_condition_step_increase = 5
 
 [files]
-batch_tasks_file_path = "./data/example/mind2web_test_0913.json" # The input data path
+batch_tasks_file_path = "./data/example/mind2web-live_test_20241024.json" # The input data path
 ground_truth_file_path = "./data/human_labeled_reward_reference/GT_instructions_202404161811_for_all_data_0328.json"  # the ground_truth data path
 out_file_path = "./batch_tasks_results/example"   # YOUR OUT FILE PATH 
 

@@ -11,10 +11,13 @@ import logging
 # universal tools
 from agent.Utils.utils import *
 # evaluate tools
-from evaluate.evaluate_utils import run_task, read_config, read_file, read_json_file
+from evaluate.evaluate_utils import run_task, read_config, read_file
+from agent.Utils.utils import read_json_file
 from experiment_results import get_evaluate_result
 
 logger = logging.getLogger(__name__)
+
+from agent.LLM.token_utils import is_model_supported
 
 
 @dataclass
@@ -131,10 +134,11 @@ async def run_experiment(task_range, experiment_config):
             logger.info(f"task_name: {task_name}")
 
         env = create_html_environment(experiment_config.mode)
-
-        if not os.path.exists("token_results"):
-            os.makedirs("token_results")
-        token_counts_filename = f"token_results/token_counts_{experiment_config.record_time}_{experiment_config.planning_text_model}_{experiment_config.global_reward_text_model}.json"
+        if is_model_supported(experiment_config.planning_text_model) and is_model_supported(
+                experiment_config.global_reward_text_model):
+            if not os.path.exists("token_results"):
+                os.makedirs("token_results")
+            token_counts_filename = f"token_results/token_counts_{experiment_config.record_time}_{experiment_config.planning_text_model}_{experiment_config.global_reward_text_model}.json"
 
         await run_task(mode=experiment_config.mode,
                        task_mode=experiment_config.config['basic']['task_mode'],
@@ -158,12 +162,12 @@ async def run_experiment(task_range, experiment_config):
 
         await env.close()
         del env
+    if is_model_supported(experiment_config.planning_text_model) and is_model_supported(experiment_config.global_reward_text_model):
+        with open(token_counts_filename, 'r') as file:
+            data = json.load(file)
+        total_token_cost = data.get("total_token_cost", 0)
 
-    with open(token_counts_filename, 'r') as file:
-        data = json.load(file)
-    total_token_cost = data.get("total_token_cost", 0)
-
-    get_evaluate_result(experiment_config.config["files"]["out_file_path"], total_token_cost)
+        get_evaluate_result(experiment_config.config["files"]["out_file_path"], total_token_cost)
     logger.info('\033[31mAll tasks finished!\033[0m')
     logger.info('\033[31mPress Enter to exit...\033[0m')
 
