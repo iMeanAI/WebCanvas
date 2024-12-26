@@ -20,12 +20,15 @@
     <img src="https://img.icons8.com/?size=100&id=19977&format=png&color=000000" alt="WeChat" width="18" height="18" style="vertical-align: middle;"/> <a href="https://postimg.cc/CZP9djG9">WeChat</a>
 </p>
 
-Existing benchmarks for web agent tasks are either offline and static, or operate within a fully reproducible environment with limited Internet dynamics. The WebCanvas project aims to pioneer the online evaluation of web agents. Additionally, we offer a suite of toolkits for scaling and maintaining web agent data to support this endeavor. We welcome any constructive feedback on the project and look forward to partnering with you in developing agents for web tasks!
+Existing benchmarks for web agent tasks are either offline and static, or operate within a fully reproducible environment with limited Internet dynamics. The WebCanvas project aims to pioneer the online evaluation of web agents. Additionally, we offer a suite of toolkits for scaling and maintaining a **KEY-NODE** based evaluation for web agents to support this endeavor. We welcome any constructive feedback on the project and look forward to partnering with you in developing agents for web tasks!
 
 ![Main Figure](src/main_figure.png)
 
 ## 🔥 News
-- **[2024, December 11]** Update a universal event listener that uses vision as input and can also perform evaluations.
+- **[2024, December 26]** v0.0.4 released! Major updates include:
+  - Introduced a new JavaScript event listener-based evaluation system that decouples evaluation methods from action space, enabling assessment of purely visually-grounded agents
+  - Integrated with [Browserbase](https://www.browserbase.com/) cloud browser environment for more stable and consistent evaluation
+  - Published and maintaining an up-to-date [leaderboard](Mind2web-live_Leaderboard.md) for Mind2Web-Live benchmark, still far from saturation!
 - **[2024, September 9]** Support evaluation for OpenAI new o1 models, includes o1-preview and o1-mini. Just set the 'planning_text_model' parameter to 'o1-preview' or 'o1-mini'.
 - **[2024, August 9]** We're excited to announce the release of v0.0.3 of WebCanvas! This update introduces support for evaluation of data operations, such as caching data in process and outputting the final answer. You can now define and evaluate a broader range of web tasks using iMean Builder and WebCanvas. Additionally, we've introduced a new metric: ***US dollar consumption / key node completion(usd_efficiency_score)***, detailed in [this section](#usd_efficiency). We believe that an agent's efficiency is crucial for online web tasks, and this metric will help quantify that efficiency.
 - **[2024, July 13]** We've released v0.0.2 of WebCanvas. This update brings the ability to call different base model services, including OpenAI, Claude, Gemini, and together.ai. Now, you can choose any of these model services for testing on our platform. Additionally, we've launched a new repository: [WebCanvas Showcase](https://github.com/iMeanAI/WebCanvas_showcase), which demonstrates how different agent frameworks can be integrated with the WebCanvas framework for online evaluation. We're kicking things off with the integration of SEEACT[^5] and WebCanvas. Play with it and explore the possibilities!
@@ -41,18 +44,16 @@ Existing benchmarks for web agent tasks are either offline and static, or operat
 - **Key Nodes Annotation**: Introduces the concept of "key nodes" to offer in-progress feedback and a granular, phase-based assessment system that rigorously evaluate web agents in the wild.
 - **Scale Web Agent Evaluation in Live Web Environments**: Connected to a comprehensive suite of toolkits with accurate observation capture and rich action space to define demonstration trajectories and intermediate states for real-time, open-ended web tasks, allowing for robust evaluation in dynamic web environments. Check out our [How to guide](https://webcanvas.gitbook.io/webcanvas-docs).
 - **Mind2Web-Live Dataset**: Presents a refined version of the original Mind2Web[^1] static dataset, containing 542 tasks with 2439 intermediate evaluation states, serving as the foundation general purpose benchmark.
-- **Open Data Access**: Raw data of all challenges can be downloaded, including raw html(ready), screenshot(ready), DOM tree(soon), Axtree(soon), captured action(ready), element position(ready), etc., refer to [challenge propose](#challenge) and [data download](#download). We plan to open the data to the community free for research use.
+- **Open Data Access**: Raw data of all challenges can be downloaded, including raw html, full screenshot, DOM tree, Axtree, operation video, captured action, element information, etc., refer to [challenge propose](#challenge) and [data download](#download). The data is open accessible to the community free for research use.
 
 ## 🚀 Roadmap
 
 - **Better Modularity and More Flexible Integration**: To help easier integration of WebCanvas evaluation, connect offline agents to online web environment.
-- **Better Observation**: Faster in computing, more accurate, and combine more modality(text, code, vision, conversation, etc.)
-- **Broader Action Space**: Add actions like cache in memory, output final answer, code execution etc. to develop a better interface for web agent, which may differ from human's.
 - **Dynamic Evaluation Function**: Provide toolkit for community to define dynamic evaluation functions(for example, model-based evaluation) as supplementary of current static evaluation functions.
 - **More Dataset Coverage**: Introduce more datasets in different domains that address key capabilities in online web tasks.
 - **Accumulate Knowledge on Agent Experiences**: Develop better algorithm to handle error encountered when inference in live environment, also accumulate knowledge on agent experiences in different websites.
-- **Statistics on Agent Cost other than Performance**: Enable calculation of token consumption or GPU consumption of agent framework or agent model to serve as another optimization goal for truly practical web agent.
-- **Cloud Version to Mitigate Environment Discrepancy**: We are working on a cloud version for more reliable evaluation.
+- **Better Visualization of Agent Performance**: Enable batch visualization and analysis of agent trajectories.
+- **More Reliable Evaluation**: Cloud browser environment with captcha solving for more stable and consistent evaluation.
 
 
 ## 📋 TODO
@@ -60,14 +61,15 @@ Existing benchmarks for web agent tasks are either offline and static, or operat
 - [x] Support more base model calling(Claude, Gemini, Open-source Models from together.ai, etc.). *(Done)*
 - [x] Add information extraction related actions and relative evaluation metrics. *(Done)*
 - [x] Enable token consumption calculation. *(Done)*
-- [x] Add vision as an extra observation and implement various grounding strategies. *(Done)*
-- [ ] Add more brilliant web agent benchmarking data as showcase: webarena[^2], GAIA[^3], workarena[^4], etc. *(in progress)*
-- [ ] Better modularity to ease integration. *(in progress)*
-- [ ] Keep updating error handling module.
-- [ ] Develop up-to-date visualizations of current live websites agent performance.
-- [ ] Enable script-based actions and evaluation.
-- [ ] Enable multi-modality input other other language-based instruction like GAIA[^3].
-- [ ] Add tool calling in the reasoning framework.
+- [x] Update evaluation methods to decouple from action space. *(Done)*
+- [x] Connect with cloud browser environment. *(Done)*
+- [ ] Batch evaluation using cloud browser.
+- [ ] Develop batch visualizations and analysis of agent performance on live websites.
+- [ ] Add captcha solving service.
+- [ ] Better modularity to ease integration.
+- [ ] Add more brilliant web agent benchmarks as showcase: webarena[^2], GAIA[^3], assistantBench[^4], etc.
+- [ ] Evaluation of open-ended web tasks.
+
 
 ## 🔍 Evaluation on Existing WebCanvas Benchmarks
 
@@ -311,5 +313,5 @@ If you use this project in your research, please cite our paper:
 [^1]: Deng, Xiang, et al. "Mind2web: Towards a generalist agent for the web." Advances in Neural Information Processing Systems 36 (2024).
 [^2]: Zhou, Shuyan, et al. "Webarena: A realistic web environment for building autonomous agents." arXiv preprint arXiv:2307.13854 (2023).
 [^3]: Mialon, Grégoire, et al. "Gaia: a benchmark for general ai assistants." arXiv preprint arXiv:2311.12983 (2023).
-[^4]: Drouin, Alexandre, et al. "WorkArena: How Capable are Web Agents at Solving Common Knowledge Work Tasks?." arXiv preprint arXiv:2403.07718 (2024).
+[^4]: Yoran, Ori, et al. "AssistantBench: Can Web Agents Solve Realistic and Time-Consuming Tasks?." arXiv preprint arXiv:2407.15711 (2024).
 [^5]: Zheng, Boyuan, et al. "Gpt-4v (ision) is a generalist web agent, if grounded." arXiv preprint arXiv:2401.01614 (2024). 
