@@ -20,7 +20,7 @@
     <img src="https://img.icons8.com/?size=100&id=19977&format=png&color=000000" alt="WeChat" width="18" height="18" style="vertical-align: middle;"/> <a href="https://postimg.cc/CZP9djG9">WeChat</a>
 </p>
 
-Existing frameworks for web agent tasks are either offline and static, or operate within a fully reproducible environment with limited Internet dynamics. The WebCanvas project aims to pioneer the online development, training and evaluation of web agents. We offer a suite of toolkits for scaling and maintaining a **KEY-NODE** based web trajectories for web agents to support this endeavor. We welcome any constructive feedback on the project and look forward to partnering with you in developing agents for web tasks!
+Existing frameworks for web agent development are either offline and static, or operate within a fully reproducible environment with limited Internet dynamics. The WebCanvas project aims to pioneer the online development, training and evaluation of web agents. We offer a suite of toolkits for scaling and maintaining a **KEY-NODE** based web trajectories for web agents to support this endeavor. We welcome any constructive feedback on the project and look forward to partnering with you in developing agents for web tasks!
 
 ![Main Figure](src/main_figure.png)
 
