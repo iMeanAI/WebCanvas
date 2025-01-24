@@ -1,4 +1,4 @@
-<h1 align="center">WebCanvas: All-in-One Open-Source Framework for Building, Training, and Evaluating WebAgents</h1>
+<h1 align="center">WebCanvas: All-in-one Open-Source Framework for Building, Training, and Evaluating Web Agents</h1>
 
 
 <p align="center">
