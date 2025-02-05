@@ -15,7 +15,7 @@ json_models = ["gpt-4-turbo",
 
 
 [steps]
-interaction_mode = false             #  Whether human control of task execution status is required
+interaction_mode = true             #  Whether human control of task execution status is required
 single_task_action_step = 10     
 batch_tasks_max_action_step = 10
 batch_tasks_condition_step_increase = 5
