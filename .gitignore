@@ -24,3 +24,7 @@ test.py
 test_dom_tree.py
 
 agent/Environment/html_env/js_event/
+
+node_modules/
+package-lock.json
+package.json

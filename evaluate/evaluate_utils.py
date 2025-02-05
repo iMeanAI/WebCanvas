@@ -11,7 +11,7 @@ from agent.Environment import ActionExecutionError, create_action
 from agent.Plan import Planning
 from agent.Utils.utils import save_screenshot, is_valid_base64
 from agent.Reward.global_reward import GlobalReward
-from evaluate import FinishTaskEvaluator, TaskLengthEvaluator, URLEvaluator, ElementEvaluator
+from evaluate import FinishTaskEvaluator, TaskLengthEvaluator, URLEvaluator, ElementEvaluator, TextEvaluator
 from logs import logger
 
 

@@ -85,6 +85,21 @@ pip install -r requirements.txt
 
 Before running the repos, you need to set up the required API keys as using features dependent on external APIs. Please refer to this [docs](agent/LLM/README.md).
 
+Also, you need to install the Node.js dependencies:
+
+```bash
+npm init -y
+npm install axios
+```
+Then you need to set the google search api key and custom search engine id to perform google search action, for **Google blocked GUI agent based search lately**.
+
+```bash
+export GOOGLE_API_KEY=your_api_key
+export GOOGLE_CX=your_custom_search_engine_id
+```
+
+See [How to set up google search](https://developers.google.com/custom-search/v1/overview?hl=zh-cn) for more details.
+
 #### Recommended Environment for Mind2Web-Live
 
 From our experiments, the experimental environment plays a crucial role in agent performance. We recommend experimenting on a Windows server using Chrome or Firefox browser engines, preferably on servers located in the United States. Below is the experiment results on Mind2Web-Live test set.
@@ -99,8 +114,6 @@ From our experiments, the experimental environment plays a crucial role in agent
 
 ### Configure cloud environment
 [Browserbase](https://www.browserbase.com/) offers a reliable, high performance serverless developer platform to run, manage, and monitor headless browsers at scale. Leverage our infrastructure to power your web automation and AI agents.
-
-
 
 Get your API Key, go over the [Dashboard’s Settings tab](https://www.browserbase.com/settings),
 Then copy your API Key directly from the input and update your `.env` by adding the `BROWSERBASE_API_KEY` entry
