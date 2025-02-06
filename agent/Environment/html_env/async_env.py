@@ -68,8 +68,8 @@ class AsyncHTMLEnvironment:
         self.current_events = []  # Add event queue
         self.events_directory = os.path.join(os.path.dirname(__file__), '..', 'js_event')
         os.makedirs(self.events_directory, exist_ok=True)
-        self.google_api_key = os.environ.get('GOOGLE_API_KEY', 'AIzaSyBQFKJS9-ofc30j1kqh4TWAF3RokKUo1S4')
-        self.google_cx = os.environ.get('GOOGLE_CX', '4537c398fd0444c1b')
+        self.google_api_key = os.environ.get('GOOGLE_API_KEY')
+        self.google_cx = os.environ.get('GOOGLE_CX')
         # Add path to the Node.js script
         self.search_script_path = os.path.join(os.path.dirname(__file__), 'google_search.js')
 
