@@ -9,13 +9,18 @@ from sanic.log import logger
 from agent.Utils import *
 from .token_utils import truncate_messages_based_on_estimated_tokens
 
+# Adopt the new field schema (max_completion_tokens)
+NEW_TOKEN_MODELS = ("o3", "o4")
+
+def use_new_token_param(model_name: str) -> bool:
+    return any(model_name.startswith(p) for p in NEW_TOKEN_MODELS)
 
 class GPTGenerator:
     def __init__(self, model=None):
         self.model = model
         self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-    async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7) -> (str, str):
+    async def request(self, messages: list = None, max_tokens: int = 100000, temperature: float = 0.7) -> (str, str):
         try:
             if "gpt-3.5" in self.model:
                 messages = truncate_messages_based_on_estimated_tokens(messages, max_tokens=16385)
@@ -42,17 +47,34 @@ class GPTGenerator:
             logger.error(f"Error in GPTGenerator.request: {e}")
             return "", str(e)
 
-    async def chat(self, messages, max_tokens=500, temperature=0.7):
+    async def chat(self, messages, max_tokens=100000, temperature=0.7):
         loop = asyncio.get_event_loop()
+        
+        # Dynamically select field names
+        token_key = "max_completion_tokens" if use_new_token_param(self.model) \
+                                         else "max_tokens"                        
         if "o1" in self.model:
             data = {
                 'model': self.model,
                 'messages': messages,
             }
+        elif "o3" in self.model or "o4" in self.model:
+            data = {
+                'model': self.model,
+                token_key: max_tokens,
+                'messages': messages,
+            }
+        elif "gpt-4.1" in self.model:
+            data = {
+                'model': self.model,
+                token_key: 32768, # gpt-4.1 max_tokens = 32768
+                'messages': messages,
+            }
         else:
             data = {
                 'model': self.model,
-                'max_tokens': max_tokens,
+                # 'max_tokens': max_tokens,
+                token_key: max_tokens,
             'temperature': temperature,
             'messages': messages,
         }
@@ -79,7 +101,7 @@ class JSONModeMixin(GPTGenerator):
             messages.insert(0, {"role": "system", "content": "You are a helpful assistant designed to output json."})
         return messages
 
-    async def request(self, messages: list = None, max_tokens: int = 500, temperature: float = 0.7) -> (str, str):
+    async def request(self, messages: list = None, max_tokens: int = 100000, temperature: float = 0.7) -> (str, str):
         messages = self.prepare_messages_for_json_mode(messages)  # Prepare messages for JSON mode
         return await super().request(messages, max_tokens, temperature)
 

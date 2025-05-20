@@ -1,3 +1,6 @@
+"""
+The new version only supports Online-Mind2Web task testing
+"""
 from playwright.async_api import Page
 import re
 import toml
@@ -13,8 +16,20 @@ from agent.Utils.utils import save_screenshot, is_valid_base64
 from agent.Reward.global_reward import GlobalReward
 from evaluate import FinishTaskEvaluator, TaskLengthEvaluator, URLEvaluator, ElementEvaluator, TextEvaluator
 from logs import logger
+import json
 
 
+def save_token_count_to_file(filename, step_tokens, task_name, global_reward_text_model, planning_text_model, token_pricing):
+    data = {
+        "task_name": task_name,
+        "global_reward_text_model": global_reward_text_model,
+        "planning_text_model": planning_text_model,
+        "token_pricing": token_pricing,
+        "step_tokens": step_tokens
+    }
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(data, f)        
+        
 def read_file(file_path: str = "./data/example/example_130.json") -> List[List]:
     """Read labeled data
     
@@ -36,70 +51,16 @@ def read_file(file_path: str = "./data/example/example_130.json") -> List[List]:
         raise
 
     for task in test_data:
-        task_name = task["task"]
-        evaluation_data = task["evaluation"]
-        reference_task_length = task["reference_task_length"]
-        task_name_id = task["index"]
+        # task_name = task["task"]
+        task_name = task["confirmed_task"]
+        # evaluation_data = task["evaluation"]
+        evaluation_data = task.get("evaluation", [])
+        # reference_task_length = task["reference_task_length"]
+        reference_task_length = task["reference_length"]
+        task_name_id = task["task_id"]
         reference_evaluate_steps = []
-        for i, evaluation in enumerate(evaluation_data):
-            match_function = evaluation["match_function_name"]
-            if "url" in match_function:
-                try:
-                    key = evaluation["content"]["key"]
-                    reference_answer = evaluation["content"]["reference_answer"]
-                    reference_evaluate_steps.append({"match_function": match_function,
-                                                     "key": key, "reference_answer": reference_answer, "score": 0})
-                except:
-                    logger.error(
-                        f"URL error in task {task_name_id}, step {i}, match_function: {match_function}")
-                    exit(1)
-            elif "element_path" in match_function:
-                try:
-                    reference_answer = evaluation["content"]["reference_answer"]
-                    method = evaluation["method"]
-                    netloc = evaluation["content"]["netloc"]
-                    reference_evaluate_steps.append({"match_function": match_function, "method": method,
-                                                     "reference_answer": reference_answer, "netloc": netloc,
-                                                     "score": 0})
-                except:
-                    logger.error(
-                        f"Element path error in task {task_name_id}, step {i}, match_function: {match_function}")
-                    exit(1)
-            elif "element_value" in match_function:
-                try:
-                    reference_answer = evaluation["content"]["reference_answer"]
-                    netloc = evaluation["content"]["netloc"]
-                    if "path" in evaluation["content"].keys():
-                        path = evaluation["content"]["path"]
-                        reference_evaluate_steps.append({"match_function": match_function,
-                                                         "reference_answer": reference_answer, "netloc": netloc,
-                                                         "path": path, "score": 0})
-                    else:
-                        reference_evaluate_steps.append({"match_function": match_function,
-                                                         "reference_answer": reference_answer, "netloc": netloc,
-                                                         "score": 0})
-                except:
-                    logger.error(
-                        f"Element value error in task {task_name_id}, step {i}, match_function: {match_function}")
-                    exit(1)
-            elif "final_answer" in match_function:
-                try:
-                    reference_answer = evaluation["content"]["reference_answer"]
-                    reference_evaluate_steps.append({"match_function": match_function,
-                                                     "reference_answer": reference_answer, "score": 0})
-                except:
-                    logger.error(
-                        f"Final answer error in task {task_name_id}, step {i}, match_function: {match_function}")
-                    exit(1)
-            elif "cache_data" in match_function:
-                try:
-                    reference_answer = evaluation["content"]["reference_answer"]
-                    reference_evaluate_steps.append({"match_function": match_function,
-                                                     "reference_answer": reference_answer, "score": 0})
-                except:
-                    logger.error(
-                        f"Cache data error in task {task_name_id}, step {i}, match_function: {match_function}")
-                    exit(1)
+        if "evaluation" not in task:
+            task["evaluation"] = []
 
         return_list.append(
             [task_name, task_name_id, reference_task_length, reference_evaluate_steps])
@@ -412,8 +373,9 @@ async def run_task(
         interaction_mode,
         task_index,
         record_time=None,
-        token_pricing=None
-):
+        token_pricing=None,
+        screenshot_params=None
+):  
     await env.reset("about:blank")
 
     response_error_count = 0
@@ -468,6 +430,49 @@ async def run_task(
     token_counts_filename = f"token_results/token_counts_{record_time}_{planning_text_model}_{global_reward_text_model}.json"
 
     while num_steps < max_steps + additional_steps:
+        # Screenshot at the beginning of each step
+        if screenshot_params:
+            if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:
+                observation, observation_VforD = await env.get_obs()
+                if is_valid_base64(observation_VforD):
+                    save_screenshot(
+                        mode=screenshot_params["mode"],
+                        record_time=screenshot_params["record_time"],
+                        task_name=screenshot_params["task_name"],
+                        step_number=num_steps,
+                        description=f"step_{num_steps}",
+                        screenshot_base64=observation_VforD,
+                        task_name_id=screenshot_params.get("task_name_id")
+                    )
+            else:
+                observation = await env.get_obs()
+                if isinstance(observation, dict) and is_valid_base64(observation.get("screenshot", "")):
+                    save_screenshot(
+                        mode=screenshot_params["mode"],
+                        record_time=screenshot_params["record_time"],
+                        task_name=screenshot_params["task_name"],
+                        step_number=num_steps,
+                        description=f"step_{num_steps}",
+                        screenshot_base64=observation["screenshot"],
+                        task_name_id=screenshot_params.get("task_name_id")
+                    )
+            
+            # save HTML(Optional)
+            # html_content = await env.page.content()
+            # html_save_path = os.path.join(screenshot_params["file_path"], "html_screenshots", f"{screenshot_params['task_name']}", 
+            #                               f"step_{num_steps}_{screenshot_params['record_time']}.html")
+            # os.makedirs(os.path.dirname(html_save_path), exist_ok=True)
+            # with open(html_save_path, "w", encoding="utf-8") as html_file:
+            #     html_file.write(html_content)
+                
+            # save screenshot
+            png_save_path = os.path.join(screenshot_params["file_path"], "img_screenshots", f"{screenshot_params['task_name']}",
+                                           f"step_{num_steps}_{screenshot_params['record_time']}.png")
+            os.makedirs(os.path.dirname(png_save_path), exist_ok=True)
+            png_bytes = await env.page.screenshot()
+            with open(png_save_path, "wb") as png_file:
+                png_file.write(png_bytes)
+        
         error_message = ""
         total_step_score = 0
         step_reward = {}
@@ -687,8 +692,7 @@ async def run_task(
     step_tokens["steps_token_counts"] = steps_token_counts
 
     # Update token counting
-    save_token_count_to_file(token_counts_filename, step_tokens, task_name, global_reward_text_model,
-                             planning_text_model, config["token_pricing"])
+    save_token_count_to_file(token_counts_filename, step_tokens, task_name, global_reward_text_model,planning_text_model, config["token_pricing"])
 
     # ! 3. Task evaluation and scoring
     if task_mode == "batch_tasks":
