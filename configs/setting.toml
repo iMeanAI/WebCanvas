@@ -1,6 +1,8 @@
 [basic]
-task_mode = "batch_tasks"    # single_task or batch_tasks
-max_time_step = 25           # For all tasks, set the maximum step length
+task_mode = "single_task"    # single_task or batch_tasks
+max_time_step = 15           # For all tasks, set the maximum step length
+save_screenshots = true  # screenshots
+screenshot_path = "./screenshots"
 
 [model]
 json_model_response = false      # Whether to require a model to strictly output json format, currently only support OPENAI models.
@@ -11,17 +13,21 @@ json_models = ["gpt-4-turbo",
                    "gpt-3.5-turbo",
                    "gpt-3.5-turbo-0125",
                    "gpt-4o-2024-05-13",
-                   "gpt-4o-mini-2024-07-18"]
+                   "gpt-4o-mini-2024-07-18",
+                   "o4-mini",
+                   "gpt-4.1-2025-04-14",
+                   "o3-mini-2025-01-31"
+                   ]
 
 
 [steps]
-interaction_mode = true             #  Whether human control of task execution status is required
-single_task_action_step = 10     
+interaction_mode = false             #  Whether human control of task execution status is required
+single_task_action_step = 15     
 batch_tasks_max_action_step = 10
 batch_tasks_condition_step_increase = 5
 
 [files]
-batch_tasks_file_path = "./data/example/mind2web-live_test_20241024.json" # The input data path
+batch_tasks_file_path = "./data/Online-Mind2Web/Online_Mind2Web.json" # The input data path
 ground_truth_file_path = "./data/human_labeled_reward_reference/GT_instructions_202404161811_for_all_data_0328.json"  # the ground_truth data path
 out_file_path = "./batch_tasks_results/example"   # YOUR OUT FILE PATH 
 
@@ -42,7 +48,9 @@ pricing_models = [
     "gpt-4-1106-preview",
     "gpt-4-vision-preview",
     "gpt-3.5-turbo-0125",
-    "gpt-3.5-turbo-1106"]
+    "gpt-3.5-turbo-1106",
+    "o4-mini"
+    ]
 
 # The price of each model for input and output, the unit is $/token
 # The name of input token price: model_name + "_input_price", such as gpt-4o_input_price
@@ -73,3 +81,4 @@ gpt-3.5-turbo-0125_input_price      = 0.0000005
 gpt-3.5-turbo-0125_output_price     = 0.0000015
 gpt-3.5-turbo-1106_input_price      = 0.000001
 gpt-3.5-turbo-1106_output_price     = 0.000002
+o4-mini                             = 0.000002
