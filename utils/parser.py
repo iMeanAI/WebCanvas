@@ -41,7 +41,7 @@ def main():
                     print(f"Error: The task ID or task name cannot be extracted from the log file: {filename}")
                     continue
                 
-                output_file = os.path.join(output_directory, f"{result['task_id']}_result.json")
+                output_file = os.path.join(output_directory, f"{result['task_id']}.json")
                 save_json(output_file, result)
                 processed_count += 1
                 

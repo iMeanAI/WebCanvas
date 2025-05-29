@@ -60,6 +60,9 @@ def to_dict(input_string):
     action = ""
     if "google_search" in extracted_fields["action_type"].lower():
         action = "google_search" + "[" + extracted_fields["fill_text"] + "]"
+        # Online_Mind2Web评估使用goto直接访问指定网站，不使用 google_search
+        # website = get_website_for_query(extracted_fields["fill_text"])
+        # action = "goto" + "[" + website + "]"
     elif "fill_search" in extracted_fields["action_type"].lower():
         action = "fill_search" + \
                  "[" + str(extracted_fields["element_id"]) + "," + \
@@ -184,6 +187,21 @@ def write_to_json(df):
 def get_result(input_json_path):
     json_result_path = input_json_path + "/json_result"
     out_file_path = input_json_path + "/result"
+    
+    if not os.path.exists(json_result_path):
+        os.makedirs(json_result_path)
+    if not os.path.exists(out_file_path):
+        os.makedirs(out_file_path)
+    
+    # 结果文件
+    if len(os.listdir(json_result_path)) == 0:
+        print(f"警告: {json_result_path} 目录是空的，没有生成结果文件")
+        empty_result = []
+        out_json_file_path = out_file_path + '/out.json'
+        with open(out_json_file_path, 'w') as json_file:
+            json.dump(empty_result, json_file)
+        return out_file_path
+    
     task_list = []
     for _, filename in enumerate(os.listdir(json_result_path)):
         file_path = os.path.join(json_result_path, filename)

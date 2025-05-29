@@ -280,3 +280,10 @@ if __name__ == "__main__":
                      )
                 )
     
+# xvfb-run python eval.py \
+# --global_reward_mode no_global_reward \
+# --index -1 \
+# --single_task_name "Find the SO2 air quality over the past hour for Maine North, County Cork, Ireland." \
+# --snapshot res \
+# --planning_text_model gpt-4.1 \
+# --global_reward_text_model gpt-4.1

@@ -36,3 +36,6 @@ results_wodom/
 results_wodom33/
 scripts/
 eval_agent/
+dataset/
+dataset_4o/
+results*

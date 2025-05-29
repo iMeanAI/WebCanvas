@@ -434,6 +434,7 @@ class AsyncHTMLEnvironment:
             logger.error(f"Search error: {str(e)}")
             self.html_content = f"<html><body><p>Search error: {str(e)}</p></body></html>"
             await self.page.set_content(self.html_content)
+        
 
     def _create_search_results_page(self, items):
         """Create an HTML page from search results"""
@@ -633,13 +634,14 @@ class AsyncHTMLEnvironment:
                     error_message = f"Failed to execute fill_form [{action['element_id']},{action['fill_text']}] action. An error({e}) occur."
                     raise ActionExecutionError(
                         action['action_type'], error_message) from e
-            case ActionTypes.GOOGLE_SEARCH:
-                try:
-                    await self.search(action)
-                except Exception as e:
-                    error_message = f"Failed to execute google_search[{action['fill_text']}] action. An error({e}) occur."
-                    raise ActionExecutionError(
-                        action['action_type'], error_message) from e
+            # 禁用Google search
+            # case ActionTypes.GOOGLE_SEARCH:
+            #     try:
+            #         await self.search(action)
+            #     except Exception as e:
+            #         error_message = f"Failed to execute google_search[{action['fill_text']}] action. An error({e}) occur."
+            #         raise ActionExecutionError(
+            #             action['action_type'], error_message) from e
             case ActionTypes.GO_BACK:
                 try:
                     await self.go_back_last_page(action)

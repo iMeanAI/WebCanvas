@@ -1,5 +1,5 @@
 {
-    "log_directory": "/home/ec2-user/WebCanvas/results_wodom33/logs",
-    "output_directory": "/home/ec2-user/WebCanvas/results_wodom33/json",
+    "log_directory": "/home/ec2-user/WebCanvas/results/logs",
+    "output_directory": "/home/ec2-user/WebCanvas/results/json",
     "task_mapping_file": "/home/ec2-user/WebCanvas/data/Online-Mind2Web/Online_Mind2Web.json"
 }
