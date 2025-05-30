@@ -24,3 +24,4 @@ requests_toolbelt
 anthropic
 google-generativeai
 tomli
+backoff==2.2.1
