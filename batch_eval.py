@@ -5,8 +5,13 @@ This release adds the following features:
 2. Support Online_Mind2Web task evaluation
 3. Support access to gpt-4.1, o3-mini, o4-mini and other models
 
-Tips: To run in a Linux environment without a visual interface, use the following command to start
+Tips: To run in a Linux environment without a visual interface, use the following command to start:
     sudo yum install -y xorg-x11-server-Xvfb
+    xvfb-run python batch_eval.py
+    
+    Ubantu/Debian users can use the following command to install xvfb:
+    sudo apt-get update
+    sudo apt-get install -y xvfb
     xvfb-run python batch_eval.py
 """
 #!/usr/bin/env python3
@@ -51,10 +56,10 @@ def main():
     parser.add_argument('--json_path', type=str, default='data/Online-Mind2Web/Online_Mind2Web.json',
                         help='JSON task file path')
     parser.add_argument('--global_reward_mode', type=str, default='dom_reward',
-                        help='Global Reward Mode: dom_reward/no_global_reward')
+                        help='Global Reward Mode: dom_reward/no_global_reward/dom_vision_reward')
     parser.add_argument('--index', type=int, default=-1,
                         help='Task index')
-    parser.add_argument('--snapshot', type=str, default='results',
+    parser.add_argument('--snapshot', type=str, default='results/41_dom',
                         help='Snapshot directory')
     parser.add_argument('--planning_text_model', type=str, default='gpt-4.1',
                         help='planning_text_model: gpt-4.1/gpt-4o-2024-08-06')
@@ -66,7 +71,7 @@ def main():
                         help='The index of the finished task (excluding)')
     parser.add_argument('--delay', type=int, default=5,
                         help='Latency between tasks (seconds)')
-    parser.add_argument('--output_log', type=str, default='results/batch_run_log.txt',
+    parser.add_argument('--output_log', type=str, default='results/41_dom/batch_run_log.txt',
                         help='output_log')
     
     args = parser.parse_args()

@@ -20,7 +20,7 @@ class GPTGenerator:
         self.model = model
         self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-    async def request(self, messages: list = None, max_tokens: int = 32768, temperature: float = 0.7) -> (str, str):
+    async def request(self, messages: list = None, max_tokens: int = 4096, temperature: float = 0.7) -> (str, str):
         try:
             if "gpt-3.5" in self.model:
                 messages = truncate_messages_based_on_estimated_tokens(messages, max_tokens=16385)
@@ -47,7 +47,7 @@ class GPTGenerator:
             logger.error(f"Error in GPTGenerator.request: {e}")
             return "", str(e)
 
-    async def chat(self, messages, max_tokens=32768, temperature=0.7):
+    async def chat(self, messages, max_tokens=4096, temperature=0.7):
         loop = asyncio.get_event_loop()
         
         # Dynamically select field names
@@ -67,7 +67,7 @@ class GPTGenerator:
         elif "gpt-4.1" in self.model:
             data = {
                 'model': self.model,
-                # token_key: 32768, # gpt-4.1 max_tokens = 32768
+                token_key: 4096, # gpt-4.1 max_tokens = 32768
                 'messages': messages,
             }
         elif "gpt-4o" in self.model:

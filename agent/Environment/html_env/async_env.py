@@ -392,80 +392,82 @@ class AsyncHTMLEnvironment:
                 self.html_content = await self.page.content()
             except Exception as e:
                 raise e
-
-    async def search(self, action):
-        """Use Node.js to call Google Custom Search API"""
-        try:
-            # Execute Node.js script
-            process = await asyncio.create_subprocess_exec(
-                'node', 
-                self.search_script_path, 
-                action["fill_text"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
             
-            # Get output
-            stdout, stderr = await process.communicate()
+    # disable Google search
+    # async def search(self, action):
+    #     """Use Node.js to call Google Custom Search API"""
+    #     try:
+    #         # Execute Node.js script
+    #         process = await asyncio.create_subprocess_exec(
+    #             'node', 
+    #             self.search_script_path, 
+    #             action["fill_text"],
+    #             stdout=subprocess.PIPE,
+    #             stderr=subprocess.PIPE
+    #         )
             
-            if process.returncode == 0:
-                try:
-                    # Parse the JSON response
-                    data = json.loads(stdout.decode().strip())
+    #         # Get output
+    #         stdout, stderr = await process.communicate()
+            
+    #         if process.returncode == 0:
+    #             try:
+    #                 # Parse the JSON response
+    #                 data = json.loads(stdout.decode().strip())
                     
-                    if 'items' in data:
-                        # Create HTML from search results
-                        results_html = self._create_search_results_page(data['items'])
-                        self.html_content = results_html
-                    else:
-                        self.html_content = "<html><body><p>No results found.</p></body></html>"
-                except json.JSONDecodeError as e:
-                    logger.error(f"Failed to parse JSON response: {e}")
-                    self.html_content = "<html><body><p>Error parsing search results.</p></body></html>"
-            else:
-                error_msg = stderr.decode().strip()
-                logger.error(f"Search script error: {error_msg}")
-                self.html_content = f"<html><body><p>Search error: {error_msg}</p></body></html>"
+    #                 if 'items' in data:
+    #                     # Create HTML from search results
+    #                     results_html = self._create_search_results_page(data['items'])
+    #                     self.html_content = results_html
+    #                 else:
+    #                     self.html_content = "<html><body><p>No results found.</p></body></html>"
+    #             except json.JSONDecodeError as e:
+    #                 logger.error(f"Failed to parse JSON response: {e}")
+    #                 self.html_content = "<html><body><p>Error parsing search results.</p></body></html>"
+    #         else:
+    #             error_msg = stderr.decode().strip()
+    #             logger.error(f"Search script error: {error_msg}")
+    #             self.html_content = f"<html><body><p>Search error: {error_msg}</p></body></html>"
             
-            # Update the page content
-            await self.page.set_content(self.html_content)
+    #         # Update the page content
+    #         await self.page.set_content(self.html_content)
             
-        except Exception as e:
-            logger.error(f"Search error: {str(e)}")
-            self.html_content = f"<html><body><p>Search error: {str(e)}</p></body></html>"
-            await self.page.set_content(self.html_content)
+    #     except Exception as e:
+    #         logger.error(f"Search error: {str(e)}")
+    #         self.html_content = f"<html><body><p>Search error: {str(e)}</p></body></html>"
+    #         await self.page.set_content(self.html_content)
         
+        
+    # disable Google search
+    # def _create_search_results_page(self, items):
+    #     """Create an HTML page from search results"""
+    #     results = []
+    #     for item in items:
+    #         result = f"""
+    #         <div class="search-result">
+    #             <h3><a href="{item.get('link', '')}">{item.get('title', 'No title')}</a></h3>
+    #             <div class="url">{item.get('link', '')}</div>
+    #             <div class="snippet">{item.get('snippet', 'No description available')}</div>
+    #         </div>
+    #         """
+    #         results.append(result)
 
-    def _create_search_results_page(self, items):
-        """Create an HTML page from search results"""
-        results = []
-        for item in items:
-            result = f"""
-            <div class="search-result">
-                <h3><a href="{item.get('link', '')}">{item.get('title', 'No title')}</a></h3>
-                <div class="url">{item.get('link', '')}</div>
-                <div class="snippet">{item.get('snippet', 'No description available')}</div>
-            </div>
-            """
-            results.append(result)
-
-        html = f"""
-        <html>
-        <head>
-            <style>
-                .search-result {{ margin-bottom: 20px; padding: 10px; }}
-                .url {{ color: green; margin: 5px 0; }}
-                .snippet {{ color: #545454; }}
-            </style>
-        </head>
-        <body>
-            <div class="search-results">
-                {''.join(results)}
-            </div>
-        </body>
-        </html>
-        """
-        return html
+    #     html = f"""
+    #     <html>
+    #     <head>
+    #         <style>
+    #             .search-result {{ margin-bottom: 20px; padding: 10px; }}
+    #             .url {{ color: green; margin: 5px 0; }}
+    #             .snippet {{ color: #545454; }}
+    #         </style>
+    #     </head>
+    #     <body>
+    #         <div class="search-results">
+    #             {''.join(results)}
+    #         </div>
+    #     </body>
+    #     </html>
+    #     """
+    #     return html
 
     async def go_back_last_page(self, action):
         # self.page = self.last_page

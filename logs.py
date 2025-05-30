@@ -5,7 +5,7 @@ import time
 import colorlog
 import re
 
-log_folder = "results/logs"
+log_folder = "results/41_dom/logs"
 
 if not os.path.exists(log_folder):
     os.makedirs(log_folder)

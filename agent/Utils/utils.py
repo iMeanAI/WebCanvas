@@ -51,17 +51,23 @@ def read_json_file(file_path):
 
 
 def save_screenshot(mode: str, record_time: str, task_name: str, step_number: int, description: str,
-                    screenshot_base64: str, task_name_id: str = None):
-
+                    screenshot_base64: str, task_name_id: str = None, task_uuid: str = None):# add task_uuid
+    # Prior use task_uuid,else task_name_id
+    identifier = task_uuid if task_uuid is not None else task_name_id
+    
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     invalid_chars = '<>:"/\\|?*'
     for char in invalid_chars:
         task_name = task_name.replace(char, '_')
-
-    if task_name_id is None:
+    # if task_name_id is None:
+    #     task_folder = f'results/screenshots/screenshots_{mode}_{record_time}/{task_name}'
+    # else:
+    #     task_folder = f'results/screenshots/screenshots_{mode}_{record_time}/{task_name_id}_{task_name}'
+        
+    if identifier is None:
         task_folder = f'results/screenshots/screenshots_{mode}_{record_time}/{task_name}'
     else:
-        task_folder = f'results/screenshots/screenshots_{mode}_{record_time}/{task_name_id}_{task_name}'
+        task_folder = f'results/screenshots/screenshots_{mode}_{record_time}/{identifier}_{task_name}'
     if not os.path.exists(task_folder):
         os.makedirs(task_folder)
 

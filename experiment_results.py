@@ -24,7 +24,7 @@ def enum_to_action_str():
         ("NONE", 0),
         ("CLICK", 1),
         ("GOTO", 2),
-        ("GOOGLE_SEARCH", 3),
+        # ("GOOGLE_SEARCH", 3),
         ("FILL_FORM", 4),
         ("SWITCH_TAB", 5),
         ("GO_BACK", 6),
@@ -58,12 +58,12 @@ def to_dict(input_string):
     extracted_fields["fill_text"] = extracted_fields["fill_text"] if extracted_fields.get(
         "fill_text") else ""
     action = ""
-    if "google_search" in extracted_fields["action_type"].lower():
-        action = "google_search" + "[" + extracted_fields["fill_text"] + "]"
+    # if "google_search" in extracted_fields["action_type"].lower():
+        # action = "google_search" + "[" + extracted_fields["fill_text"] + "]"
         # Online_Mind2Web评估使用goto直接访问指定网站，不使用 google_search
         # website = get_website_for_query(extracted_fields["fill_text"])
         # action = "goto" + "[" + website + "]"
-    elif "fill_search" in extracted_fields["action_type"].lower():
+    if "fill_search" in extracted_fields["action_type"].lower():
         action = "fill_search" + \
                  "[" + str(extracted_fields["element_id"]) + "," + \
                  extracted_fields["fill_text"] + "]"

@@ -133,9 +133,10 @@ async def run_experiment(task_range, experiment_config):
             task_name = task.get("confirmed_task", f"Task_{task_index}")
             task_uuid = task.get("task_id", f"task_{task_index}")
             reference_task_length = task.get("reference_length", 0)
-            # reference_evaluate_steps = None  # Online_Mind2Web.json 文件中没有对应字段
+            # reference_evaluate_steps = None
             # evaluate_steps = reference_evaluate_steps
             reference_evaluate_steps = task.get("evaluation", [])
+            website = task.get("website", "about:blank") # The first step is to force access to the specified web page
             log_task_info(task_index, task_name,
                           reference_task_length, reference_evaluate_steps)
         elif experiment_config.config['basic']['task_mode'] == "single_task":
@@ -144,7 +145,7 @@ async def run_experiment(task_range, experiment_config):
                         
             evaluate_steps = []
             reference_evaluate_steps = []
-            
+            website = "about:blank" # The first step is to force access to the specified web page
             # Generate a unique task_uuid for the single_task mode
             task_uuid = f"single_task_{int(time.time())}"
             logger.info(f"task_name: {task_name}")
@@ -198,7 +199,8 @@ async def run_experiment(task_range, experiment_config):
                        task_index=task_index,
                        record_time=experiment_config.record_time,
                        token_pricing=experiment_config.config['token_pricing'],
-                       screenshot_params=screenshot_params # support screenshot
+                       screenshot_params=screenshot_params, # support screenshot
+                       website=website # Specified web page
                        )
 
         await env.close()
