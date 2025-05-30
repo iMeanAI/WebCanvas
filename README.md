@@ -77,3 +77,14 @@ results/
   ...
 -- result.json
 ```
+
+### Online-Mind2Web Benchmarking
+Run the following command to generate the benchmark file:
+```bash
+bash OM2W_Benchmarking/eval.sh
+```
+
+Display evaluation results:
+```bash
+python OM2W_Benchmarking/statistic.py 
+```
