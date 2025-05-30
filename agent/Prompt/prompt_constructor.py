@@ -7,10 +7,10 @@ from .base_prompts import BasePrompts
 from .dom_vision_prompts import DomVisionPrompts
 from .vision_prompts import VisionPrompts
 from jinja2 import Template
-
+from typing import Union, List, Dict, Any, Optional
 
 from agent.Memory.short_memory.history import HistoryMemory
-
+from agent.Memory.retriever import TestOnlyRetriever
 
 class BasePromptConstructor:
     def __init__(self):
@@ -427,3 +427,80 @@ class SemanticMatchPromptConstructor(BasePromptConstructor):
         messages = [{"role": "system", "content": self.prompt_system}, {
             "role": "user", "content": self.prompt_user}]
         return messages
+
+# Build a prompt for planning based on the DOM tree and retrioeval pool
+class PlanningPromptRetrievalConstructor(BasePromptConstructor):
+    def __init__(self):
+        self.prompt_system = BasePrompts.planning_prompt_system
+        self.prompt_user = BasePrompts.planning_prompt_user
+    def construct(
+            self,
+            user_request: str,
+            rag_path: str,
+            previous_trace: list,
+            observation: str,
+            feedback: str = "",
+            status_description: str = "",
+    ) -> list:
+        self.prompt_user = Template(self.prompt_user).render(
+            user_request=user_request)
+        self.prompt_user += "## Example Tasks ##\n"
+        retrieval_path = dict()
+        retrieval_path['collection_path'] = f"{rag_path}/collection"
+        retrieval_path['qry_embed_path'] = f"{rag_path}/qry_task_embed.json" # list of dict: "id", "task", "embed"
+        retrieval_path['cand_embed_path'] = f"{rag_path}/cand_embed.parquet" # parquet, "annotation_id", "embed", "instruction"
+        # "cand_id + task + cand_text"
+        retriever = TestOnlyRetriever(retrieval_path)
+        retrieved_ids = retriever.retrieve(
+            task_name=user_request,
+        )
+
+        # for idx, (task, text) in enumerate(zip(retrieved_tasks, retrieved_texts), 1):
+        #     self.prompt_user += (
+        #         f"\nExample {idx}: {task}\n"
+        #         "Web browsing trajectory in this example:\n"
+        #         f"{text}\n\n"
+        #     )
+        print(f"retrieved_ids: {retrieved_ids}")
+
+        if len(previous_trace) > 0:
+            self.prompt_user += HistoryMemory(
+                previous_trace=previous_trace, 
+                reflection=status_description
+            ).construct_previous_trace_prompt()
+            
+            if status_description:
+                self.prompt_user += f"\nTask completion description: {status_description}"
+                
+            if feedback:
+                self.prompt_user += f"\nHere are some other things you need to know:\n{feedback}"
+                
+            self.prompt_user += f"\nHere is the accessibility tree that you should refer to for this task:\n{observation}"
+
+        # Construct final messages
+        messages = [
+            {"role": "system", "content": self.prompt_system},
+            {"role": "user", "content": self.prompt_user}
+        ]
+        
+        return messages
+
+    def stringfy_thought_and_action(self, input_data: Union[str, bytes, List[Dict[str, Any]]]) -> str:
+        """Convert thought and action data to formatted string.
+        
+        Args:
+            input_data: Input data to format
+            
+        Returns:
+            Formatted string representation
+        """
+        if isinstance(input_data, (str, bytes)):
+            input_list = json5.loads(input_data, encoding="utf-8")
+        else:
+            input_list = input_data
+            
+        str_output = "["
+        for idx, i in enumerate(input_list):
+            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}, Reflection:{i.get("reflection", "")}\";\n'
+        str_output += "]"
+        return str_output

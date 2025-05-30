@@ -18,6 +18,9 @@ json_models = ["gpt-4-turbo",
                    "o3-mini-2025-01-31"
                    ]
 
+[rag]
+enabled = true                   # Whether to enable RAG mode
+rag_path = "./data/Online-Mind2web/rag_data"    # Path to store RAG data
 
 [steps]
 interaction_mode = false             #  Whether human control of task execution status is required

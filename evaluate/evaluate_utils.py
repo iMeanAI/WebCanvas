@@ -372,6 +372,7 @@ async def run_task(
         ground_truth_data,
         interaction_mode,
         task_index,
+        rag_path,
         record_time=None,
         token_pricing=None,
         screenshot_params=None,
