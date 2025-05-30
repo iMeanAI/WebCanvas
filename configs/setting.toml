@@ -1,6 +1,6 @@
 [basic]
 task_mode = "single_task"    # single_task or batch_tasks
-max_time_step = 15           # For all tasks, set the maximum step length
+max_time_step = 25           # For all tasks, set the maximum step length
 save_screenshots = true  # screenshots
 screenshot_path = "./screenshots"
 
@@ -12,8 +12,7 @@ json_models = ["gpt-4-turbo",
                    "gpt-4-1106-preview",
                    "gpt-3.5-turbo",
                    "gpt-3.5-turbo-0125",
-                   "gpt-4o-2024-05-13",
-                   "gpt-4o-mini-2024-07-18",
+                   "gpt-4o-2024-08-06",
                    "o4-mini",
                    "gpt-4.1-2025-04-14",
                    "o3-mini-2025-01-31"
@@ -22,7 +21,7 @@ json_models = ["gpt-4-turbo",
 
 [steps]
 interaction_mode = false             #  Whether human control of task execution status is required
-single_task_action_step = 15     
+single_task_action_step = 25     
 batch_tasks_max_action_step = 10
 batch_tasks_condition_step_increase = 5
 
@@ -37,7 +36,7 @@ URL = ["error"]
 [token_pricing]
 pricing_models = [
     "gpt-4o",
-    "gpt-4o-2024-05-13",
+    "gpt-4o-2024-08-06",
     "gpt-4o-mini",
     "gpt-4o-mini-2024-07-18",
     "gpt-4-turbo",

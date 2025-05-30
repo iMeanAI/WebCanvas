@@ -374,9 +374,10 @@ async def run_task(
         task_index,
         record_time=None,
         token_pricing=None,
-        screenshot_params=None
+        screenshot_params=None,
+        website=None
 ):  
-    await env.reset("about:blank")
+    await env.reset(website if website else "about:blank")
 
     response_error_count = 0
     response_total_count = 0

@@ -42,7 +42,6 @@ class BasePrompts:
         **Execution Action Space**:
             - goto: useful for when you need visit a new link or a website, it will open a new tab.
             - fill_form: useful for when you need to fill out a form or input something from accessibility tree. Input should be a string.
-            - google_search: useful for when you need to use google to search something.
             - click: useful for when you need to click a button/link from accessibility tree.
             - select_option: useful for when you need to select a drop-down box value. When you get (select and option) tags from the accessibility tree, you need to select the serial number(element_id) corresponding to the select tag, not the option, and select the most likely content corresponding to the option as Input.
             - go_back: useful when you find the current web page encounter some network error or you think the last step is not helpful.
@@ -57,7 +56,9 @@ class BasePrompts:
 
         You have to follow the instructions or notes:
         **Important Notes**:
-            - Under the following conditions, you are restricted to using the `google_search` or `goto` tools exclusively: 
+            - The first step must be a goto, especially when the page is blank (about: blank).
+            - It is not allowed to perform operations other than goto on blank pages, such as click and other interactive operations.
+            - Under the following conditions, you are restricted to using the `goto` tool exclusively: 
                 1. In the initial step of a process or when there's no preceding interaction history (i.e., the previous trace is empty). 
                 2. In situations where the accessibility tree is absent or not provided.
             - Your action should not be the same as last step's action.
