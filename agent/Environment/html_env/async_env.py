@@ -107,9 +107,16 @@ class AsyncHTMLEnvironment:
             if start_url:
                 # Use existing or create new page
                 self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
-                await self.page.goto(start_url, timeout=10000)
-                await self.page.wait_for_timeout(500)
-                self.html_content = await self.page.content()
+                try:
+                    # Removed timeout limitation by setting it to 0
+                    await self.page.goto(start_url, timeout=0)
+                    await self.page.wait_for_timeout(500)
+                    self.html_content = await self.page.content()
+                except Exception as e:
+                    logger.error(f"Failed to load page {start_url}: {str(e)}")
+                    # Try to load a blank page as fallback
+                    await self.page.goto("about:blank", timeout=0)
+                    self.html_content = await self.page.content()
             else:
                 self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
                 self.html_content = await self.page.content()

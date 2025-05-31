@@ -90,9 +90,14 @@ def to_dict(input_string):
     return action
 
 
-def score_rate(score):
-    first, second = score.split("/")
-    return float(first) / float(second)
+def score_rate(x):
+    try:
+        first, second = x.split(" / ")
+        if float(second) == 0:
+            return 0.0  # Return 0 if denominator is 0
+        return float(first) / float(second)
+    except (ValueError, ZeroDivisionError):
+        return 0.0  # Return 0 for any parsing or division errors
 
 
 def parse_step_reward(dict_str):
@@ -245,10 +250,15 @@ def read_json_result(file_path):
 
 
 def calculate_total_score(scores):
-    molecular_sum = sum(float(x.split('/')[0]) for x in scores)
-    denominator_sum = sum(float(x.split('/')[1]) for x in scores)
-    final_score = molecular_sum / denominator_sum
-    return final_score
+    try:
+        molecular_sum = sum(float(x.split('/')[0]) for x in scores)
+        denominator_sum = sum(float(x.split('/')[1]) for x in scores)
+        if denominator_sum == 0:
+            return 0.0  # Return 0 if denominator is 0
+        final_score = molecular_sum / denominator_sum
+        return final_score
+    except (ValueError, ZeroDivisionError):
+        return 0.0  # Return 0 for any parsing or division errors
 
 
 def evaluate(file_path, total_token_cost):

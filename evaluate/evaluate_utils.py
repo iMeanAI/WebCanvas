@@ -1,6 +1,7 @@
 """
 The new version only supports Online-Mind2Web task testing
 """
+from urllib.parse import urlparse
 from playwright.async_api import Page
 import re
 import toml
@@ -372,11 +373,12 @@ async def run_task(
         ground_truth_data,
         interaction_mode,
         task_index,
-        rag_path,
         record_time=None,
         token_pricing=None,
         screenshot_params=None,
-        website=None
+        website=None,
+        rag_enabled=False,
+        rag_path=None,
 ):  
     await env.reset(website if website else "about:blank")
 
@@ -512,7 +514,9 @@ async def run_task(
                     feedback=error_description,
                     mode=mode,
                     observation_VforD=observation_VforD,
-                    status_description=status_description
+                    status_description=status_description,
+                    rag_enabled=rag_enabled,
+                    rag_path=rag_path
                 )
 
                 if out_put is not None:

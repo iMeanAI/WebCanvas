@@ -1,5 +1,5 @@
 [basic]
-task_mode = "single_task"    # single_task or batch_tasks
+task_mode = "batch_tasks"    # single_task or batch_tasks
 max_time_step = 25           # For all tasks, set the maximum step length
 save_screenshots = true  # screenshots
 screenshot_path = "./screenshots"

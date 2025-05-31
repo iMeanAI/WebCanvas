@@ -21,9 +21,14 @@ class DomMode(InteractionMode):
     def __init__(self, text_model=None, visual_model=None):
         super().__init__(text_model, visual_model)
 
-    async def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
-        planning_request = PlanningPromptConstructor().construct(
-            user_request, previous_trace, observation, feedback, status_description)
+    async def execute(self, status_description, user_request, rag_enabled, rag_path, previous_trace, observation, feedback, observation_VforD):
+        if rag_enabled:
+            planning_request = PlanningPromptRetrievalConstructor().construct(
+                user_request, rag_path, previous_trace, observation, feedback, status_description)
+        else:
+            planning_request = PlanningPromptConstructor().construct(
+                user_request, previous_trace, observation, feedback, status_description)
+        
         logger.info(
             f"\033[32mDOM_based_planning_request:\n{planning_request}\033[0m\n")
         logger.info(f"planning_text_model: {self.text_model.model}")
@@ -31,23 +36,6 @@ class DomMode(InteractionMode):
         # if "gpt" in self.text_model.model:
         #     output_token_count = future_answer_result.usage.completion_tokens
         #     input_token_count = future_answer_result.usage.prompt_tokens
-        input_token_count = calculation_of_token(planning_request, model=self.text_model.model)
-        output_token_count = calculation_of_token(planning_response, model=self.text_model.model)
-        planning_token_count = [input_token_count, output_token_count]
-
-        return planning_response, error_message, None, None, planning_token_count
-
-class DomRMode(InteractionMode):
-    def __init__(self, text_model=None, visual_model=None):
-        super().__init__(text_model, visual_model)
-
-    async def execute(self, status_description, user_request, rag_path, previous_trace, observation, feedback, observation_VforD):
-        planning_request = PlanningPromptRetrievalConstructor().construct(
-            user_request, rag_path, previous_trace, observation, feedback, status_description)
-        logger.info(
-            f"\033[32mDOM_based_planning_request:\n{planning_request}\033[0m\n")
-        logger.info(f"planning_text_model: {self.text_model.model}")
-        planning_response, error_message = await self.text_model.request(planning_request)
         input_token_count = calculation_of_token(planning_request, model=self.text_model.model)
         output_token_count = calculation_of_token(planning_response, model=self.text_model.model)
         planning_token_count = [input_token_count, output_token_count]
@@ -197,6 +185,7 @@ class Planning:
         mode,
         observation_VforD,
         status_description,
+        rag_enabled,
         rag_path
     ):
 
@@ -211,7 +200,6 @@ class Planning:
 
         modes = {
             "dom": DomMode(text_model=llm_planning_text),
-            "domR": DomRMode(text_model=llm_planning_text),
             "dom_v_desc": DomVDescMode(visual_model=gpt4v, text_model=llm_planning_text),
             "vision_to_dom": VisionToDomMode(visual_model=gpt4v, text_model=llm_planning_text),
             "d_v": DVMode(visual_model=gpt4v),
@@ -222,6 +210,7 @@ class Planning:
         planning_response, error_message, planning_response_thought, planning_response_action, planning_token_count = await modes[mode].execute(
             status_description=status_description,
             user_request=user_request,
+            rag_enabled=rag_enabled,
             rag_path=rag_path,
             previous_trace=previous_trace,
             observation=observation,
@@ -253,11 +242,11 @@ class Planning:
             "action": (
                 f'{planning_response_action["action"]}: {planning_response_action["action_input"]}' if "description" not in planning_response_action.keys() else
                 planning_response_action["description"])
-            if mode in ["dom", "domR", "d_v", "dom_v_desc", "vision_to_dom"] else (
+            if mode in ["dom","d_v", "dom_v_desc", "vision_to_dom"] else (
                 planning_response_action["action"] if "description" not in planning_response_action.keys() else
                 planning_response_action["description"])
         }
-        if mode in ["dom", "domR", "d_v", "dom_v_desc", "vision_to_dom"]:
+        if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
             planning_response_action = {element: planning_response_action.get(
                 element, "") for element in ["element_id", "action", "action_input", "description"]}
         elif mode == "vision":
@@ -266,7 +255,7 @@ class Planning:
         logger.info("****************")
         # logger.info(planning_response_action)
         dict_to_write = {}
-        if mode in ["dom", "domR", "d_v", "dom_v_desc", "vision_to_dom"]:
+        if mode in ["dom", "d_v", "dom_v_desc", "vision_to_dom"]:
             dict_to_write['id'] = planning_response_action['element_id']
             dict_to_write['action_type'] = planning_response_action['action']
             dict_to_write['value'] = planning_response_action['action_input']

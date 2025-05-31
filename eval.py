@@ -41,6 +41,7 @@ class ExperimentConfig:
     write_result_file_path: str
     record_time: str
     file: list
+    rag_enabled: bool
     rag_path: str
 
 def validate_config(config, observation_mode, global_reward_mode, observation_model, global_reward_model):
@@ -201,6 +202,7 @@ async def run_experiment(task_range, experiment_config):
                        token_pricing=experiment_config.config['token_pricing'],
                        screenshot_params=screenshot_params, # support screenshot
                        website=website, # Specified web page
+                       rag_enabled=experiment_config.rag_enabled,
                        rag_path=experiment_config.rag_path
                        )
 
@@ -242,8 +244,6 @@ async def main(global_reward_mode="no_global_reward",
     ground_truth_data = load_ground_truth_data(config, ground_truth_mode)
 
     rag_enabled = config['rag']['enabled']
-    if rag_enabled == True:
-        observation_mode = "domR"
     rag_path = config['rag']['rag_path']
 
     experiment_config = ExperimentConfig(
@@ -258,6 +258,7 @@ async def main(global_reward_mode="no_global_reward",
         write_result_file_path=write_result_file_path,
         record_time=record_time,
         file=file,
+        rag_enabled=rag_enabled,
         rag_path=rag_path,
     )
 

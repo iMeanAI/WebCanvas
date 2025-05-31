@@ -449,20 +449,20 @@ class PlanningPromptRetrievalConstructor(BasePromptConstructor):
         retrieval_path['collection_path'] = f"{rag_path}/collection"
         retrieval_path['qry_embed_path'] = f"{rag_path}/qry_task_embed.json" # list of dict: "id", "task", "embed"
         retrieval_path['cand_embed_path'] = f"{rag_path}/cand_embed.parquet" # parquet, "annotation_id", "embed", "instruction"
+        retrieval_path['cand_id_text_path'] = f"{rag_path}/cand_id_text.json"
         # "cand_id + task + cand_text"
         retriever = TestOnlyRetriever(retrieval_path)
-        retrieved_ids = retriever.retrieve(
+        retrieved_tasks, retrieved_texts = retriever.retrieve(
             task_name=user_request,
         )
 
-        # for idx, (task, text) in enumerate(zip(retrieved_tasks, retrieved_texts), 1):
-        #     self.prompt_user += (
-        #         f"\nExample {idx}: {task}\n"
-        #         "Web browsing trajectory in this example:\n"
-        #         f"{text}\n\n"
-        #     )
-        print(f"retrieved_ids: {retrieved_ids}")
-
+        for idx, (task, text) in enumerate(zip(retrieved_tasks, retrieved_texts), 1):
+            self.prompt_user += (
+                f"\nExample {idx}: {task}\n"
+                "Web browsing trajectory in this example:\n"
+                f"{text}\n\n"
+            )
+            
         if len(previous_trace) > 0:
             self.prompt_user += HistoryMemory(
                 previous_trace=previous_trace, 
