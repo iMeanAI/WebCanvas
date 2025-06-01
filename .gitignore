@@ -44,3 +44,5 @@ run_evaluate.sh
 process_raw.sh
 load_from_platform.sh
 
+data/Online-Mind2Web/rag_data/collection/*
+
