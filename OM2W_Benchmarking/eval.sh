@@ -15,7 +15,7 @@ modes=(
 )
 
 # base_dir="./data/example"
-base_dir="../WebCanvas/dataset"
+base_dir="../WebCanvas/dataset_4o"
 
 for mode in "${modes[@]}"; do
     python ./OM2W_Benchmarking/src/run.py \

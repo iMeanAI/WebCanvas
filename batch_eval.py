@@ -27,11 +27,11 @@ def load_tasks(json_path):
         data = json.load(f)
     return data
 
-def run_single_task(task, args):
+def run_single_task(task, args, current_idx):
     command = [
         "python", "eval.py",
         "--global_reward_mode", args.global_reward_mode,
-        "--index", str(args.index),
+        "--index", str(current_idx),
         "--single_task_name", task,
         "--snapshot", args.snapshot,
         "--planning_text_model", args.planning_text_model,
@@ -59,7 +59,7 @@ def main():
                         help='Global Reward Mode: dom_reward/no_global_reward/dom_vision_reward')
     parser.add_argument('--index', type=int, default=-1,
                         help='Task index')
-    parser.add_argument('--snapshot', type=str, default='results/41_dom',
+    parser.add_argument('--snapshot', type=str, default='results/4o_dom',
                         help='Snapshot directory')
     parser.add_argument('--planning_text_model', type=str, default='gpt-4.1',
                         help='planning_text_model: gpt-4.1/gpt-4o-2024-08-06')
@@ -71,7 +71,7 @@ def main():
                         help='The index of the finished task (excluding)')
     parser.add_argument('--delay', type=int, default=5,
                         help='Latency between tasks (seconds)')
-    parser.add_argument('--output_log', type=str, default='results/41_dom/batch_run_log.txt',
+    parser.add_argument('--output_log', type=str, default='results/4o_dom/batch_run_log.txt',
                         help='output_log')
     
     args = parser.parse_args()
@@ -101,7 +101,7 @@ def main():
         with open(args.output_log, 'a') as log_file:
             log_file.write(f"[{current_idx}/{len(tasks)}] Running tasks: {task}\n")
         
-        success = run_single_task(task, args)
+        success = run_single_task(task, args, current_idx)
         if success:
             successful_tasks += 1
         

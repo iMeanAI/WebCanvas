@@ -34,9 +34,12 @@ scripts/
 eval_agent/
 dataset/
 dataset_4o/
+dataset_4o-rag/
+
 results*
 
 run.sh
+run_batch_eval.sh
 run_evaluate.sh
 process_raw.sh
 load_from_platform.sh

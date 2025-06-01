@@ -42,8 +42,8 @@ def find_best_match(folder_name, task_map):
 
 def process_dataset():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    screenshots_dir = os.path.join(base_dir, "results", "img_screenshots")
-    json_results_dir = os.path.join(base_dir, "results", "json")
+    screenshots_dir = os.path.join(base_dir, "results/4o_dom", "img_screenshots")
+    json_results_dir = os.path.join(base_dir, "results/4o_dom", "json")
     output_dir = os.path.join(base_dir, "dataset_4o")
     
     os.makedirs(output_dir, exist_ok=True)

@@ -36,7 +36,7 @@ class LogProcessor:
             return ''
             
         for task in self.task_mapping:
-            if task.get('confirmed_task') == task_name:
+            if task_name in task.get('confirmed_task', ''):
                 return task.get('task_id', '')
         return ''
 
@@ -56,16 +56,17 @@ class LogProcessor:
             
             # Finding the task name
             task_patterns = [
-                r'The question here is described as "([^"]+)"',
-                r'"confirmed_task": "([^"]+)"',
+                r'The question here is described as "(.+?)(?<!\\)"',
+                r'"confirmed_task": "(.+?)(?<!\\)"',
                 r'task_name: (.+?)(?:\n|\r\n)',
-                r'"task": "([^"]+)"'
+                r'"task": "(.+?)(?<!\\)"'
             ]
             
             for pattern in task_patterns:
                 task_match = re.search(pattern, content)
                 if task_match:
-                    result["task"] = task_match.group(1).strip()
+                    # Unescape the task name
+                    result["task"] = task_match.group(1).encode().decode('unicode_escape').strip()
                     result["task_id"] = self._get_task_id_by_task_name(result["task"])
                     if result["task_id"]:
                         break
