@@ -593,10 +593,8 @@ async def run_task(
                 else:
                     each_step_dict["step_reward"] = {}
 
-                if total_step_score == len(reference_evaluate_steps):
-                    # steps_list.append(each_step_dict)
+                if total_step_score == len(reference_evaluate_steps) and len(reference_evaluate_steps) > 0:
                     task_finished = True
-                    # break
 
             logger.info(
                 "**🤖 The agent is in the process of executing the action 🤖**")
@@ -651,6 +649,12 @@ async def run_task(
             steps_list.append(each_step_dict)
             step_index += 1
             if num_steps >= 25 or task_global_status == "finished" or task_finished:
+                if num_steps >= 25:
+                    logger.info("**🤖 Breaking loop: Reached maximum step limit of 25 🤖**")
+                elif task_global_status == "finished":
+                    logger.info("**🤖 Breaking loop: Global reward status indicates task is finished 🤖**")
+                elif task_finished:
+                    logger.info("**🤖 Breaking loop: All evaluation steps matched successfully 🤖**")
                 break
         num_steps += 1
         if interaction_mode:

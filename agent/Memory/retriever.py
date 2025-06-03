@@ -22,15 +22,18 @@ def load_cand(cand_path):
 def build_retrieval_pool(collection_path, cand_pool):
     if not os.path.exists(collection_path):
         os.makedirs(collection_path)
-    client = chromadb.PersistentClient(path=collection_path)
-    collection = client.get_or_create_collection(name="retrieval_pool")
-    cand_ids = list(cand_pool['annotation_id'].values())
-    embeddings = list(cand_pool['embed'].values())
+        client = chromadb.PersistentClient(path=collection_path)
+        collection = client.get_or_create_collection(name="retrieval_pool")
+        cand_ids = list(cand_pool['annotation_id'].values())
+        embeddings = list(cand_pool['embed'].values())
 
-    collection.add(
-        embeddings=embeddings,
-        ids=cand_ids
-    )
+        collection.add(
+            embeddings=embeddings,
+            ids=cand_ids
+        )
+    else:
+        client = chromadb.PersistentClient(path=collection_path)
+        collection = client.get_or_create_collection(name="retrieval_pool")
     return collection
 
 class TestOnlyRetriever():

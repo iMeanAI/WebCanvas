@@ -24,25 +24,27 @@ test_dom_tree.py
 
 agent/Environment/html_env/js_event/
 
+# npm modules
 node_modules/
 package-lock.json
 package.json
 
-results_wodom/
-results_wodom33/
-scripts/
-eval_agent/
-dataset/
+# results
 dataset_4o/
 dataset_4o-rag/
+data/example/
+data/Mind2Web-Live/
+data/Online-Mind2Web/
+results/*
+token_results/*
 
-results*
-
-run.sh
+# scripts
+download_raw.sh
 run_batch_eval.sh
-run_evaluate.sh
-process_raw.sh
-load_from_platform.sh
+run_benchmark.sh
+run_ds_proc.sh
+run_proc_raw.sh
 
-data/Online-Mind2Web/rag_data/collection/*
+# Logs
+Logs/
 

@@ -59,7 +59,7 @@ def main():
                         help='Global Reward Mode: dom_reward/no_global_reward/dom_vision_reward')
     parser.add_argument('--index', type=int, default=-1,
                         help='Task index')
-    parser.add_argument('--snapshot', type=str, default='results/4o_dom',
+    parser.add_argument('--snapshot', type=str, default='results/4o_dom-rag',
                         help='Snapshot directory')
     parser.add_argument('--planning_text_model', type=str, default='gpt-4.1',
                         help='planning_text_model: gpt-4.1/gpt-4o-2024-08-06')
@@ -71,7 +71,7 @@ def main():
                         help='The index of the finished task (excluding)')
     parser.add_argument('--delay', type=int, default=5,
                         help='Latency between tasks (seconds)')
-    parser.add_argument('--output_log', type=str, default='results/4o_dom/batch_run_log.txt',
+    parser.add_argument('--output_log', type=str, default='results/4o_dom-rag/batch_run_log.txt',
                         help='output_log')
     
     args = parser.parse_args()
