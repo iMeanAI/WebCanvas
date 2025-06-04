@@ -22,8 +22,30 @@ def load_cand(cand_path):
 def build_retrieval_pool(collection_path, cand_pool):
     if not os.path.exists(collection_path):
         os.makedirs(collection_path)
-        client = chromadb.PersistentClient(path=collection_path)
-        collection = client.get_or_create_collection(name="retrieval_pool")
+    
+    client = chromadb.PersistentClient(path=collection_path)
+    
+    # Check if collection exists
+    collections = client.list_collections()
+    collection_exists = any(col.name == "retrieval_pool" for col in collections)
+    
+    if collection_exists:
+        collection = client.get_collection(name="retrieval_pool")
+    else:
+        # Create new collection with optimized parameters
+        collection = client.create_collection(
+            name="retrieval_pool",
+            configuration={
+                "hnsw": {
+                    "space": "cosine", # Cohere models often use cosine space
+                    "ef_search": 200,
+                    "ef_construction": 200,
+                    "max_neighbors": 32,
+                    "num_threads": 4
+                },
+            }
+        )
+        # Add embeddings only for new collection
         cand_ids = list(cand_pool['annotation_id'].values())
         embeddings = list(cand_pool['embed'].values())
 
@@ -31,9 +53,7 @@ def build_retrieval_pool(collection_path, cand_pool):
             embeddings=embeddings,
             ids=cand_ids
         )
-    else:
-        client = chromadb.PersistentClient(path=collection_path)
-        collection = client.get_or_create_collection(name="retrieval_pool")
+    
     return collection
 
 class TestOnlyRetriever():
@@ -53,12 +73,15 @@ class TestOnlyRetriever():
             if task_name == entry['task']:
                 return entry['embedding']
 
-    def get_cand_text(self, ids):
+    def get_cand_content(self, ids):
         retrieved_texts = []
+        retrieved_image_paths = []
         for a_id in ids: 
             cand_text = self.traj_pool[a_id]['cand_text']
+            cand_image_path = self.traj_pool[a_id]['cand_image_path']
             retrieved_texts.append(cand_text)
-        return retrieved_texts
+            retrieved_image_paths.append(cand_image_path)
+        return retrieved_texts, retrieved_image_paths
 
     def get_cand_task(self, ids):
         retrieved_tasks = []
@@ -77,12 +100,12 @@ class TestOnlyRetriever():
             
         response = self.collection.query(
             query_embeddings=[qry_embed],
-            n_results=2,
+            n_results=1,
         )
         retrieved_ids = response['ids'][0]
         print(f"retrieved_ids: {retrieved_ids}")
-        retrieved_texts = self.get_cand_text(retrieved_ids)
+        retrieved_texts, retrieved_image_paths = self.get_cand_content(retrieved_ids)
         retrieved_tasks = self.get_cand_task(retrieved_ids)
-        return retrieved_tasks, retrieved_texts
+        return retrieved_tasks, retrieved_texts, retrieved_image_paths
 
        

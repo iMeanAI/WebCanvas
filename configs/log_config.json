@@ -1,5 +1,5 @@
 {
-    "log_directory": "./results/4o_dom-rag/logs",
-    "output_directory": "./results/4o_dom-rag/json",
+    "log_directory": "./results/4o_dom_rag_parse/logs",
+    "output_directory": "./results/4o_dom_rag_parse/json",
     "task_mapping_file": "./data/Online-Mind2Web/Online_Mind2Web.json"
 }

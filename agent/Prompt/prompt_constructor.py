@@ -428,6 +428,70 @@ class SemanticMatchPromptConstructor(BasePromptConstructor):
             "role": "user", "content": self.prompt_user}]
         return messages
 
+class ExampleParser:
+    """Parser for retrieved examples to format them properly for the prompt."""
+    
+    @staticmethod
+    def parse_action_space(action_space_text: str) -> str:
+        """Parse and format the action space description."""
+        # Extract action space items and format them
+        action_items = []
+        for line in action_space_text.split('\n'):
+            if line.strip().startswith(('1.', '2.', '3.', '4.', '5.')):
+                action_items.append(line.strip())
+        return '\n'.join(action_items)
+    
+    @staticmethod
+    def parse_trajectory(trajectory_text: str) -> List[Dict[str, Any]]:
+        """Parse the trajectory text into structured steps."""
+        steps = []
+        current_step = {}
+        
+        for line in trajectory_text.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+                
+            if line.startswith('Observation'):
+                if current_step:
+                    steps.append(current_step)
+                current_step = {'observation': line}
+            elif line.startswith('Action'):
+                try:
+                    action_data = json5.loads(line.split(':', 1)[1].strip())
+                    current_step['action'] = action_data
+                except:
+                    current_step['action'] = line
+                    
+        if current_step:
+            steps.append(current_step)
+            
+        return steps
+    
+    @staticmethod
+    def format_example(task: str, trajectory_text: str) -> str:
+        """Format a complete example with task and trajectory."""
+        # Extract action space and trajectory
+        parts = trajectory_text.split('\n\n')
+        action_space = ExampleParser.parse_action_space(parts[0])
+        trajectory = ExampleParser.parse_trajectory('\n'.join(parts[1:]))
+        
+        # Format the example
+        formatted = f"Task: {task}\n\n"
+        formatted += "Available Actions:\n"
+        formatted += action_space + "\n\n"
+        formatted += "Example Trajectory:\n"
+        
+        for step in trajectory:
+            formatted += f"Observation: {step['observation']}\n"
+            if isinstance(step['action'], dict):
+                formatted += f"Action: {json5.dumps(step['action'])}\n"
+            else:
+                formatted += f"Action: {step['action']}\n"
+            formatted += "\n"
+            
+        return formatted
+
 # Build a prompt for planning based on the DOM tree and retrioeval pool
 class PlanningPromptRetrievalConstructor(BasePromptConstructor):
     def __init__(self):
@@ -445,24 +509,27 @@ class PlanningPromptRetrievalConstructor(BasePromptConstructor):
         self.prompt_user = Template(self.prompt_user).render(
             user_request=user_request)
         self.prompt_user += "## Example Tasks ##\n"
-        retrieval_path = dict()
-        retrieval_path['collection_path'] = f"{rag_path}/collection"
-        retrieval_path['qry_embed_path'] = f"{rag_path}/qry_task_embed.json" # list of dict: "id", "task", "embed"
-        retrieval_path['cand_embed_path'] = f"{rag_path}/cand_embed.parquet" # parquet, "annotation_id", "embed", "instruction"
-        retrieval_path['cand_id_text_path'] = f"{rag_path}/cand_id_text.json"
-        # "cand_id + task + cand_text"
+        
+        # Setup retrieval paths
+        retrieval_path = {
+            'collection_path': f"{rag_path}/collection",
+            'qry_embed_path': f"{rag_path}/qry_task_embed.json",
+            'cand_embed_path': f"{rag_path}/cand_embed.parquet",
+            'cand_id_text_path': f"{rag_path}/cand_id_text.json"
+        }
+        
+        # Retrieve examples
         retriever = TestOnlyRetriever(retrieval_path)
-        retrieved_tasks, retrieved_texts = retriever.retrieve(
+        retrieved_tasks, retrieved_texts, retrieved_image_paths = retriever.retrieve(
             task_name=user_request,
         )
-
+        
+        # Format and add examples
         for idx, (task, text) in enumerate(zip(retrieved_tasks, retrieved_texts), 1):
-            self.prompt_user += (
-                f"\nExample {idx}: {task}\n"
-                "Web browsing trajectory in this example:\n"
-                f"{text}\n\n"
-            )
+            formatted_example = ExampleParser.format_example(task, text)
+            self.prompt_user += f"\nExample {idx}:\n{formatted_example}\n"
             
+        # Add previous trace and other information
         if len(previous_trace) > 0:
             self.prompt_user += HistoryMemory(
                 previous_trace=previous_trace, 
@@ -502,5 +569,137 @@ class PlanningPromptRetrievalConstructor(BasePromptConstructor):
         str_output = "["
         for idx, i in enumerate(input_list):
             str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}, Reflection:{i.get("reflection", "")}\";\n'
+        str_output += "]"
+        return str_output
+
+class PlanningPromptVisionRetrievalConstructor(BasePromptConstructor):
+    def __init__(self):
+        super().__init__()
+        self.prompt_system = BasePrompts.planning_prompt_system
+        self.prompt_user = BasePrompts.planning_prompt_user
+
+    def parse_retrieved_text(self, text: str) -> tuple:
+        """Parse the retrieved text into action space and trajectory steps."""
+        parts = text.split('\n\n')
+        action_space = parts[0]
+        trajectory_text = '\n'.join(parts[1:])
+        
+        # Parse trajectory into steps
+        steps = []
+        current_step = {}
+        
+        for line in trajectory_text.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+                
+            if line.startswith('Observation'):
+                if current_step:
+                    steps.append(current_step)
+                current_step = {'observation': line}
+            elif line.startswith('Action'):
+                try:
+                    action_data = json5.loads(line.split(':', 1)[1].strip())
+                    current_step['action'] = action_data
+                except:
+                    current_step['action'] = line
+                    
+        if current_step:
+            steps.append(current_step)
+            
+        return action_space, steps
+
+    def construct(
+            self,
+            user_request: str,
+            rag_path: str,
+            previous_trace: list,
+            observation: str,
+            feedback: str = "",
+            status_description: str = "",
+    ) -> list:
+        # Start with the base prompt
+        self.prompt_user = Template(self.prompt_user).render(
+            user_request=user_request)
+        
+        # Setup retrieval paths
+        retrieval_path = {
+            'collection_path': f"{rag_path}/collection",
+            'qry_embed_path': f"{rag_path}/qry_task_embed.json",
+            'cand_embed_path': f"{rag_path}/cand_embed.parquet",
+            'cand_id_text_path': f"{rag_path}/cand_id_text2.json" 
+        }
+        
+        # Retrieve examples
+        retriever = TestOnlyRetriever(retrieval_path)
+        retrieved_tasks, retrieved_texts, retrieved_image_paths = retriever.retrieve(
+            task_name=user_request,
+        )
+        print(f"retrieved_tasks: {retrieved_tasks}")
+        print(f"retrieved_texts: {retrieved_texts}")
+        print(f"retrieved_image_paths: {retrieved_image_paths}")
+
+        # Add retrieved examples with their steps and images
+        if retrieved_tasks:
+            self.prompt_user += "\n\nHere are some similar examples to help you:\n"
+            for task, text, image_paths_json in zip(retrieved_tasks, retrieved_texts, retrieved_image_paths):
+                # Parse the retrieved text
+                action_space, steps = self.parse_retrieved_text(text)
+
+                # Parse the image paths JSON string
+                image_paths = json5.loads(image_paths_json)
+
+                # Add task description and action space
+                self.prompt_user += f"\nExample:\nTask: {task}\n\n"
+                self.prompt_user += f"{action_space}\n\n"
+                
+                # Add each step with its corresponding image
+                prompt_elements = [{"type": "text", "text": self.prompt_user}]
+                for step_idx, (step, image_path) in enumerate(zip(steps, image_paths)):
+                    # Add the observation with image reference
+                    prompt_elements.append({
+                        "type": "text", 
+                        "text": f"Observation {step_idx + 1}: <|image_{step_idx + 1}|>\n"
+                    })
+                    # Add the action
+                    prompt_elements.append({
+                        "type": "text",
+                        "text": f"Action {step_idx + 1}: {json5.dumps(step['action']) if isinstance(step['action'], dict) else step['action']}\n"
+                    })
+                    # Add the corresponding image
+                    full_image_path = f"data/Online-Mind2Web/rag_data/image/{image_path}"
+                    with open(full_image_path, 'rb') as img_file:
+                        import base64
+                        img_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+                        prompt_elements.append({
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/png;base64,{img_base64}"}
+                        })
+        
+        # Add previous trace if exists
+        if len(previous_trace) > 0:
+            trace_prompt = HistoryMemory(
+                previous_trace=previous_trace, reflection=status_description).construct_previous_trace_prompt()
+            prompt_elements.append({"type": "text", "text": trace_prompt})
+            
+            if status_description:
+                prompt_elements.append({"type": "text", "text": f"Task completion description is {status_description}"})
+            if feedback:
+                prompt_elements.append({"type": "text", "text": f"Here are some other things you need to know:\n {feedback}\n"})
+            
+            prompt_elements.append({"type": "text", "text": f"\nHere is the accessibility tree that you should refer to for this task:\n{observation}"})
+        
+        # Construct the final message payload
+        messages = [
+            {"role": "system", "content": self.prompt_system},
+            {"role": "user", "content": prompt_elements}
+        ]
+        return messages
+
+    def stringfy_thought_and_action(self, input_list: list) -> str:
+        input_list = json5.loads(input_list, encoding="utf-8")
+        str_output = "["
+        for idx, i in enumerate(input_list):
+            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}, Reflection:{i["reflection"]}\";\n'
         str_output += "]"
         return str_output
