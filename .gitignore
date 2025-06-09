@@ -6,6 +6,7 @@
 result_logs/
 results/
 LOGS/
+logs/
 batch_tasks_results/
 # data
 data/*
