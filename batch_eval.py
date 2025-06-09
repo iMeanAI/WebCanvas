@@ -27,27 +27,32 @@ def load_tasks(json_path):
         data = json.load(f)
     return data
 
-def run_single_task(task, args):
+def run_single_task(task_data, task_index, args):
+    task_name = task_data["confirmed_task"]
+    website = task_data.get("website", "about:blank")
+    
     command = [
         "python", "eval.py",
         "--global_reward_mode", args.global_reward_mode,
-        "--index", str(args.index),
-        "--single_task_name", task,
+        "--index", str(task_index),
+        "--single_task_name", task_name,
+        "--single_task_website", website,
         "--snapshot", args.snapshot,
         "--planning_text_model", args.planning_text_model,
         "--global_reward_text_model", args.global_reward_text_model
     ]
     
     print(f"\n{'='*80}")
-    print(f"Task: {task}")
+    print(f"Task [{task_index}]: {task_name}")
+    print(f"Website: {website}")
     print(f"{'='*80}")
     
     try:
         subprocess.run(command, check=True)
-        print(f"Mission accomplished: {task}")
+        print(f"Mission accomplished: {task_name}")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"Task failure: {task}")
+        print(f"Task failure: {task_name}")
         print(f"Error: {e}")
         return False
 
@@ -59,7 +64,7 @@ def main():
                         help='Global Reward Mode: dom_reward/no_global_reward/dom_vision_reward')
     parser.add_argument('--index', type=int, default=-1,
                         help='Task index')
-    parser.add_argument('--snapshot', type=str, default='results/41_dom',
+    parser.add_argument('--snapshot', type=str, default='results/test2',
                         help='Snapshot directory')
     parser.add_argument('--planning_text_model', type=str, default='gpt-4.1',
                         help='planning_text_model: gpt-4.1/gpt-4o-2024-08-06')
@@ -71,7 +76,7 @@ def main():
                         help='The index of the finished task (excluding)')
     parser.add_argument('--delay', type=int, default=5,
                         help='Latency between tasks (seconds)')
-    parser.add_argument('--output_log', type=str, default='results/41_dom/batch_run_log.txt',
+    parser.add_argument('--output_log', type=str, default='results/test2/batch_run_log.txt',
                         help='output_log')
     
     args = parser.parse_args()
@@ -96,18 +101,20 @@ def main():
     # Run the selected task
     for i, task_data in enumerate(tasks[start_idx:end_idx]):
         current_idx = start_idx + i
-        task = task_data["confirmed_task"]
+        task_name = task_data["confirmed_task"]
+        website = task_data.get("website", "about:blank")
 
         with open(args.output_log, 'a') as log_file:
-            log_file.write(f"[{current_idx}/{len(tasks)}] Running tasks: {task}\n")
+            log_file.write(f"[{current_idx}/{len(tasks)}] Running task: {task_name}\n")
+            log_file.write(f"Website: {website}\n")
         
-        success = run_single_task(task, args)
+        success = run_single_task(task_data, current_idx, args)
         if success:
             successful_tasks += 1
         
         # Logging results
         with open(args.output_log, 'a') as log_file:
-            log_file.write(f"results: {'Success' if success else 'failure'}\n\n")
+            log_file.write(f"Result: {'Success' if success else 'Failure'}\n\n")
         if i < total_tasks - 1:
             print(f"waiting {args.delay} continue to the next task after seconds...")
             time.sleep(args.delay)
