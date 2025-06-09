@@ -20,6 +20,7 @@ data/*
 !data/dataset_io.py
 !data/raw_data_processor.py
 !data/Online-Mind2Web/
+!data/Online-Mind2Web/Online_Mind2Web.json
 
 !configs/log_config.json
 
@@ -39,3 +40,6 @@ eval_agent/
 dataset/
 dataset_4o/
 results*
+batch_output*
+check_result*
+dataset_41*
