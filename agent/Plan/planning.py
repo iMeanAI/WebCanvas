@@ -23,7 +23,7 @@ class DomMode(InteractionMode):
 
     async def execute(self, status_description, user_request, rag_enabled, rag_path, previous_trace, observation, feedback, observation_VforD):
         if rag_enabled:
-            planning_request = PlanningPromptVisionRetrievalConstructor().construct(
+            planning_request = PlanningPromptDescriptionRetrievalConstructor().construct(
                 user_request, rag_path, previous_trace, observation, feedback, status_description)
         else:
             planning_request = PlanningPromptConstructor().construct(

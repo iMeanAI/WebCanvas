@@ -1,5 +1,7 @@
 from ..Utils.utils import is_valid_base64
 import json5
+import base64
+import json
 
 from .vision_to_dom_prompts import VisionToDomPrompts
 from .dom_vision_disc_prompts import DomVisionDiscPrompts
@@ -524,6 +526,16 @@ class PlanningPromptRetrievalConstructor(BasePromptConstructor):
             task_name=user_request,
         )
         
+        # Log the retrieval results
+        from log_retrieved_tasks import log_retrieval
+        log_retrieval(
+            user_request=user_request,
+            retrieved_tasks=retrieved_tasks,
+            retrieved_texts=retrieved_texts,
+            retrieved_image_paths=retrieved_image_paths,
+            log_path="Logs/retrieved_tasks.json"
+        )
+        
         # Format and add examples
         for idx, (task, text) in enumerate(zip(retrieved_tasks, retrieved_texts), 1):
             formatted_example = ExampleParser.format_example(task, text)
@@ -577,6 +589,37 @@ class PlanningPromptVisionRetrievalConstructor(BasePromptConstructor):
         super().__init__()
         self.prompt_system = BasePrompts.planning_prompt_system
         self.prompt_user = BasePrompts.planning_prompt_user
+        self.max_image_dimension = 800  # Increased from 800 to 1200 based on analysis
+
+    def scale_image(self, image_path: str) -> bytes:
+        """Scale down image while maintaining aspect ratio to reduce size."""
+        from PIL import Image
+        import io
+        
+        # Open and scale image
+        with Image.open(image_path) as img:
+            # Calculate new dimensions while maintaining aspect ratio
+            width, height = img.size
+            if width > height:
+                if width > self.max_image_dimension:
+                    new_width = self.max_image_dimension
+                    new_height = int(height * (self.max_image_dimension / width))
+                else:
+                    return img.tobytes()
+            else:
+                if height > self.max_image_dimension:
+                    new_height = self.max_image_dimension
+                    new_width = int(width * (self.max_image_dimension / height))
+                else:
+                    return img.tobytes()
+            
+            # Scale image
+            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+            # Convert to bytes
+            img_byte_arr = io.BytesIO()
+            img.save(img_byte_arr, format=img.format or 'PNG', optimize=True)
+            return img_byte_arr.getvalue()
 
     def parse_retrieved_text(self, text: str) -> tuple:
         """Parse the retrieved text into action space and trajectory steps."""
@@ -626,18 +669,28 @@ class PlanningPromptVisionRetrievalConstructor(BasePromptConstructor):
         retrieval_path = {
             'collection_path': f"{rag_path}/collection",
             'qry_embed_path': f"{rag_path}/qry_task_embed.json",
-            'cand_embed_path': f"{rag_path}/cand_embed.parquet",
+            'cand_embed_path': f"{rag_path}/cand_embed_online_mind2web.parquet",
             'cand_id_text_path': f"{rag_path}/cand_id_text2.json" 
         }
         
         # Retrieve examples
         retriever = TestOnlyRetriever(retrieval_path)
-        retrieved_tasks, retrieved_texts, retrieved_image_paths = retriever.retrieve(
+        retrieved_tasks, retrieved_texts, retrieved_image_paths, retrieved_workflows = retriever.retrieve(
             task_name=user_request,
         )
         print(f"retrieved_tasks: {retrieved_tasks}")
         print(f"retrieved_texts: {retrieved_texts}")
         print(f"retrieved_image_paths: {retrieved_image_paths}")
+        
+        # Log the retrieval results
+        from log_retrieved_tasks import log_retrieval
+        log_retrieval(
+            user_request=user_request,
+            retrieved_tasks=retrieved_tasks,
+            retrieved_texts=retrieved_texts,
+            retrieved_image_paths=retrieved_image_paths,
+            log_path="Logs/retrieved_tasks.json"
+        )
 
         # Add retrieved examples with their steps and images
         if retrieved_tasks:
@@ -669,12 +722,28 @@ class PlanningPromptVisionRetrievalConstructor(BasePromptConstructor):
                     # Add the corresponding image
                     full_image_path = f"data/Online-Mind2Web/rag_data/image/{image_path}"
                     with open(full_image_path, 'rb') as img_file:
-                        import base64
                         img_base64 = base64.b64encode(img_file.read()).decode('utf-8')
                         prompt_elements.append({
                             "type": "image_url",
                             "image_url": {"url": f"data:image/png;base64,{img_base64}"}
                         })
+                    # try:
+                    #     # Scale image before encoding
+                    #     scaled_image_bytes = self.scale_image(full_image_path)
+                    #     img_base64 = base64.b64encode(scaled_image_bytes).decode('utf-8')
+                    #     prompt_elements.append({
+                    #         "type": "image_url",
+                    #         "image_url": {"url": f"data:image/png;base64,{img_base64}"}
+                    #     })
+                    # except Exception as e:
+                    #     print(f"Error processing image {image_path}: {str(e)}")
+                    #     # Fallback to original image if scaling fails
+                    #     with open(full_image_path, 'rb') as img_file:
+                    #         img_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+                    #         prompt_elements.append({
+                    #             "type": "image_url",
+                    #             "image_url": {"url": f"data:image/png;base64,{img_base64}"}
+                    #         })
         
         # Add previous trace if exists
         if len(previous_trace) > 0:
@@ -693,6 +762,92 @@ class PlanningPromptVisionRetrievalConstructor(BasePromptConstructor):
         messages = [
             {"role": "system", "content": self.prompt_system},
             {"role": "user", "content": prompt_elements}
+        ]
+        return messages
+
+    def stringfy_thought_and_action(self, input_list: list) -> str:
+        input_list = json5.loads(input_list, encoding="utf-8")
+        str_output = "["
+        for idx, i in enumerate(input_list):
+            str_output += f'Step{idx + 1}:\"Thought: {i["thought"]}, Action: {i["action"]}, Reflection:{i["reflection"]}\";\n'
+        str_output += "]"
+        return str_output
+
+class PlanningPromptDescriptionRetrievalConstructor(BasePromptConstructor):
+    def __init__(self):
+        super().__init__()
+        self.prompt_system = BasePrompts.planning_prompt_system
+        self.prompt_user = BasePrompts.planning_prompt_user
+        self.reference = ""  # Initialize as empty string instead of None
+
+    def construct(
+            self,
+            user_request: str,
+            rag_path: str,
+            previous_trace: list,
+            observation: str,
+            feedback: str = "",
+            status_description: str = "",
+    ) -> list:
+        # Start with the base prompt
+        self.prompt_user = Template(self.prompt_user).render(
+            user_request=user_request)
+       
+        # Add previous trace if exists
+        if len(previous_trace) > 0:
+            trace_prompt = HistoryMemory(
+                previous_trace=previous_trace, reflection=status_description).construct_previous_trace_prompt()
+            self.prompt_user += trace_prompt
+            
+            if status_description:
+                self.prompt_user += f"\nTask completion description: {status_description}"
+            if feedback:
+                self.prompt_user += f"\nHere are some other things you need to know:\n{feedback}"
+            
+            self.prompt_user += f"\nHere is the accessibility tree that you should refer to for this task:\n{observation}"
+        
+        # Set reference if none
+        if self.reference == "":
+            # Load generated descriptions
+            descriptions_path = "data/Online-Mind2Web/generated_steps/generated_task_descriptions.json"
+            with open(descriptions_path, 'r') as f:
+                generated_descriptions = json.load(f)
+            
+            print(f"\nLooking for task description matching: {user_request}")
+            print(f"Available tasks in descriptions file:")
+            for desc in generated_descriptions:
+                print(f"- {desc['task_name']}")
+            
+            # Find matching task description
+            task_description = next((desc for desc in generated_descriptions if desc['task_name'].lower() == user_request.lower()), None)
+            
+            if not task_description:
+                print(f"\nWARNING: No matching task description found for: {user_request}")
+                print("Please ensure the task name matches exactly with one in the descriptions file.")
+            else:
+                print(f"\nFound matching task description for: {user_request}")
+            
+            # Add example if found
+            if task_description:
+                self.reference += "\n\nHere is a similar example to help you:\n"
+                self.reference += f"\nTask: {task_description['task_name']}\n\n"
+                self.reference += "Steps:\n"
+                
+                # Add each step with its descriptions
+                for step in task_description['steps']:
+                    self.reference += f"Step {step['step_number']}:\n"
+                    self.reference += f"Observation: {step['observation_description']}\n"
+                    self.reference += f"Action: {step['action_description']}\n\n"
+            # Add reference confirmation to end of description
+            self.reference += "In the final part of your output's description section, you should state whether the similar task example was helpful and elaborate on how your plan draws from it.\n\n"
+        
+        # Add reference to user prompt
+        self.prompt_user += self.reference
+
+        # Construct the final message payload
+        messages = [
+            {"role": "system", "content": self.prompt_system},
+            {"role": "user", "content": self.prompt_user}
         ]
         return messages
 

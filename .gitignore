@@ -45,6 +45,8 @@ run_batch_eval.sh
 run_benchmark.sh
 run_ds_proc.sh
 run_proc_raw.sh
+run_generate_task_steps.sh
+log_retrieved_tasks.py
 
 # Logs
 Logs/

@@ -18,6 +18,28 @@ def load_cand(cand_path):
     except Exception as e:
         logger.error(f"Error loading candidate data from {cand_path}: {str(e)}")
         raise
+
+def get_task_workflow_description(task_id: str) -> str:
+    """Get the combined workflow description of all steps for a given task ID."""
+    try:
+        # Load the generated steps
+        with open("data/Online-Mind2Web/generated_steps/generated_task_steps.json", "r") as f:
+            tasks = json.load(f)
+        
+        # Find the task with matching ID
+        for task in tasks:
+            if task["task_id"] == task_id:
+                # Combine all steps into a single string
+                description = f"Task: {task['confirmed_task']}\nWebsite: {task['website']}\n\nSteps:\n"
+                for i, step in enumerate(task["steps"], 1):
+                    description += f"{i}. Observation: {step['observation']}\n"
+                    description += f"   Action: {step['action']}\n\n"
+                return description
+        
+        return f"No workflow description found for task ID: {task_id}"
+    except Exception as e:
+        logger.error(f"Error getting workflow description for task {task_id}: {str(e)}")
+        return f"Error retrieving workflow description: {str(e)}"
         
 def build_retrieval_pool(collection_path, cand_pool):
     if not os.path.exists(collection_path):
@@ -93,6 +115,14 @@ class TestOnlyRetriever():
             retrieved_tasks.append(cand_task)
         return retrieved_tasks
 
+    def get_task_workflow(self, ids):
+        """Get workflow descriptions for the given task IDs."""
+        workflow_descriptions = []
+        for task_id in ids:
+            description = get_task_workflow_description(task_id)
+            workflow_descriptions.append(description)
+        return workflow_descriptions
+
     def retrieve(self, task_name):
         qry_embed = self.lookup_qry_embed(task_name)
         if qry_embed is None:
@@ -106,6 +136,7 @@ class TestOnlyRetriever():
         print(f"retrieved_ids: {retrieved_ids}")
         retrieved_texts, retrieved_image_paths = self.get_cand_content(retrieved_ids)
         retrieved_tasks = self.get_cand_task(retrieved_ids)
-        return retrieved_tasks, retrieved_texts, retrieved_image_paths
+        retrieved_workflows = self.get_task_workflow(retrieved_ids)
+        return retrieved_tasks, retrieved_texts, retrieved_image_paths, retrieved_workflows
 
        
