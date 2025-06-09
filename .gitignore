@@ -10,13 +10,7 @@ logs/
 batch_tasks_results/
 # data
 data/*
-!data/example/
-!data/example/example_130.json
-!data/example/mind2web-live_test_20241024.json
-!data/human_labeled_reward_reference/*
-!data/dataset_io.py
-!data/raw_data_processor.py
-!data/Online-Mind2Web/
+
 !configs/log_config.json
 **/*.json
 img_renamed.zip
@@ -34,9 +28,7 @@ package.json
 # results
 dataset_4o/
 dataset_4o-rag/
-data/example/
-data/Mind2Web-Live/
-data/Online-Mind2Web/
+
 results/*
 token_results/*
 
