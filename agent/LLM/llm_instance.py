@@ -5,7 +5,8 @@ from .togetherai import TogetherAIGenerator
 
 
 def create_llm_instance(model, json_mode=False, all_json_models=None):
-    if "gpt" in model or "o1" in model:
+    # if "gpt" in model or "o1" in model:
+    if any(keyword in model for keyword in ["gpt", "o1", "o3-mini", "o4-mini"]):
         if json_mode:
             if model in all_json_models:
                 return GPTGeneratorWithJSON(model)

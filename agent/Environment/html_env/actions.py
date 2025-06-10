@@ -15,7 +15,7 @@ class ActionTypes(IntEnum):
     NONE = 0
     CLICK = 1
     GOTO = 2
-    GOOGLE_SEARCH = 3
+    # GOOGLE_SEARCH = 3 # 禁用Google search
     FILL_FORM = 4
     SWITCH_TAB = 5
     GO_BACK = 6
@@ -103,16 +103,16 @@ def create_fill_search_action(elementid: int, fill_text: str) -> Action:
         "element_name": ""
     }
 
-
-@beartype
-def create_search_action(elementid: int, text: str) -> Action:
-    return {
-        "action_type": ActionTypes.GOOGLE_SEARCH,
-        "element_id": elementid,
-        "url": "https://www.google.com",
-        "fill_text": text,
-        "element_name": ""
-    }
+# 禁用Google search
+# @beartype
+# def create_search_action(elementid: int, text: str) -> Action:
+#     return {
+#         "action_type": ActionTypes.GOOGLE_SEARCH,
+#         "element_id": elementid,
+#         "url": "https://www.google.com",
+#         "fill_text": text,
+#         "element_name": ""
+#     }
 
 
 @beartype
@@ -176,8 +176,8 @@ def create_action(elementid: int, action_type: str, action_input: str) -> Action
         return create_fill_search_action(elementid=elementid, fill_text=action_input)
     elif action_type == "goto":
         return create_goto_action(elementid=elementid, url=action_input)
-    elif action_type == "google_search":
-        return create_search_action(elementid=elementid, text=action_input)
+    # elif action_type == "google_search": # 禁用Google search
+    #     return create_search_action(elementid=elementid, text=action_input)
     elif action_type == "go_back":
         return create_go_back_action(elementid=elementid)
     elif action_type == "select_option":
@@ -203,7 +203,7 @@ __all__ = [
     "create_fill_action",
     "create_none_action",
     "create_goto_action",
-    "create_search_action",
+    # "create_search_action", # 禁用Google search
     "create_go_back_action",
     "create_fill_search_action",
     "create_select_option_action",

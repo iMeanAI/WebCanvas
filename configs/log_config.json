@@ -1,0 +1,5 @@
+{
+    "log_directory": "./results/41_dom/logs",
+    "output_directory": "./results/41_dom/json",
+    "task_mapping_file": "./data/Online-Mind2Web/Online_Mind2Web.json"
+}

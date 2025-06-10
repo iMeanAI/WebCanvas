@@ -77,7 +77,7 @@ class VisionToDomMode(InteractionMode):
                 vision_act_response)
             actions = {
                 'goto': "Found 'goto' in the vision_act_response.",
-                'google_search': "Found 'google_search' in the vision_act_response.",
+                # 'google_search': "Found 'google_search' in the vision_act_response.",
                 'switch_tab': "Found 'switch_tab' in the vision_act_response.",
                 'scroll_down': "Found 'scroll_down' in the vision_act_response.",
                 'scroll_up': "Found 'scroll_up' in the vision_act_response.",
@@ -94,7 +94,8 @@ class VisionToDomMode(InteractionMode):
                     break
 
             if not actions_found:
-                print("None of 'goto', 'google_search', 'switch_tab', 'scroll_down', 'scroll_up', or 'go_back' were found in the vision_act_response.")
+                # print("None of 'goto', 'google_search', 'switch_tab', 'scroll_down', 'scroll_up', or 'go_back' were found in the vision_act_response.")
+                print("None of 'goto', 'switch_tab', 'scroll_down', 'scroll_up', or 'go_back' were found in the vision_act_response.")
 
                 target_element = planning_response_get.get('target_element')
                 description = planning_response_get.get('description')

@@ -19,6 +19,10 @@ data/*
 !data/human_labeled_reward_reference/*
 !data/dataset_io.py
 !data/raw_data_processor.py
+!data/Online-Mind2Web/
+!data/Online-Mind2Web/Online_Mind2Web.json
+
+!configs/log_config.json
 
 test.py
 test_dom_tree.py
@@ -28,3 +32,14 @@ agent/Environment/html_env/js_event/
 node_modules/
 package-lock.json
 package.json
+
+results_wodom/
+results_wodom33/
+scripts/
+eval_agent/
+dataset/
+dataset_4o/
+results*
+batch_output*
+check_result*
+dataset_41*
