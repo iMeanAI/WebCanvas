@@ -434,6 +434,29 @@ async def run_task(
     token_counts_filename = f"token_results/token_counts_{record_time}_{planning_text_model}_{global_reward_text_model}.json"
 
     while num_steps < max_steps + additional_steps:
+        # Force the first step to navigate to a specific website
+        if num_steps == 0 and website and website != "about:blank":
+            logger.info(f"**🤖 Force the first step to navigate to a specific website: {website} 🤖**")
+            try:
+                # Force navigation to a specific website
+                await env.page.goto(website, wait_until="domcontentloaded", timeout=10000)
+                logger.info(f"-- success: {website}")
+
+                # Update current information
+                current_info = {"URL": env.page.url}
+                
+                # Create a virtual navigation trace record
+                navigation_trace = {
+                    "thought": f"I need to navigate to the designated website to start the task",
+                    "action": f"goto {website}",
+                    "reflection": f"Successfully naviged to the specified website: {website}"
+                }
+                previous_trace.append(navigation_trace)
+                
+            except Exception as e:
+                logger.error(f"-- fail: {e}")
+                error_description = f"Failed to navigate to {website}: {str(e)}"
+        
         # Screenshot at the beginning of each step
         if screenshot_params:
             if mode in ["d_v", "dom_v_desc", "vision_to_dom"]:

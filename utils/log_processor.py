@@ -36,9 +36,34 @@ class LogProcessor:
             return ''
             
         for task in self.task_mapping:
-            if task_name in task.get('confirmed_task', ''):
+            if task.get('confirmed_task') == task_name:
                 return task.get('task_id', '')
         return ''
+
+    def _get_element_description(self, element):
+        """
+        Extract a more complete description from the element object, such as button 'Join', link 'Shop Now'. String and dict types are supported.
+        """
+        if isinstance(element, str):
+            return element.strip()
+        if isinstance(element, dict):
+            # type + text/aria_label/title
+            type_ = element.get('type') or element.get('tag')
+            text = element.get('text')
+            aria = element.get('aria_label')
+            title = element.get('title')
+            value = element.get('value')
+            # text > aria > title > value
+            desc = text or aria or title or value
+            if type_ and desc:
+                return f"{type_} '{desc}'"
+            elif type_:
+                return type_
+            elif desc:
+                return desc
+            else:
+                return str(element)
+        return str(element)
 
     def parse_log(self):
         """Parse the log file and extract the information"""
@@ -56,17 +81,16 @@ class LogProcessor:
             
             # Finding the task name
             task_patterns = [
-                r'The question here is described as "(.+?)(?<!\\)"',
-                r'"confirmed_task": "(.+?)(?<!\\)"',
+                r'The question here is described as "([^"]+)"',
+                r'"confirmed_task": "([^"]+)"',
                 r'task_name: (.+?)(?:\n|\r\n)',
-                r'"task": "(.+?)(?<!\\)"'
+                r'"task": "([^"]+)"'
             ]
             
             for pattern in task_patterns:
                 task_match = re.search(pattern, content)
                 if task_match:
-                    # Unescape the task name
-                    result["task"] = task_match.group(1).encode().decode('unicode_escape').strip()
+                    result["task"] = task_match.group(1).strip()
                     result["task_id"] = self._get_task_id_by_task_name(result["task"])
                     if result["task_id"]:
                         break
@@ -78,27 +102,61 @@ class LogProcessor:
                 action_match = re.search(r"'action': '([^']+)'", last_trace)
                 if action_match:
                     result["final_result_response"] = action_match.group(1).strip()
-            
-            # Extract the action_input and action fields from all Planning_Response
-            planning_blocks = re.findall(r'Planning_Response:\s*\{([^}]+)\}', content)
-            for block in planning_blocks:
+
+            # 新增：预处理所有DOM_based_planning_request块，按顺序存储
+            dom_blocks = []
+            for m in re.finditer(r'DOM_based_planning_request:\s*\{([^}]*)\}', content):
+                dom_blocks.append(m)
+
+            # 处理所有Planning_Response块
+            planning_blocks = list(re.finditer(r'Planning_Response:\s*\{([^}]*)\}', content))
+            for idx, planning_match in enumerate(planning_blocks):
+                block = planning_match.group(1)
                 action_input_match = re.search(r'"action_input": "([^"]*)"', block)
                 action_match = re.search(r'"action": "([^"]*)"', block)
-                
+                element_id_match = re.search(r'"element_id": "([^"]*)"', block)
+                thought_match = re.search(r'"thought": "([^"]*)"', block)
+
                 action_input = action_input_match.group(1) if action_input_match else ""
                 action = action_match.group(1) if action_match else ""
-                
-                if action_input or action:
-                    result["action_history"].append(f"{action_input} -> {action}")
-            
-            # Extract the thought field from all Planning_Response
-            for block in planning_blocks:
-                thought_match = re.search(r'"thought": "([^"]*)"', block)
-                if thought_match:
-                    thought = thought_match.group(1).strip()
+                element_id = element_id_match.group(1) if element_id_match else ""
+                thought = thought_match.group(1).strip() if thought_match else ""
+
+                # 1. 跳过action为get_final_answer的Planning_Response
+                if action == "get_final_answer":
+                    continue
+
+                # 2. 处理action_history
+                if not element_id:
+                    # 没有element_id，按原逻辑
+                    if action_input or action:
+                        result["action_history"].append(f"{action_input} -> {action}")
+                else:
+                    # 有element_id，查找最近的DOM_based_planning_request
+                    # 找到当前Planning_Response之前的所有DOM_based_planning_request
+                    dom_content = ""
+                    for dom_m in reversed(dom_blocks):
+                        if dom_m.start() < planning_match.start():
+                            dom_block = dom_m.group(1)
+                            try:
+                                dom_json = json.loads('{' + dom_block + '}')
+                                dom_obj = dom_json.get(element_id, "")
+                                dom_content = self._get_element_description(dom_obj)
+                            except Exception:
+                                dom_content = ""
+                            break
+                    if dom_content:
+                        result["action_history"].append(f"{dom_content} -> {action}")
+                    else:
+                        # 如果找不到，降级为action_input -> action
+                        # result["action_history"].append(f"{element_id} -> {action}")
+                        result["action_history"].append(f"{action_input} -> {action}")
+
+
+                # 3. 处理thoughts（同样跳过get_final_answer）
+                if thought:
                     result["thoughts"].append(thought)
-            
         except Exception as e:
             print(f"Error parsing log file: {e}")
-            
+        
         return result
