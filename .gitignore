@@ -28,9 +28,8 @@ package.json
 # results
 dataset_4o/
 dataset_4o-rag/
-dataset*
 
-results*
+results/*
 token_results/*
 
 # scripts

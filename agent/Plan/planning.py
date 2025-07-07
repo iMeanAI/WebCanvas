@@ -7,9 +7,6 @@ import json5
 from .action import ResponseError
 from logs import logger
 
-#RAG logger
-from ..Utils.rag_logger import RAGLogger
-import copy
 
 class InteractionMode:
     def __init__(self, text_model=None, visual_model=None):
@@ -17,55 +14,33 @@ class InteractionMode:
         self.visual_model = visual_model
 
     def execute(self, status_description, user_request, previous_trace, observation, feedback, observation_VforD):
-        # Returns a six-tuple containing None, consistent with DomMode
-        return None, None, None, None, None, None
+        pass
+
 
 class DomMode(InteractionMode):
     def __init__(self, text_model=None, visual_model=None):
         super().__init__(text_model, visual_model)
-    
-    async def execute(self, status_description, user_request, rag_enabled,rag_path, previous_trace, observation, feedback, observation_VforD):
-        rag_data = {
-            "rag_enabled": rag_enabled,
-            "rag_path": rag_path if rag_enabled else None,
-        }
 
+    async def execute(self, status_description, user_request, rag_enabled, rag_path, previous_trace, observation, feedback, observation_VforD):
         if rag_enabled:
-            prompt_constructor = PlanningPromptDescriptionRetrievalConstructor()
-            # PlanningPromptVisionRetrievalConstructor 
-            
-            rag_data["rag_method"] = prompt_constructor.__class__.__name__
-            # planning_request
-            planning_request = prompt_constructor.construct(
-                user_request, rag_path, previous_trace, observation, feedback,  status_description)
-
-            # Record the retrieved example information (from prompt_constructor)
-            if hasattr(prompt_constructor, 'reference') and prompt_constructor. reference:
-                rag_data["retrieved_examples"] = prompt_constructor.reference
+            planning_request = PlanningPromptDescriptionRetrievalConstructor().construct(
+                user_request, rag_path, previous_trace, observation, feedback, status_description)
         else:
-            planning_request = PlanningPromptConstructor().construct(user_request, previous_trace, observation, feedback, status_description)
-
-        planning_request_copy = copy.deepcopy(planning_request)
-        rag_data["planning_request"] = planning_request_copy
-
+            planning_request = PlanningPromptConstructor().construct(
+                user_request, previous_trace, observation, feedback, status_description)
+        
         logger.info(
             f"\033[32mDOM_based_planning_request:\n{planning_request}\033[0m\n")
         logger.info(f"planning_text_model: {self.text_model.model}")
         planning_response, error_message = await self.text_model.request(planning_request)
-
-        # Logging the response
-        rag_data["planning_response"] = planning_response
-
+        # if "gpt" in self.text_model.model:
+        #     output_token_count = future_answer_result.usage.completion_tokens
+        #     input_token_count = future_answer_result.usage.prompt_tokens
         input_token_count = calculation_of_token(planning_request, model=self.text_model.model)
         output_token_count = calculation_of_token(planning_response, model=self.text_model.model)
         planning_token_count = [input_token_count, output_token_count]
 
-        rag_data["token_counts"] = {
-            "input_tokens": input_token_count,
-            "output_tokens": output_token_count
-        }
-
-        return planning_response, error_message, None, None, planning_token_count, rag_data
+        return planning_response, error_message, None, None, planning_token_count
 
 class DomVDescMode(InteractionMode):
     def __init__(self, text_model=None, visual_model=None):
@@ -214,14 +189,6 @@ class Planning:
         rag_path
     ):
 
-        rag_logger = RAGLogger()
-        # # Get the current step index from previous_trace
-        step_idx = len(previous_trace)
-        # task id
-        task_id = f"{user_request[:50]}_{int(time.time())}"
-        if hasattr(config, 'task_id') and config.task_id:
-            task_id = config.task_id
-        
         gpt35 = GPTGenerator(model="gpt-3.5-turbo")
         gpt4v = GPTGenerator(model="gpt-4-turbo")
 
@@ -239,7 +206,8 @@ class Planning:
             "vision": VisionMode(visual_model=gpt4v)
         }
 
-        result = await modes[mode].execute(
+        # planning_response_thought, planning_response_action
+        planning_response, error_message, planning_response_thought, planning_response_action, planning_token_count = await modes[mode].execute(
             status_description=status_description,
             user_request=user_request,
             rag_enabled=rag_enabled,
@@ -248,40 +216,8 @@ class Planning:
             observation=observation,
             feedback=feedback,
             observation_VforD=observation_VforD)
-        
-        # Check if any RAG data is returned
-        if len(result) >= 6 and mode == "dom":  # DomMode has been updated to return six values, including rag_data
-            planning_response, error_message, planning_response_thought, planning_response_action, planning_token_count, rag_data = result
-        
-            rag_data["mode"] = mode
-            rag_data["user_request"] = user_request
-            rag_logger.log_rag_step(task_id, step_idx, rag_data)
-        else:
-            # Compatible with other patterns that do not return rag_data
-            planning_response, error_message, planning_response_thought, planning_response_action, planning_token_count = result
-        
-            # log
-            rag_data = {
-                "mode": mode,
-                "user_request": user_request,
-                "rag_enabled": False
-            }
-            rag_logger.log_rag_step(task_id, step_idx, rag_data)
 
         logger.info(f"\033[34mPlanning_Response:\n{planning_response}\033[0m")
-    
-        # # planning_response_thought, planning_response_action
-        # planning_response, error_message, planning_response_thought, planning_response_action, planning_token_count = await modes[mode].execute(
-        #     status_description=status_description,
-        #     user_request=user_request,
-        #     rag_enabled=rag_enabled,
-        #     rag_path=rag_path,
-        #     previous_trace=previous_trace,
-        #     observation=observation,
-        #     feedback=feedback,
-        #     observation_VforD=observation_VforD)
-
-        # logger.info(f"\033[34mPlanning_Response:\n{planning_response}\033[0m")
         if mode != "vision_to_dom":
             try:
                 planning_response_thought, planning_response_action = ActionParser().extract_thought_and_action(

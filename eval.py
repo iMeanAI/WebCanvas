@@ -146,12 +146,10 @@ async def run_experiment(task_range, experiment_config):
                         
             evaluate_steps = []
             reference_evaluate_steps = []
-            # website = "about:blank" # The first step is to force access to the specified web page
-            website = experiment_config.config.get('single_task_website', "about:blank")
+            website = "about:blank" # The first step is to force access to the specified web page
             # Generate a unique task_uuid for the single_task mode
             task_uuid = f"single_task_{int(time.time())}"
             logger.info(f"task_name: {task_name}")
-            logger.info(f"website: {website}")
             
             # TODO
             # evaluate_steps = experiment_config.config['steps']['single_task_action_step']
@@ -224,14 +222,12 @@ async def main(global_reward_mode="no_global_reward",
                planning_text_model="gpt-4-turbo",
                global_reward_text_model="gpt-4-turbo",
                single_task_name="",
-               single_task_website="about:blank",
                raw_data_index=-1,
                observation_mode="dom",
                ground_truth_mode=False,
                toml_path=None
                ):
     config = read_config(toml_path)
-    config['single_task_website'] = single_task_website
     validate_config(config, observation_mode, global_reward_mode, planning_text_model, global_reward_text_model)
 
     file = None
@@ -279,8 +275,6 @@ if __name__ == "__main__":
     parser.add_argument("--index", type=str, default=-1)
     parser.add_argument("--single_task_name", type=str,
                         default="Find Dota 2 game and add all DLC to cart in steam.")
-    parser.add_argument("--single_task_website", type=str,
-                        default="about:blank", help="Website URL for single task mode")
     parser.add_argument("--snapshot", type=str, default="results_o4")
     parser.add_argument("--planning_text_model", type=str, default="gpt-4o-mini")
     parser.add_argument("--global_reward_text_model", type=str, default="gpt-4o-mini")
@@ -292,17 +286,14 @@ if __name__ == "__main__":
                      planning_text_model=args.planning_text_model,
                      global_reward_text_model=args.global_reward_text_model,
                      single_task_name=args.single_task_name,
-                     single_task_website=args.single_task_website,
                      raw_data_index=args.index
                      )
                 )
     
-# Example command to run the evaluation script
-# python eval.py \
-# --global_reward_mode dom_reward \
+# xvfb-run python eval.py \
+# --global_reward_mode no_global_reward \
 # --index -1 \
-# --single_task_name "View the cheapest apartment available for students at the University of Leeds with bills that include WIFI and cleaning services." \
-# --single_task_website "https://www.student.com/" \
-# --snapshot results/test1 \
+# --single_task_name "Find the SO2 air quality over the past hour for Maine North, County Cork, Ireland." \
+# --snapshot res \
 # --planning_text_model gpt-4.1 \
 # --global_reward_text_model gpt-4.1
