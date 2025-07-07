@@ -1,6 +1,6 @@
 [basic]
-task_mode = "batch_tasks"    # single_task or batch_tasks
-max_time_step = 25           # For all tasks, set the maximum step length
+task_mode = "single_task"    # single_task or batch_tasks
+max_time_step = 20           # For all tasks, set the maximum step length
 save_screenshots = true  # screenshots
 screenshot_path = "./screenshots"
 
@@ -24,15 +24,15 @@ enabled = true          # Whether to enable RAG mode
 rag_path = "./data/Online-Mind2Web/rag_data"    # Path to store RAG data
 
 [steps]
-interaction_mode = true             #  Whether human control of task execution status is required
-single_task_action_step = 25     
-batch_tasks_max_action_step = 10
+interaction_mode = false            #  Whether human control of task execution status is required
+single_task_action_step = 20     
+batch_tasks_max_action_step =25
 batch_tasks_condition_step_increase = 5
 
 [files]
-batch_tasks_file_path = "./data/Online-Mind2Web/Online_Mind2Web_sub.json" # The input data path
+batch_tasks_file_path = "./data/Online-Mind2Web/72exp30.json" # The input data path
 ground_truth_file_path = "./data/human_labeled_reward_reference/GT_instructions_202404161811_for_all_data_0328.json"  # the ground_truth data path
-out_file_path = "./results/4o_dom_rag_parse"   # YOUR OUT FILE PATH 
+out_file_path = "./results_new/exp"   # YOUR OUT FILE PATH 
 
 [conditions]
 URL = ["error"]

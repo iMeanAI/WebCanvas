@@ -54,8 +54,13 @@ Set the log path in "log.py"
 Start evaluation：
 
 ```bash
-xvfb-run python batch_eval.py
+xvfb-run -a python batch_eval.py
 ```
+
+#### tips:
+
+1. If you want to inspect the Prompt output of the rag construct, you can set the output path in agent/Utils/rag_logger.py and inspect it.
+
 
 ### Evaluate dataset processing
 After getting the evaluation data set, use "utils/parser.py" to parse the log log file to get the json parsed file

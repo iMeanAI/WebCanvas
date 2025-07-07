@@ -15,7 +15,7 @@ modes=(
 )
 
 # base_dir="./data/example"
-base_dir="../WebCanvas/dataset_4o"
+base_dir="../WebCanvas/dataset_new/exp"
 
 for mode in "${modes[@]}"; do
     python ./OM2W_Benchmarking/src/run.py \
@@ -23,7 +23,7 @@ for mode in "${modes[@]}"; do
         --model "${model_name}" \
         --trajectories_dir "$base_dir" \
         --api_key "${api_key}" \
-        --output_path results \
+        --output_path results_new/exp \
         --num_worker 1 \
         --score_threshold 3
 done
